@@ -128,6 +128,7 @@ export class Truco3v3Component implements OnInit, OnDestroy {
   estadoTruco  = 'No se cantó.';
   turnoBadge   = 'Esperando inicio de partida...';
   picaPicaBanner = '';
+  mostrarMenuSenias = false;
 
   gameOver = false;
   gameOverGanamos = false;
@@ -163,6 +164,14 @@ export class Truco3v3Component implements OnInit, OnDestroy {
         if (v) this.showToast('Un jugador se desconectó de la partida.');
       }),
     );
+
+    this.sala.seniaRecibida$.subscribe(tipo => {
+        if (!tipo) return;
+        this.mostrarDialogo(
+          'compa',
+          `👁 ${tipo}`
+        );
+      })
   }
 
   ngOnDestroy(): void {
@@ -554,5 +563,14 @@ export class Truco3v3Component implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => { this.toastMsg = ''; this.cdr.markForCheck(); }, tipo === 'info' ? 2600 : 4000);
+  }
+
+  abrirMenuSenias() {
+    this.mostrarMenuSenias = true;
+  }
+
+  enviarSenia(tipo: string): void {
+    this.hub('EnviarSenia2v2', tipo);
+    this.mostrarMenuSenias = false;
   }
 }
