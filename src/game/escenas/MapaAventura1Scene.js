@@ -5,9 +5,16 @@ import Portal from '../objetos/Portal.js';
 import Oponente from '../personajes/Oponente.js';
 import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
 import NpcDialogo from '../personajes/NpcDialogo.js';
+import BarreraJefe from '../objetos/BarreraJefe.js';
 
 const RIVAL_NAHUELITO_NIVEL = 1;
 const RIVAL_POMBERITO_NIVEL = 2;
+const RIVAL_SIGUIENTE_A_POMBERITO_NIVEL = 3;
+
+// Barrera al final del puente (lado derecho)
+const BARRERA_PUENTE_X = 948;
+const BARRERA_PUENTE_Y = 368;
+const BARRERA_PUENTE_ALTO = 160;
 
 // Coordenadas del jefe Nahuelito
 const JEFE1_X = 550;
@@ -112,11 +119,22 @@ export default class MapaAventura1Scene extends BaseScene {
     this.keys = this.input.keyboard.createCursorKeys();
     this.teclaE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
-    // portal mapa aventura 2
+    // portal mapa aventura 2 (bloqueado hasta derrotar al Pomberito)
     this.portalMapaAventura2 = new Portal(this, 1092, 131, 'MapaAventura2', false, {
       x: 1078,
       y: 611,
     });
+    this.portalMapaAventura2.mensajeBloqueo = 'Derrotá al Pomberito antes de entrar';
+
+    // barrera al final del puente (bloqueada hasta derrotar al Nahuelito)
+    this.barreraPuente = new BarreraJefe(
+      this,
+      BARRERA_PUENTE_X,
+      BARRERA_PUENTE_Y,
+      BARRERA_PUENTE_ALTO,
+      'Derrotá al Nahuelito para pasar',
+    );
+    this.barreraPuente.agregarColision(this.JugadorPrincipal);
 
     // portal volver al mapa principal
     this.portalMapaPrincipal = new Portal(this, 35, 552, 'MapaPrincipal', false, {
@@ -139,10 +157,18 @@ export default class MapaAventura1Scene extends BaseScene {
     ]);
 
     this.puedePelearPomberito = false;
-    this.cargarPuedePelearPomberito();
+    this.puedeEntrarCueva = false;
+    this.cargarPuedePelearPomberito(false);
+    this.cargarPuedeEntrarCueva();
 
-    this._onProgresoActualizado = () => this.cargarPuedePelearPomberito();
-    this._onTrucoEnd = () => this.cargarPuedePelearPomberito();
+    this._onProgresoActualizado = () => {
+      this.cargarPuedePelearPomberito(true);
+      this.cargarPuedeEntrarCueva();
+    };
+    this._onTrucoEnd = () => {
+      this.cargarPuedePelearPomberito(true);
+      this.cargarPuedeEntrarCueva();
+    };
     window.addEventListener('historia:progreso-actualizado', this._onProgresoActualizado);
     window.addEventListener('truco-solo:end', this._onTrucoEnd);
   }
@@ -172,7 +198,7 @@ export default class MapaAventura1Scene extends BaseScene {
       .setDepth(10);
   }
 
-  async cargarPuedePelearPomberito() {
+  async cargarPuedePelearPomberito(animarBarrera = false) {
     try {
       const res = await fetch(
         `/api/historia/rivales/${RIVAL_POMBERITO_NIVEL}/puede-pelear`,
@@ -184,9 +210,38 @@ export default class MapaAventura1Scene extends BaseScene {
       this.puedePelearPomberito = !!data.puedePelear;
       this.motivoBloqueoPomberito = data.motivo ?? null;
       this._actualizarEtiquetaBloqueoPomberito();
+      this._actualizarBarreraPuente(animarBarrera);
     } catch {
       this.puedePelearPomberito = false;
       this._actualizarEtiquetaBloqueoPomberito();
+    }
+  }
+
+  // Si puede pelear con el Pomberito es porque el Nahuelito ya fue derrotado.
+  _actualizarBarreraPuente(animar) {
+    if (!this.barreraPuente || this.barreraPuente.desbloqueada) return;
+    if (!this.puedePelearPomberito) return;
+
+    if (animar) {
+      this.barreraPuente.desbloquear(this.JugadorPrincipal);
+    } else {
+      this.barreraPuente.desbloquearInmediato();
+    }
+  }
+
+  async cargarPuedeEntrarCueva() {
+    try {
+      const res = await fetch(
+        `/api/historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puede-pelear`,
+        { headers: authHeaders() },
+      );
+      if (!res.ok) return;
+
+      const data = await res.json();
+      // si puede pelear con el rival de nivel 3, el Pomberito ya fue derrotado
+      this.puedeEntrarCueva = !!data.puedePelear;
+    } catch {
+      this.puedeEntrarCueva = false;
     }
   }
 
@@ -205,6 +260,13 @@ export default class MapaAventura1Scene extends BaseScene {
   }
 
   update() {
+    // durante la animación de desbloqueo de la barrera se frena todo
+    if (this.barreraPuente?.animando) {
+      this.JugadorPrincipal.setVelocity(0);
+      this.botonInteractuarPresionado = false;
+      return;
+    }
+
     // si el dialogo esta abierto bloquea el resto
     if (this.npcAldeano.dialogoAbierto) {
       this.npcAldeano.update(this.JugadorPrincipal, this.teclaE, this.botonInteractuarPresionado);
@@ -228,7 +290,12 @@ export default class MapaAventura1Scene extends BaseScene {
 
     const interactuoMobile = this.botonInteractuarPresionado;
 
-    this.portalMapaAventura2.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
+    this.portalMapaAventura2.update(
+      this.JugadorPrincipal,
+      this.teclaE,
+      interactuoMobile,
+      this.puedeEntrarCueva,
+    );
     this.portalMapaPrincipal.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
 
 
