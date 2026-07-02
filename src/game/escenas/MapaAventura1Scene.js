@@ -10,16 +10,16 @@ const RIVAL_NAHUELITO_NIVEL = 1;
 const RIVAL_POMBERITO_NIVEL = 2;
 
 // Coordenadas del jefe Nahuelito
-const JEFE1_X = 937;
-const JEFE1_Y = 499;
+const JEFE1_X = 550;
+const JEFE1_Y = 285;
 
 // Coordenadas del jefe Pomberito
-const JEFE2_X = 1085;
-const JEFE2_Y = 200;
+const JEFE2_X = 1102;
+const JEFE2_Y = 219;
 
 // coords npc para hablar
-const NPC_ALDEANO_X = 442;
-const NPC_ALDEANO_Y = 195;
+const NPC_ALDEANO_X = 141;
+const NPC_ALDEANO_Y = 313;
 
 function authHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -63,11 +63,12 @@ export default class MapaAventura1Scene extends BaseScene {
     const fogataTileset = map.addTilesetImage('Fogata', 'Fuego Av');
     const paredesMontañaTileset = map.addTilesetImage('ParedesMontaña', 'ParedesMontaña');
     const paredesCuevaTileset = map.addTilesetImage('ParedesCueva', 'ParedesCueva');
+    const cuevaTileset = map.addTilesetImage('Cueva', 'Cueva Av');
 
     map.createLayer('Base', sueloTileset);
     map.createLayer('Agua', aguaTileset);
     map.createLayer('Montañas', [sueloTileset, paredesCuevaTileset, paredesMontañaTileset]);
-    map.createLayer('Camino', sueloTileset);
+    map.createLayer('Camino', [sueloTileset, cuevaTileset]);
     map.createLayer('Pasto/Vegetacion', [vegetacionTileset, piedrasTileset]);
     map.createLayer('Piedras', piedrasTileset);
 

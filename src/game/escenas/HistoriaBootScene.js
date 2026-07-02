@@ -21,17 +21,17 @@ export default class HistoriaBootScene extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64,
     });
-    this.load.spritesheet('Nuri','./assets/sprites/Nuri.png',{
-      frameWidth:64,
-      frameHeight:64
+    this.load.spritesheet('Nuri', './assets/sprites/Nuri.png', {
+      frameWidth: 64,
+      frameHeight: 64
     });
-    this.load.spritesheet('Facu','./assets/sprites/Facu.png',{
-      frameWidth:64,
-      frameHeight:64
+    this.load.spritesheet('Facu', './assets/sprites/Facu.png', {
+      frameWidth: 64,
+      frameHeight: 64
     });
-    this.load.spritesheet('Ale','./assets/sprites/Ale.png',{
-      frameWidth:64,
-      frameHeight:64
+    this.load.spritesheet('Ale', './assets/sprites/Ale.png', {
+      frameWidth: 64,
+      frameHeight: 64
     });
 
     this.load.tilemapTiledJSON('mapa', './assets/mapa-principal/mapa-principal.json');
@@ -63,10 +63,10 @@ export default class HistoriaBootScene extends Phaser.Scene {
     this.load.image('RackPulperia', './assets/mapa-pulperia/RackPulperia.png');
     this.load.image('alfombra', './assets/mapa-pulperia/alfombra2.png');
     this.load.image('percha', './assets/mapa-pulperia/perchero.png');
-    this.load.image('mesa','./assets/mapa-pulperia/mesa.png');
-    this.load.image('lena','./assets/mapa-pulperia/lena.png');
-    this.load.image('silla1','./assets/mapa-pulperia/silla_costado.png')
-    this.load.image('silla2','./assets/mapa-pulperia/silla_frente.png')
+    this.load.image('mesa', './assets/mapa-pulperia/mesa.png');
+    this.load.image('lena', './assets/mapa-pulperia/lena.png');
+    this.load.image('silla1', './assets/mapa-pulperia/silla_costado.png')
+    this.load.image('silla2', './assets/mapa-pulperia/silla_frente.png')
 
 
     //mapa casa
@@ -88,6 +88,7 @@ export default class HistoriaBootScene extends Phaser.Scene {
     this.load.image('ParedesMontaña', './assets/mapa-aventura-1/ParedesMontaña.png');
     this.load.image('Piedras Av', './assets/mapa-aventura-1/Piedras.png');
     this.load.image('Vegetacion Av', './assets/mapa-aventura-1/Vegetacion.png');
+    this.load.image('Cueva Av', './assets/mapa-aventura-1/Cueva.png')
 
     //mapa aventura 2
     this.load.tilemapTiledJSON('mapa-aventura-2', './assets/mapa-aventura-2/mapa-aventura-2.json');
