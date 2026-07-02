@@ -159,15 +159,15 @@ export default class MapaAventura1Scene extends BaseScene {
     this.puedePelearPomberito = false;
     this.puedeEntrarCueva = false;
     this.cargarPuedePelearPomberito(false);
-    this.cargarPuedeEntrarCueva();
+    this.cargarPuedeEntrarCueva(false);
 
     this._onProgresoActualizado = () => {
       this.cargarPuedePelearPomberito(true);
-      this.cargarPuedeEntrarCueva();
+      this.cargarPuedeEntrarCueva(true);
     };
     this._onTrucoEnd = () => {
       this.cargarPuedePelearPomberito(true);
-      this.cargarPuedeEntrarCueva();
+      this.cargarPuedeEntrarCueva(true);
     };
     window.addEventListener('historia:progreso-actualizado', this._onProgresoActualizado);
     window.addEventListener('truco-solo:end', this._onTrucoEnd);
@@ -179,12 +179,12 @@ export default class MapaAventura1Scene extends BaseScene {
   }
 
   _crearJefeNahuelito() {
-    new Oponente(this, JEFE1_X, JEFE1_Y, 'nahuelito').setDepth(0).setScale(2);
+    this.jefeNahuelito = new Oponente(this, JEFE1_X, JEFE1_Y, 'nahuelito').setDepth(0).setScale(2);
     this.zonaJefe1 = new ZonaInteraccionNpc(this, JEFE1_X, JEFE1_Y);
   }
 
   _crearJefePomberito() {
-    new Oponente(this, JEFE2_X, JEFE2_Y, 'pomberito').setDepth(0).setScale(1);
+    this.jefePomberito = new Oponente(this, JEFE2_X, JEFE2_Y, 'pomberito').setDepth(0).setScale(1);
     this.zonaJefe2 = new ZonaInteraccionNpc(this, JEFE2_X, JEFE2_Y);
     this.etiquetaBloqueoPomberito = this.add
       .text(JEFE2_X, JEFE2_Y - 55, 'Derrotá al Nahuelito antes', {
@@ -210,26 +210,47 @@ export default class MapaAventura1Scene extends BaseScene {
       this.puedePelearPomberito = !!data.puedePelear;
       this.motivoBloqueoPomberito = data.motivo ?? null;
       this._actualizarEtiquetaBloqueoPomberito();
-      this._actualizarBarreraPuente(animarBarrera);
+      this._actualizarDerrotaNahuelito(animarBarrera);
     } catch {
       this.puedePelearPomberito = false;
       this._actualizarEtiquetaBloqueoPomberito();
     }
   }
 
-  // Si puede pelear con el Pomberito es porque el Nahuelito ya fue derrotado.
-  _actualizarBarreraPuente(animar) {
-    if (!this.barreraPuente || this.barreraPuente.desbloqueada) return;
+  // Si puede pelear con el Pomberito es porque el Nahuelito ya fue derrotado:
+  // el jefe cae, desaparece del lago y después se desbloquea la barrera del puente.
+  _actualizarDerrotaNahuelito(animar) {
     if (!this.puedePelearPomberito) return;
 
+    const jefe = this.jefeNahuelito;
+    if (!jefe || jefe.derrotado || jefe.cayendo) return;
+
     if (animar) {
-      this.barreraPuente.desbloquear(this.JugadorPrincipal);
+      this.animarDerrotaJefe(jefe, {
+        desaparecer: true,
+        alTerminar: () => this.barreraPuente.desbloquear(this.JugadorPrincipal),
+      });
     } else {
+      jefe.caerDerrotado(false, undefined, true);
       this.barreraPuente.desbloquearInmediato();
     }
   }
 
-  async cargarPuedeEntrarCueva() {
+  // Si puede entrar a la cueva es porque el Pomberito ya fue derrotado.
+  _actualizarDerrotaPomberito(animar) {
+    if (!this.puedeEntrarCueva) return;
+
+    const jefe = this.jefePomberito;
+    if (!jefe || jefe.derrotado || jefe.cayendo) return;
+
+    if (animar) {
+      this.animarDerrotaJefe(jefe);
+    } else {
+      jefe.caerDerrotado(false);
+    }
+  }
+
+  async cargarPuedeEntrarCueva(animar = false) {
     try {
       const res = await fetch(
         `/api/historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puede-pelear`,
@@ -240,6 +261,7 @@ export default class MapaAventura1Scene extends BaseScene {
       const data = await res.json();
       // si puede pelear con el rival de nivel 3, el Pomberito ya fue derrotado
       this.puedeEntrarCueva = !!data.puedePelear;
+      this._actualizarDerrotaPomberito(animar);
     } catch {
       this.puedeEntrarCueva = false;
     }
@@ -260,8 +282,8 @@ export default class MapaAventura1Scene extends BaseScene {
   }
 
   update() {
-    // durante la animación de desbloqueo de la barrera se frena todo
-    if (this.barreraPuente?.animando) {
+    // durante las animaciones de derrota/desbloqueo se frena todo
+    if (this._animandoDerrota || this.barreraPuente?.animando) {
       this.JugadorPrincipal.setVelocity(0);
       this.botonInteractuarPresionado = false;
       return;
@@ -301,11 +323,14 @@ export default class MapaAventura1Scene extends BaseScene {
 
     this.npcAldeano.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
 
-    const enZonaJefe1 = this.zonaJefe1.update(this.JugadorPrincipal);
-    const enZonaJefe2 = this.zonaJefe2.update(
-      this.JugadorPrincipal,
-      this.puedePelearPomberito,
-    );
+    const nahuelitoDisponible = !this.jefeNahuelito.derrotado && !this.jefeNahuelito.cayendo;
+    const pomberitoDisponible =
+      this.puedePelearPomberito &&
+      !this.jefePomberito.derrotado &&
+      !this.jefePomberito.cayendo;
+
+    const enZonaJefe1 = this.zonaJefe1.update(this.JugadorPrincipal, nahuelitoDisponible);
+    const enZonaJefe2 = this.zonaJefe2.update(this.JugadorPrincipal, pomberitoDisponible);
 
     const interactuar =
       Phaser.Input.Keyboard.JustDown(this.teclaE) ||
@@ -315,7 +340,7 @@ export default class MapaAventura1Scene extends BaseScene {
       this.iniciarPelea(RIVAL_NAHUELITO_NIVEL);
     }
 
-    if (enZonaJefe2 && interactuar && this.puedePelearPomberito) {
+    if (enZonaJefe2 && interactuar && pomberitoDisponible) {
       this.iniciarPelea(RIVAL_POMBERITO_NIVEL);
     }
 

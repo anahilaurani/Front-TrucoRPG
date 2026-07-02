@@ -96,6 +96,48 @@ export default class BaseScene extends Phaser.Scene {
     this._btnInteractuarTxt.on('pointerout', restaurarBoton);
   }
 
+  // Panea la cámara hasta el jefe, reproduce la caída y al terminar
+  // ejecuta alTerminar (si hay) o vuelve al jugador.
+  // Con desaparecer=true el jefe se desvanece y se elimina del mapa después de caer.
+  animarDerrotaJefe(jefe, { alTerminar, desaparecer = false } = {}) {
+    jefe.cayendo = true;
+    this._animandoDerrota = true;
+
+    const cam = this.cameras.main;
+    cam.stopFollow();
+    cam.pan(jefe.x, jefe.y, 700, 'Sine.easeInOut', false, (camera, progress) => {
+      if (progress !== 1) return;
+
+      jefe.caerDerrotado(
+        true,
+        () => {
+          if (alTerminar) {
+            this._animandoDerrota = false;
+            alTerminar();
+            return;
+          }
+
+          this.time.delayedCall(300, () => {
+            cam.pan(
+              this.JugadorPrincipal.x,
+              this.JugadorPrincipal.y,
+              700,
+              'Sine.easeInOut',
+              false,
+              (c, p) => {
+                if (p === 1) {
+                  cam.startFollow(this.JugadorPrincipal, true, 0.1, 0.1);
+                  this._animandoDerrota = false;
+                }
+              },
+            );
+          });
+        },
+        desaparecer,
+      );
+    });
+  }
+
   ocultarBotonInteractuar() {
     this._btnInteractuarBg?.setVisible(false);
     this._btnInteractuarTxt?.setVisible(false);
