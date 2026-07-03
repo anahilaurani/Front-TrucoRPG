@@ -31,7 +31,6 @@ export default class InteriorPulperiaScene extends BaseScene {
     this.load.image('gaucho3', './assets/mapa-pulperia/gauchosentado3.png');
     this.load.image('ObjetosMesa', './assets/mapa-pulperia/mesa_objetos.png');
     this.load.image('ObjetosMesa2', './assets/mapa-pulperia/mesa_objetos_2.png');
-    this.load.image('AnimacionMesa');
     this.load.spritesheet('MesaEjemplo', './assets/sprites/GauchoEjemplo.png', {
       frameWidth: 256,
       frameHeight: 160,
