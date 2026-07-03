@@ -15,7 +15,7 @@ export default class GauchosPulperia extends Phaser.Physics.Arcade.Sprite {
       escena.anims.create({
         key: `${this.nombre}-quieto`,
         frames: escena.anims.generateFrameNumbers(this.nombre, { start: 0, end: 4 }),
-        frameRate: 7,
+        frameRate: 6,
         repeat: -1,
       });
     }
