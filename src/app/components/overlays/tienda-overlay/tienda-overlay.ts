@@ -7,7 +7,7 @@ import { ObjetoTienda } from '../../../interfaces/ObjetoTienda';
 @Component({
   selector: 'app-tienda-overlay',
   standalone: true,
-  imports: [CommonModule], 
+  imports: [CommonModule],
   templateUrl: './tienda-overlay.html',
   styleUrls: ['./tienda-overlay.css'],
 })
@@ -16,6 +16,8 @@ export class TiendaOverlayComponent implements OnInit {
 
   datos: CategoriaTienda[] = [];
   objetoActivo: ObjetoTienda | null = null;
+  objetoFijado: ObjetoTienda | null = null;
+  confirmandoCompra: boolean = false;
 
   ngOnInit() {
     this.cargarTienda();
@@ -31,14 +33,37 @@ export class TiendaOverlayComponent implements OnInit {
   }
 
   mostrarInfo(objeto: ObjetoTienda) {
-    this.objetoActivo = objeto;
+    if (this.objetoFijado) return;
+
+    if (this.objetoActivo !== objeto) {
+      this.objetoActivo = objeto;
+      this.confirmandoCompra = false;
+    }
   }
 
-  ocultarInfo() {
-    this.objetoActivo = null;
+  seleccionarObjeto(objeto: ObjetoTienda) {
+    if (this.objetoFijado === objeto) {
+      this.liberarSeleccion();
+    } else {
+      this.objetoFijado = objeto;
+      this.objetoActivo = objeto;
+      this.confirmandoCompra = false;
+    }
   }
 
-  comprar(objeto: ObjetoTienda) {
-    console.log(`Compraste: ${objeto.nombre} (mentira no compraste nada jeje :P)`);
+  liberarSeleccion() {
+    this.objetoFijado = null;
+    this.confirmandoCompra = false;
+  }
+
+  cancelarCompra() {
+    this.confirmandoCompra = false;
+  }
+
+  confirmarAccionCompra() {
+    if (this.objetoActivo) {
+      console.log(`¡Compra confirmada!: ${this.objetoActivo.nombre} (Mentira)`);
+      this.liberarSeleccion();
+    }
   }
 }

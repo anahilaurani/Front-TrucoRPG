@@ -19,7 +19,7 @@ export class HistoriaService {
   private habilidadSeleccionada: string | null = null;
   private spriteKeyBD: string | null = null;
 
-  private apiUrl = 'http://localhost:5001/api/Historia';
+  private apiUrl = '/api/Historia';
 
   private cambiarSkinSource = new Subject<string>();
   cambiarSkin$ = this.cambiarSkinSource.asObservable();

@@ -6,12 +6,14 @@ import Portal from '../objetos/Portal.js';
 import PuntoInteraccion from '../objetos/PuntoInteraccion.js';
 import MesaManager from '../objetos/mesaManager.js';
 import { TUTORIALES } from '../data/tutoriales.js';
+import GauchosPulperia from '../personajes/GauchosPulperia.js';
 
 export default class InteriorPulperiaScene extends BaseScene {
   constructor() {
     super('InteriorPulperiaScene');
     this.timerBuscarSalas = null;
     this.mesaManager = null;
+    this.mesasDecoracion = null;
   }
 
   init(data) {
@@ -23,12 +25,44 @@ export default class InteriorPulperiaScene extends BaseScene {
   preload() {
     this.load.audio('pasos', './assets/musica/sonidos/paso.ogg');
     this.load.image('mesa_juego', './assets/objetos/mesa.png');
-    this.load.image('nenaSentada','./assets/mapa-pulperia/nenaSentada.png');
-    this.load.image('gaucho','./assets/mapa-pulperia/gauchosentado.png');
-    this.load.image('gaucho2','./assets/mapa-pulperia/gauchosentado2.png');
-    this.load.image('gaucho3','./assets/mapa-pulperia/gauchosentado3.png');
-    this.load.image('ObjetosMesa','./assets/mapa-pulperia/mesa_objetos.png');
-    this.load.image('ObjetosMesa2','./assets/mapa-pulperia/mesa_objetos_2.png');
+    this.load.image('nenaSentada', './assets/mapa-pulperia/nenaSentada.png');
+    this.load.image('gaucho', './assets/mapa-pulperia/gauchosentado.png');
+    this.load.image('gaucho2', './assets/mapa-pulperia/gauchosentado2.png');
+    this.load.image('gaucho3', './assets/mapa-pulperia/gauchosentado3.png');
+    this.load.image('ObjetosMesa', './assets/mapa-pulperia/mesa_objetos.png');
+    this.load.image('ObjetosMesa2', './assets/mapa-pulperia/mesa_objetos_2.png');
+    this.load.spritesheet('MesaEjemplo', './assets/sprites/GauchoEjemplo.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('MesaSolitario', './assets/sprites/GauchoSolitario.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('MesaEjemplo2', './assets/sprites/GauchoEjemplo2.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('MesaEjemplo3', './assets/sprites/GauchoEjemplo3.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('MesaEjemplo4', './assets/sprites/GauchoEjemplo4.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('MesaEjemplo5', './assets/sprites/GauchoEjemplo5.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('MesaEjemplo6', './assets/sprites/GauchoEjemplo6.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('MesaEspera', './assets/sprites/MesaEspera.png', {
+      frameWidth: 256,
+      frameHeight: 160,
+    });
   }
 
   async create() {
@@ -51,17 +85,30 @@ export default class InteriorPulperiaScene extends BaseScene {
     const silla1Tileset = map.addTilesetImage('silla1', 'silla1');
     const silla2Tileset = map.addTilesetImage('silla2', 'silla2');
     const lenaTileset = map.addTilesetImage('lena', 'lena');
-    const objetosMesa1Tileset = map.addTilesetImage('ObjetosMesa','ObjetosMesa');
-    const objetosMesa2Tileset = map.addTilesetImage('ObjetosMesa2','ObjetosMesa2');
-
+    const objetosMesa1Tileset = map.addTilesetImage('ObjetosMesa', 'ObjetosMesa');
+    const objetosMesa2Tileset = map.addTilesetImage('ObjetosMesa2', 'ObjetosMesa2');
 
     map.createLayer('Base', pisoTileSet);
-    map.createLayer('Paredes', [paredesTileSet,alfombraTileSet]);
+    map.createLayer('Paredes', [paredesTileSet, alfombraTileSet]);
     map.createLayer('Estantes', [rackTileSet, pisoTileSet]);
     const objetos2Layer = map.createLayer('Objetos2', [mesaTileset, lenaTileset]);
-    const personajesLayer = map.createLayer('Personajes', [gaucho1Tileset, gaucho2Tileset, gaucho3Tileset, chinitaTileset]);
-    map.createLayer('Objetos1', [mesaTileset, perchaTileSet, silla1Tileset,silla2Tileset,alfombraTileSet]);
-    const objetosMesaLayer = map.createLayer('Objetos3',[objetosMesa1Tileset,objetosMesa2Tileset]);
+    const personajesLayer = map.createLayer('Personajes', [
+      gaucho1Tileset,
+      gaucho2Tileset,
+      gaucho3Tileset,
+      chinitaTileset,
+    ]);
+    map.createLayer('Objetos1', [
+      mesaTileset,
+      perchaTileSet,
+      silla1Tileset,
+      silla2Tileset,
+      alfombraTileSet,
+    ]);
+    const objetosMesaLayer = map.createLayer('Objetos3', [
+      objetosMesa1Tileset,
+      objetosMesa2Tileset,
+    ]);
     const barraLayer = map.createLayer('Barra', [barraTileSet]);
     const marcoLayer = map.createLayer('Marco', paredesTileSet);
     const colisionesLayer = map.createLayer('Colisiones', paredesTileSet);
@@ -93,6 +140,29 @@ export default class InteriorPulperiaScene extends BaseScene {
 
     this.npc = new Npc(this, 536, 272, 'Facu').setDepth(1);
 
+    this.mesa = new GauchosPulperia(this, 960, 180, 'MesaEjemplo');
+    this.mesa2 = new GauchosPulperia(this, 205, 495, 'MesaEjemplo2');
+
+    this.mesasDecoracion = this.add.group();
+
+    this.mesa3 = new GauchosPulperia(this, 1040, 370, 'MesaEjemplo3');
+    this.mesa4 = new GauchosPulperia(this, 1480, 370, 'MesaEjemplo4');
+    this.mesa5 = new GauchosPulperia(this, 1605, 570, 'MesaEjemplo6');
+    this.mesa6 = new GauchosPulperia(this, 1050, 560, 'MesaEjemplo5');
+
+    this.mesa3.posXOriginal = 1040;
+    this.mesa3.posYOriginal = 370;
+    this.mesa4.posXOriginal = 1480;
+    this.mesa4.posYOriginal = 370;
+    this.mesa5.posXOriginal = 1605;
+    this.mesa5.posYOriginal = 570;
+    this.mesa6.posXOriginal = 1050;
+    this.mesa6.posYOriginal = 560;
+
+    this.mesasDecoracion.addMultiple([this.mesa3, this.mesa4, this.mesa5, this.mesa6]);
+
+    this.mesaSolitario = new GauchosPulperia(this, 1590, 180, 'MesaSolitario');
+
     const pasosCargados = TUTORIALES.pulperia.map((paso) => {
       if (paso.enfoque === 'npc') {
         return { ...paso, enfoqueNpc: this.npc };
@@ -108,8 +178,8 @@ export default class InteriorPulperiaScene extends BaseScene {
 
     this.puntosDeInteraccion = [
       new PuntoInteraccion(this, 536, 378, 'tienda', false, {}),
-      new PuntoInteraccion(this, 1610, 180, 'partida-solo', {}),
-      new PuntoInteraccion(this, 1283, 180, 'multijugador',{
+      new PuntoInteraccion(this, 1595, 180, 'partida-solo', {}),
+      new PuntoInteraccion(this, 1283, 180, 'multijugador', {
         subVista: 'tipo',
       }),
     ];
@@ -117,7 +187,28 @@ export default class InteriorPulperiaScene extends BaseScene {
     const salaService = this.game.registry.get('salaService');
     const uiService = this.game.registry.get('uiService');
 
-    this.mesaManager = new MesaManager(this, this.JugadorPrincipal, salaService, uiService);
+    this.anims.create({
+      key: 'MesaEspera_idle',
+      frames: this.anims.generateFrameNumbers('MesaEspera', { start: 0, end: 26 }),
+      frameRate: 6,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'MesaEjemplo2_idle',
+      frames: this.anims.generateFrameNumbers('MesaEjemplo2', { start: 0, end: 3 }),
+      frameRate: 6,
+      repeat: -1,
+    });
+
+    this.mesaManager = new MesaManager(
+      this,
+      this.JugadorPrincipal,
+      salaService,
+      uiService,
+      null,
+      this.mesasDecoracion,
+    );
 
     if (salaService) {
       try {

@@ -1,25 +1,78 @@
-<div class="contenedor-tienda">
-  @for (estante of datos; track estante.categoria) {
-    <div class="estante">
-      <div class="cartel-estante">{{ estante.categoria }}</div>
+<div class="interfaz-tienda">
+  <div class="contenedor-tienda">
+    @for (estante of datos; track estante.categoria) {
+      <div class="estante">
+        <div class="cartel-estante">{{ estante.categoria }}</div>
 
-      @for (objeto of estante.objetos; track objeto.id) {
-        <div class="objeto" (mouseenter)="mostrarInfo(objeto)" (mouseleave)="ocultarInfo()">
-          <img [src]="objeto.img" [alt]="objeto.nombre" />
-
-          <div class="cartelito">
-            <span class="precio">${{ objeto.precio }}</span>
-            <button class="botonComprar" (click)="comprar(objeto)">COMPRAR</button>
-          </div>
-
-          @if (objetoActivo === objeto) {
-            <div class="tooltip-info">
-              <h4>{{ objeto.nombre }}</h4>
-              <p>{{ objeto.descripcion }}</p>
+        @for (objeto of estante.objetos; track objeto.id) {
+          <div class="objeto" 
+               [class.seleccionado]="objetoActivo === objeto"
+               [class.fijado]="objetoFijado === objeto"
+               (mouseenter)="mostrarInfo(objeto)"
+               (click)="seleccionarObjeto(objeto)">
+            <img [src]="objeto.img" [alt]="objeto.nombre" />
+            <div class="cartelito-simple">
+              <span class="precio">${{ objeto.precio }}</span>
             </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="pantalla-detalles">
+    @if (objetoActivo) {
+      
+      @if (objetoFijado && !confirmandoCompra) {
+        <button class="btn-cerrar-inspector" (click)="liberarSeleccion()">X</button>
+      }
+
+      @if (!confirmandoCompra) {
+        <div class="detalles-contenido animate-pixel">
+          <div class="marco-imagen">
+            <img [src]="objetoActivo.img" [alt]="objetoActivo.nombre" class="img-grande" />
+          </div>
+          <h4 class="titulo-detalle">{{ objetoActivo.nombre }}</h4>
+          
+          @if (objetoFijado) {
+            <span class="tag-fijado">Fijado</span>
+          } @else {
+            <span class="tag-hover">Click para fijar</span>
           }
+
+          <div class="separador-pixel"></div>
+          <p class="descripcion-detalle">{{ objetoActivo.descripcion }}</p>
+          
+          <button class="boton-comprar-fijo" 
+                  [disabled]="!objetoFijado"
+                  [class.deshabilitado]="!objetoFijado"
+                  (click)="confirmandoCompra = true">
+            @if (objetoFijado) {
+              COMPRAR (${{ objetoActivo.precio }})
+            } @else {
+              SELECCIONA PARA COMPRAR
+            }
+          </button>
+        </div>
+      } 
+      
+      @else {
+        <div class="cartel-confirmacion animate-pixel">
+          <h4 class="titulo-alerta">¿ESTÁS SEGURO?</h4>
+          <div class="separador-pixel alerta"></div>
+          <p class="texto-alerta">¿Deseas comprar <strong>{{ objetoActivo.nombre }}</strong> por <span class="resaltar-precio">${{ objetoActivo.precio }}</span>?</p>
+          
+          <div class="acciones-confirmar">
+            <button class="btn-pixel si" (click)="confirmarAccionCompra()">SÍ</button>
+            <button class="btn-pixel no" (click)="cancelarCompra()">NO</button>
+          </div>
         </div>
       }
-    </div>
-  }
+
+    } @else {
+      <div class="detalles-vacio">
+        <p>Pasa el cursor sobre un objeto para inspeccionarlo...</p>
+      </div>
+    }
+  </div>
 </div>
