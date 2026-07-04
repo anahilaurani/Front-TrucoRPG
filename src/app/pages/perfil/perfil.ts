@@ -34,7 +34,7 @@ export class PerfilComponent {
   private authService = inject(AuthService);
   private router      = inject(Router);
 
-  usuario    = computed(() => this.authService.obtenerUsuario());
+  usuario    = this.authService.usuario;
   inicial    = computed(() => this.usuario()?.nombre?.charAt(0).toUpperCase() ?? '?');
   avatarUrl  = computed(() => this.authService.avatarUrl());
   heroe      = computed(() => {
