@@ -850,6 +850,39 @@
   line-height: 1.35;
 }
 
+.destello-box {
+  background: rgba(35, 30, 15, 0.94);
+  border-color: #f5e6a8;
+  color: #fff8dc;
+  box-shadow: 0 8px 32px rgba(255, 230, 120, 0.25);
+}
+
+.destello-titulo {
+  color: #ffe566;
+}
+
+.destello-sub {
+  color: #f5e6a8;
+}
+
+.baza-card-img.espejismo-parpadeo {
+  animation: espejismo-flash 0.28s ease-out;
+  filter: brightness(1.35) saturate(1.1);
+}
+
+@keyframes espejismo-flash {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.92) rotate(-2deg);
+    filter: brightness(2) blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1.35) saturate(1.1);
+  }
+}
+
 .fan-card-back {
   object-fit: cover;
 }

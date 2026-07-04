@@ -68,8 +68,11 @@
           @for (s of slots; track $index) {
           <div class="baza-col">
             <div class="baza-slot far-slot" [class.pending]="s.pending">
-              @if (s.maquina) {
-              <img class="baza-card-img far-card-img" [src]="cardImg(s.maquina)"
+              @if (s.espejismoOculto) {
+              <img class="baza-card-img far-card-img" src="assets/cards/back.PNG" alt="reverso" />
+              } @else if (s.maquina) {
+              <img class="baza-card-img far-card-img" [class.espejismo-parpadeo]="s.espejismoParpadeo"
+                [src]="cardImg(s.maquina)"
                 [alt]="s.maquina.numero + ' ' + s.maquina.palo" />
               }
             </div>
@@ -289,6 +292,24 @@
   <div class="salpicadura-box">
     <div class="salpicadura-titulo">¡{{ rival?.nombre ?? 'El Lobizón' }} usa Aullido!</div>
     <div class="salpicadura-sub">Te asustás y te vas al mazo... {{ aullidoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (destelloRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box destello-box">
+    <div class="salpicadura-titulo destello-titulo">¡{{ rival?.nombre ?? 'La Luz Mala' }} usa Destello!</div>
+    <div class="salpicadura-sub destello-sub">Te confunde y vas a jugar una carta al azar... {{ destelloSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (espejismoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box destello-box">
+    <div class="salpicadura-titulo destello-titulo">¡{{ rival?.nombre ?? 'La Luz Mala' }} usa Espejismo!</div>
+    <div class="salpicadura-sub destello-sub">No confíes en lo que ves en la mesa... {{ espejismoSegundos || 1 }}s</div>
   </div>
 </div>
 }

@@ -51,6 +51,12 @@ export interface VistaHabilidadesRival {
   rasgunoActivo?: boolean;
   rasgunoBloqueando?: boolean;
   aullidoBloqueando?: boolean;
+  destelloBloqueando?: boolean;
+  espejismoActivo?: boolean;
+  espejismoBloqueando?: boolean;
+  espejismoAlternando?: boolean;
+  espejismoMostrarFakePrimero?: boolean;
+  espejismoCartaFalsa?: { numero: number; palo: string };
   cartasOcultasTravesura?: { numero: number; palo: string }[];
   ultimoMensajeHabilidad?: string;
 }
@@ -96,6 +102,12 @@ export interface ManoState {
   rasgunoActivo?: boolean;
   rasgunoBloqueando?: boolean;
   aullidoBloqueando?: boolean;
+  destelloBloqueando?: boolean;
+  espejismoActivo?: boolean;
+  espejismoBloqueando?: boolean;
+  espejismoAlternando?: boolean;
+  espejismoMostrarFakePrimero?: boolean;
+  espejismoCartaFalsa?: Carta;
   cartasOcultasTravesura?: { numero: number; palo: string }[];
 }
 
@@ -110,6 +122,8 @@ export interface Slot {
   jugador?: Carta;
   maquina?: Carta;
   pending: boolean;
+  espejismoOculto?: boolean;
+  espejismoParpadeo?: boolean;
   winner?: 'Humano' | 'Maquina' | 'Parda';
 }
 
@@ -157,6 +171,9 @@ const SALPICADURA_REVEAL_SEG = 5;
 const TRAVESURA_REVEAL_SEG = 5;
 const RASGUNO_REVEAL_SEG = 3;
 const AULLIDO_REVEAL_SEG = 3;
+const DESTELLO_REVEAL_SEG = 3;
+const ESPEJISMO_REVEAL_SEG = 3;
+const ESPEJISMO_PARPADEO_MS = 2000;
 
 // ── Componente ───────────────────────────────────────────────────────────────
 
@@ -212,14 +229,21 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       || this.travesuraRevelando
       || this.rasgunoRevelando
       || this.rasgunoConfirmando
+      || this.destelloRevelando
+      || this.espejismoRevelando
+      || this.aullidoRevelando
       || !!this.vistaRival?.salpicaduraBloqueando
       || !!this.vistaRival?.travesuraBloqueando
       || !!this.vistaRival?.rasgunoBloqueando
       || !!this.vistaRival?.aullidoBloqueando
+      || !!this.vistaRival?.destelloBloqueando
+      || !!this.vistaRival?.espejismoBloqueando
       || !!m?.salpicaduraBloqueando
       || !!m?.travesuraBloqueando
       || !!m?.rasgunoBloqueando
-      || !!m?.aullidoBloqueando;
+      || !!m?.aullidoBloqueando
+      || !!m?.destelloBloqueando
+      || !!m?.espejismoBloqueando;
   }
 
   /** @deprecated usar accionesBloqueadasPorHabilidadRival */
@@ -235,6 +259,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   rasgunoSegundos = 0;
   aullidoRevelando = false;
   aullidoSegundos = 0;
+  destelloRevelando = false;
+  destelloSegundos = 0;
+  espejismoRevelando = false;
+  espejismoSegundos = 0;
+  espejismoMostrarFake = false;
+  espejismoParpadeoAnim = false;
   private salpicaduraCartasOriginales: Carta[] = [];
   private rasgunoCartasOriginales: Carta[] = [];
 
@@ -313,6 +343,15 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private aullidoManoId: string | null = null;
   private aullidoTimer: ReturnType<typeof setTimeout> | null = null;
   private aullidoInterval: ReturnType<typeof setInterval> | null = null;
+  private destelloManoId: string | null = null;
+  private destelloTriggerKey: string | null = null;
+  private destelloTimer: ReturnType<typeof setTimeout> | null = null;
+  private destelloInterval: ReturnType<typeof setInterval> | null = null;
+  private espejismoManoId: string | null = null;
+  private espejismoTimer: ReturnType<typeof setTimeout> | null = null;
+  private espejismoInterval: ReturnType<typeof setInterval> | null = null;
+  private espejismoCountdownInterval: ReturnType<typeof setInterval> | null = null;
+  private espejismoParpadeoTimeout: ReturnType<typeof setTimeout> | null = null;
   private rasgunoWatchdog: ReturnType<typeof setInterval> | null = null;
   private rasgunoConfirmando = false;
   private nuevaManoEnCurso = false;
@@ -322,7 +361,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Imagen del rival ──────────────────────────────────────────────────────
 
-  // Slug normalizado del rival (ej. "El Pomberito" -> "pomberito"). Vac\u00edo si no hay rival.
+  // Slug normalizado del rival (ej. "El Pomberito" -> "pomberito"). Vacío si no hay rival.
   get rivalSlug(): string {
     if (!this.rival?.nombre) return '';
     return this.rival.nombre
@@ -332,6 +371,13 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '')
       .trim();
+  }
+
+  /** Slug del fondo de batalla (La Luz Mala comparte el escenario del Lobizón). */
+  get rivalSlugFondo(): string {
+    const slug = this.rivalSlug;
+    if (slug === 'luzmala') return 'lobizon';
+    return slug || 'gaucho';
   }
 
   // Clase CSS por personaje para poder estilar cada uno por separado.
@@ -350,8 +396,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.escenarioPractica !== null) {
       return { 'background-image': `url('assets/multijugador.png')` };
     }
-    const slug = this.rivalSlug;
-    const img = slug ? `assets/fondos1v1/${slug}_fondo.png` : 'assets/multijugador.png';
+    const slug = this.rivalSlugFondo;
+    const img = slug && slug !== 'gaucho'
+      ? `assets/fondos1v1/${slug}_fondo.png`
+      : 'assets/multijugador.png';
     return { 'background-image': `url('${img}')` };
   }
 
@@ -407,6 +455,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
     this.cancelarAullidoTimer();
+    this.cancelarDestelloTimer();
+    this.cancelarEspejismoTimers();
     this.rasgunoManoId = null;
 
     this.call('nueva-partida', this.construirBodyPartida());
@@ -446,6 +496,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
     this.cancelarAullidoTimer();
+    this.cancelarDestelloTimer();
+    this.cancelarEspejismoTimers();
     if (this.rasgunoWatchdog) {
       clearInterval(this.rasgunoWatchdog);
       this.rasgunoWatchdog = null;
@@ -521,7 +573,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private esperaAccionHumano(m: ManoState): boolean {
-    if (m.salpicaduraBloqueando || m.travesuraBloqueando || this.rasgunoBloqueandoEn(m)) return true;
+    if (m.salpicaduraBloqueando || m.travesuraBloqueando || this.rasgunoBloqueandoEn(m)
+      || m.destelloBloqueando || !!m.vistaHabilidadesRival?.destelloBloqueando
+      || m.espejismoBloqueando || !!m.vistaHabilidadesRival?.espejismoBloqueando) return true;
     if (m.envidoPendienteRespuestaHumano || m.trucoPendienteRespuestaHumano) return true;
     if (m.cartaMaquinaEnMesa) return true;
     if (m.cartaHumanoEnMesa) return false;
@@ -602,6 +656,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       && endpoint !== 'confirmar-travesura'
       && endpoint !== 'confirmar-rasguno'
       && endpoint !== 'confirmar-aullido'
+      && endpoint !== 'confirmar-destello'
+      && endpoint !== 'confirmar-espejismo'
       && endpoint !== 'ganar-automatico-debug'
       && this.accionesBloqueadasPorHabilidadRival) return;
     this.loading = true;
@@ -766,6 +822,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
+    this.cancelarDestelloTimer();
+    this.cancelarEspejismoTimers();
     this.call('nueva-partida', this.construirBodyPartida());
   }
 
@@ -887,6 +945,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.turnoBadge = 'Travesura: memorizá tus cartas...';
     } else if (this.salpicaduraRevelando) {
       this.turnoBadge = 'Salpicadura: mirá tus cartas originales...';
+    } else if (this.destelloRevelando) {
+      this.turnoBadge = 'Destello: la Luz Mala te confunde...';
+    } else if (this.espejismoRevelando) {
+      this.turnoBadge = 'Espejismo: no confíes en lo que ves...';
     } else {
       this.turnoBadge = esMiTurno
         ? 'Tu turno — jugá una carta o cantá'
@@ -903,23 +965,32 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     const cantOp = m.maquina?.mano?.length ?? 0;
     this.actualizarCartasRival(m, cantOp);
 
+    this.manejarSalpicadura(m);
+    this.manejarRasguno(m);
+    this.manejarTravesura(m);
+    this.manejarAullido(m);
+    this.manejarDestello(m);
+    this.manejarEspejismo(m);
+
     this.slots = [0, 1, 2].map(i => {
       const b = m.bazas?.[i];
       const idxActual = m.bazas?.length ?? 0;
       const pendingMaq = !b && i === idxActual && !!m.cartaMaquinaEnMesa;
       const pendingHum = !b && i === idxActual && !!m.cartaHumanoEnMesa && !m.cartaMaquinaEnMesa;
+      const espejismoOculto = pendingMaq && this.espejismoOcultandoMesa(m);
+      const espejismoParpadeoActivo = pendingMaq && this.espejismoAlternandoEnMesa(m);
       return {
         jugador: b?.cartaJugador ?? (pendingHum ? m.cartaHumanoEnMesa : undefined),
-        maquina: b?.cartaMaquina ?? (pendingMaq ? m.cartaMaquinaEnMesa : undefined),
+        maquina: espejismoOculto
+          ? undefined
+          : (b?.cartaMaquina ?? (pendingMaq ? this.cartaMaquinaVisual(m) : undefined)),
         pending: pendingMaq,
+        espejismoOculto,
+        espejismoParpadeo: espejismoParpadeoActivo && this.espejismoParpadeoAnim,
         winner: b?.ganador,
       };
     });
 
-    this.manejarSalpicadura(m);
-    this.manejarRasguno(m);
-    this.manejarTravesura(m);
-    this.manejarAullido(m);
     this.actualizarCartasMano(m);
 
     this.buildBtns(m, esMiTurno, pendEnv, pendTru);
@@ -1173,8 +1244,229 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  private destelloBloqueandoEn(m: ManoState): boolean {
+    return !!(
+      m.destelloBloqueando
+      || m.vistaHabilidadesRival?.destelloBloqueando
+    );
+  }
+
+  private cancelarDestelloTimer(): void {
+    if (this.destelloTimer) {
+      clearTimeout(this.destelloTimer);
+      this.destelloTimer = null;
+    }
+    if (this.destelloInterval) {
+      clearInterval(this.destelloInterval);
+      this.destelloInterval = null;
+    }
+    this.destelloRevelando = false;
+    this.destelloSegundos = 0;
+    this.destelloManoId = null;
+    this.destelloTriggerKey = null;
+  }
+
+  private manejarDestello(m: ManoState): void {
+    const bloqueando = this.destelloBloqueandoEn(m);
+    if (!bloqueando) {
+      if (!this.destelloTimer) {
+        this.destelloRevelando = false;
+        this.destelloSegundos = 0;
+        this.destelloManoId = null;
+        this.destelloTriggerKey = null;
+      }
+      return;
+    }
+
+    const triggerKey = `${m.id}-baza-${m.bazas?.length ?? 0}`;
+    if (this.destelloTriggerKey === triggerKey) return;
+
+    if (this.destelloTimer) clearTimeout(this.destelloTimer);
+    if (this.destelloInterval) clearInterval(this.destelloInterval);
+
+    this.destelloManoId = m.id;
+    this.destelloTriggerKey = triggerKey;
+    this.destelloRevelando = true;
+    this.destelloSegundos = DESTELLO_REVEAL_SEG;
+
+    this.destelloInterval = setInterval(() => {
+      this.destelloSegundos = Math.max(0, this.destelloSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.destelloTimer = setTimeout(() => {
+      this.destelloTimer = null;
+      if (this.destelloInterval) clearInterval(this.destelloInterval);
+      this.destelloInterval = null;
+      this.destelloRevelando = false;
+      this.destelloSegundos = 0;
+      this.cdr.markForCheck();
+      if (this.mano?.id === m.id) {
+        this.confirmarHabilidadRival('confirmar-destello', m.id);
+      }
+    }, DESTELLO_REVEAL_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
+  private espejismoBloqueandoEn(m: ManoState): boolean {
+    return !!(
+      m.espejismoBloqueando
+      || m.vistaHabilidadesRival?.espejismoBloqueando
+    );
+  }
+
+  private espejismoActivoEn(m: ManoState): boolean {
+    return !!(
+      m.espejismoActivo
+      || m.vistaHabilidadesRival?.espejismoActivo
+    );
+  }
+
+  private espejismoAlternandoEn(m: ManoState): boolean {
+    return !!(
+      m.espejismoAlternando
+      || m.vistaHabilidadesRival?.espejismoAlternando
+    );
+  }
+
+  /** Carta rival boca abajo mientras dura el cartel de Espejismo (3 s). */
+  private espejismoOcultandoMesa(m: ManoState): boolean {
+    return this.espejismoActivoEn(m)
+      && (this.espejismoBloqueandoEn(m) || this.espejismoRevelando);
+  }
+
+  private espejismoAlternandoEnMesa(m: ManoState): boolean {
+    return this.espejismoActivoEn(m)
+      && this.espejismoAlternandoEn(m)
+      && !this.espejismoOcultandoMesa(m);
+  }
+
+  private espejismoCartaFalsaDe(m: ManoState): Carta | null {
+    const ref = m.espejismoCartaFalsa ?? m.vistaHabilidadesRival?.espejismoCartaFalsa;
+    if (!ref) return null;
+    return this.normalizarCarta(ref as Carta);
+  }
+
+  private cartaMaquinaVisual(m: ManoState): Carta | undefined {
+    const real = m.cartaMaquinaEnMesa;
+    if (!real) return undefined;
+    if (this.espejismoOcultandoMesa(m)) return undefined;
+    if (!this.espejismoAlternandoEnMesa(m)) return this.normalizarCarta(real);
+
+    const fake = this.espejismoCartaFalsaDe(m);
+    if (!fake) return this.normalizarCarta(real);
+
+    return this.espejismoMostrarFake ? fake : this.normalizarCarta(real);
+  }
+
+  private cancelarEspejismoParpadeo(): void {
+    if (this.espejismoInterval) {
+      clearInterval(this.espejismoInterval);
+      this.espejismoInterval = null;
+    }
+    if (this.espejismoParpadeoTimeout) {
+      clearTimeout(this.espejismoParpadeoTimeout);
+      this.espejismoParpadeoTimeout = null;
+    }
+    this.espejismoParpadeoAnim = false;
+  }
+
+  private cancelarEspejismoTimers(): void {
+    if (this.espejismoTimer) {
+      clearTimeout(this.espejismoTimer);
+      this.espejismoTimer = null;
+    }
+    if (this.espejismoCountdownInterval) {
+      clearInterval(this.espejismoCountdownInterval);
+      this.espejismoCountdownInterval = null;
+    }
+    this.cancelarEspejismoParpadeo();
+    this.espejismoRevelando = false;
+    this.espejismoSegundos = 0;
+    this.espejismoManoId = null;
+    this.espejismoMostrarFake = false;
+  }
+
+  private iniciarEspejismoParpadeo(m: ManoState): void {
+    if (this.espejismoInterval) return;
+
+    const primero = !!(m.espejismoMostrarFakePrimero ?? m.vistaHabilidadesRival?.espejismoMostrarFakePrimero);
+    this.espejismoMostrarFake = primero;
+
+    this.espejismoInterval = setInterval(() => {
+      this.espejismoParpadeoAnim = true;
+      this.espejismoMostrarFake = !this.espejismoMostrarFake;
+      if (this.espejismoParpadeoTimeout) clearTimeout(this.espejismoParpadeoTimeout);
+      this.espejismoParpadeoTimeout = setTimeout(() => {
+        this.espejismoParpadeoAnim = false;
+        this.cdr.markForCheck();
+      }, 280);
+      if (this.mano) this.actualizarCartaEspejismoEnMesa(this.mano);
+      this.cdr.markForCheck();
+    }, ESPEJISMO_PARPADEO_MS);
+  }
+
+  private actualizarCartaEspejismoEnMesa(m: ManoState): void {
+    const idx = m.bazas?.length ?? 0;
+    if (!this.slots[idx]?.pending) return;
+    const oculto = this.espejismoOcultandoMesa(m);
+    this.slots[idx] = {
+      ...this.slots[idx],
+      espejismoOculto: oculto,
+      maquina: oculto ? undefined : this.cartaMaquinaVisual(m),
+      espejismoParpadeo: !oculto && this.espejismoParpadeoAnim,
+    };
+  }
+
+  private manejarEspejismo(m: ManoState): void {
+    if (!this.espejismoActivoEn(m)) {
+      if (!this.espejismoTimer && !this.espejismoInterval) {
+        this.cancelarEspejismoTimers();
+      }
+      return;
+    }
+
+    if (this.espejismoAlternandoEn(m) && !this.espejismoBloqueandoEn(m)) {
+      this.iniciarEspejismoParpadeo(m);
+    }
+
+    const bloqueando = this.espejismoBloqueandoEn(m);
+    if (!bloqueando) return;
+
+    const triggerKey = `${m.id}-espejismo-baza0`;
+    if (this.espejismoManoId === triggerKey) return;
+
+    if (this.espejismoTimer) clearTimeout(this.espejismoTimer);
+    if (this.espejismoCountdownInterval) clearInterval(this.espejismoCountdownInterval);
+
+    this.espejismoManoId = triggerKey;
+    this.espejismoRevelando = true;
+    this.espejismoSegundos = ESPEJISMO_REVEAL_SEG;
+    this.actualizarCartaEspejismoEnMesa(m);
+
+    this.espejismoCountdownInterval = setInterval(() => {
+      this.espejismoSegundos = Math.max(0, this.espejismoSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.espejismoTimer = setTimeout(() => {
+      this.espejismoTimer = null;
+      if (this.espejismoCountdownInterval) clearInterval(this.espejismoCountdownInterval);
+      this.espejismoCountdownInterval = null;
+      this.espejismoRevelando = false;
+      this.espejismoSegundos = 0;
+      this.cdr.markForCheck();
+      if (this.mano?.id === m.id) {
+        this.confirmarHabilidadRival('confirmar-espejismo', m.id);
+      }
+    }, ESPEJISMO_REVEAL_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
   private confirmarHabilidadRival(
-    endpoint: 'confirmar-salpicadura' | 'confirmar-travesura' | 'confirmar-rasguno' | 'confirmar-aullido',
+    endpoint: 'confirmar-salpicadura' | 'confirmar-travesura' | 'confirmar-rasguno' | 'confirmar-aullido' | 'confirmar-destello' | 'confirmar-espejismo',
     manoId: string,
   ): void {
     if (endpoint === 'confirmar-rasguno') this.rasgunoConfirmando = true;
@@ -1184,7 +1476,14 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rasgunoManoId = null;
       this.rasgunoConfirmando = false;
       this.aullidoManoId = null;
+      this.destelloManoId = null;
+      this.destelloTriggerKey = null;
+      this.espejismoManoId = null;
       this.recibirMano(data);
+      if (endpoint === 'confirmar-espejismo' && this.mano) {
+        this.iniciarEspejismoParpadeo(this.mano);
+        this.actualizarCartaEspejismoEnMesa(this.mano);
+      }
       return this.correrMaquinas();
     }).catch(err => {
       this.rasgunoManoId = null;
@@ -1203,6 +1502,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.aullidoBloqueandoEn(data)) {
         this.cancelarAullidoTimer();
       }
+      if (!this.destelloBloqueandoEn(data)) {
+        this.cancelarDestelloTimer();
+      }
+      if (!this.espejismoActivoEn(data)) {
+        this.cancelarEspejismoTimers();
+      }
     }
     this.mano = data;
     this.updateEventosHabilidad(data);
@@ -1212,6 +1517,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.aullidoBloqueandoEn(data) && this.aullidoManoId !== data.id) {
       this.manejarAullido(data);
+    }
+    if (this.destelloBloqueandoEn(data) && this.destelloTriggerKey !== `${data.id}-baza-${data.bazas?.length ?? 0}`) {
+      this.manejarDestello(data);
+    }
+    if (this.espejismoBloqueandoEn(data) && this.espejismoManoId !== `${data.id}-espejismo-baza0`) {
+      this.manejarEspejismo(data);
     }
   }
 

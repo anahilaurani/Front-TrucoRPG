@@ -95,9 +95,16 @@ export const OPONENTES: Oponente[] = [
         {
           nombre: 'Destello',
           texto:
-            'Cada 2 rondas, la Luz Mala destella y te obliga a jugar una carta al azar de tu mano, sin que puedas elegir cuál.',
+            'Cada 2 turnos en bazas 1 o 2, la Luz Mala te confunde y te obliga a jugar una carta al azar (50% en baza 1, 50% en baza 2).',
           tag: 'HABILIDAD',
           nota: 'Guardá tu mejor carta con cuidado: el destello no respeta tu estrategia.',
+        },
+        {
+          nombre: 'Espejismo',
+          texto:
+            'Si la Luz Mala es mano y abre la baza 1, su carta parpadea mostrando un número y palo falsos (solo visual) hasta que respondas.',
+          tag: 'PASIVA',
+          nota: 'La carta real no cambia: solo tu vista se confunde.',
         },
       ],
     },
