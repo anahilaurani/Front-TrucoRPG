@@ -938,6 +938,107 @@
   color: #7fd4ff;
 }
 
+.mandinga-fases {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mandinga-fase-wrap {
+  position: relative;
+}
+
+.mandinga-fase {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #553300;
+  color: #886644;
+  background: #1a1208;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.45;
+  cursor: help;
+}
+
+.mandinga-fase.activa {
+  opacity: 1;
+  color: #ffcc44;
+  border-color: #cc8800;
+  box-shadow: 0 0 8px rgba(255, 180, 0, 0.5);
+}
+
+.mandinga-fase-tip-float {
+  position: fixed;
+  z-index: 500;
+  width: 230px;
+  padding: 10px 12px;
+  background: rgba(12, 8, 6, 0.97);
+  border: 2px solid #aa2222;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.mandinga-fase-tip-titulo {
+  font-family: var(--font-data);
+  font-size: 16px;
+  color: #ff6666;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.mandinga-fase-tip-rango {
+  display: inline-block;
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: #ffcc44;
+  background: rgba(80, 40, 0, 0.6);
+  border: 1px solid #664400;
+  border-radius: 3px;
+  padding: 1px 6px;
+  margin-bottom: 8px;
+}
+
+.mandinga-fase-tip-texto {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 14px;
+  color: var(--cream);
+  line-height: 1.35;
+}
+
+.mandinga-box {
+  background: rgba(40, 8, 8, 0.94);
+  border-color: #aa2222;
+}
+
+.mandinga-titulo {
+  color: #ff6666;
+}
+
+.mandinga-sub {
+  color: #ffcccc;
+}
+
+.mandinga-maldicion-activa {
+  margin-top: 10px;
+  padding: 6px 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  color: #ff8888;
+  background: rgba(60, 10, 10, 0.85);
+  border: 1px solid #aa3333;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(255, 60, 60, 0.25);
+}
+
 @keyframes toastIn {
   from {
     opacity: 0;

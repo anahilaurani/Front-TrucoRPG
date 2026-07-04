@@ -16,18 +16,36 @@
 
     @if (rival) {
     <div class="rival-panel-left">
-      <div class="rival-nombre-panel">⚔ {{ rival.nombre }}</div>
+      <div class="rival-nombre-panel">{{ rivalIconoPanel }} {{ rival.nombre }}</div>
       <div class="heroe-desc">{{ rival.descripcionHabilidad }}</div>
       @if (vistaRival?.ultimoMensajeHabilidad) {
       <div class="heroe-desc rival-log-msg">{{ mensajeHabilidadLimpio(vistaRival?.ultimoMensajeHabilidad) }}</div>
       }
+      @if (esMandinga) {
+      <div class="mandinga-fases">
+        @for (fase of mandingaFases; track fase.titulo; let i = $index) {
+        <div class="mandinga-fase-wrap" (mouseenter)="abrirMandingaFaseTip(i, $event)" (mouseleave)="cerrarMandingaFaseTip()">
+          <span class="mandinga-fase" [class.activa]="mandingaFaseDesbloqueada(i)">{{ mandingaFaseLabels[i] }}</span>
+        </div>
+        }
+      </div>
+      }
     </div>
+    }
+
+    @if (esMandinga && mandingaMaldicionActiva) {
+    <div class="mandinga-maldicion-activa">Maldición Activa</div>
     }
 
     <!-- SOLO PRUEBAS — Eliminar antes de producción -->
     @if (mostrarBotonGanarAutomatico) {
     <button class="debug-win-btn" (click)="ganarAutomaticoDebug()">
       Ganar automáticamente
+    </button>
+    }
+    @if (mostrarBotonGanar10Puntos) {
+    <button class="debug-win-btn" (click)="ganar10PuntosDebug()">
+      Ganar 10puntos
     </button>
     }
   </aside>
@@ -314,9 +332,45 @@
 </div>
 }
 
+@if (mandingaEspejoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box mandinga-box">
+    <div class="salpicadura-titulo mandinga-titulo">¡{{ rival?.nombre ?? 'El Mandinga' }} usa El Espejo!</div>
+    <div class="salpicadura-sub mandinga-sub">Copia tu última carta más alta jugada... {{ mandingaEspejoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (mandingaEnganoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box mandinga-box">
+    <div class="salpicadura-titulo mandinga-titulo">¡{{ rival?.nombre ?? 'El Mandinga' }} usa El Engaño!</div>
+    <div class="salpicadura-sub mandinga-sub">Memorizá tus cartas... {{ mandingaEnganoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (mandingaMaldicionRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box mandinga-box">
+    <div class="salpicadura-titulo mandinga-titulo">¡{{ rival?.nombre ?? 'El Mandinga' }} usa El Pacto!</div>
+    <div class="salpicadura-sub mandinga-sub">La mesa está maldita... {{ mandingaMaldicionSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
 <!-- Toast -->
 @if (toastMsg) {
 <div class="toast" [class.toast-info]="toastTipo === 'info'">{{ toastMsg }}</div>
+}
+
+@if (mandingaFaseTipAbierta !== null && mandingaFases[mandingaFaseTipAbierta]; as fase) {
+<div class="mandinga-fase-tip-float" role="tooltip"
+  [style.top.px]="mandingaFaseTipY" [style.left.px]="mandingaFaseTipX">
+  <div class="mandinga-fase-tip-titulo">{{ fase.titulo }}</div>
+  <div class="mandinga-fase-tip-rango">{{ fase.rango }}</div>
+  <p class="mandinga-fase-tip-texto">{{ fase.texto }}</p>
+</div>
 }
 
 <!-- ── CONFIRMAR SALIR ────────────────────────────────────────────────────── -->
