@@ -47,6 +47,14 @@ const ERRORES_SERVIDOR: Record<string, string> = {
   'DuplicateEmail':                              'El email ya está registrado.',
 };
 
+function extraerMensajeErrorApi(err: { error?: unknown }): string {
+  const body = err.error;
+  if (!body || typeof body !== 'object') return '';
+  const data = body as Record<string, unknown>;
+  const candidato = data['detail'] ?? data['message'] ?? data['error'] ?? data['title'];
+  return typeof candidato === 'string' ? candidato : '';
+}
+
 function traducirErrorServidor(msg: string): string {
   for (const [clave, traduccion] of Object.entries(ERRORES_SERVIDOR)) {
     if (msg.includes(clave)) return traduccion;
@@ -114,7 +122,7 @@ export class RegistroComponent {
         setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       error: (err) => {
-        const raw = err.error?.error ?? err.error?.message ?? '';
+        const raw = extraerMensajeErrorApi(err);
         this.errorServidor = raw ? traducirErrorServidor(raw) : 'Error al registrarse. Intentá de nuevo.';
         this.toast.error(this.errorServidor);
         this.cargando = false;

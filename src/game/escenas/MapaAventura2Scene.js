@@ -7,6 +7,7 @@ import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
 
 const RIVAL_LOBIZON_NIVEL = 3;
 const RIVAL_LUZMALA_NIVEL = 4;
+const RIVAL_MANDINGA_NIVEL = 5;
 
 const JEFE1_X = 475;
 const JEFE1_Y = 445;
@@ -96,14 +97,17 @@ export default class MapaAventura2Scene extends BaseScene {
     this.puedePelearLuzMala = false;
     this.cargarPuedePelearLobizon();
     this.cargarPuedePelearLuzMala(false);
+    this.cargarDerrotaLuzMala(false);
 
     this._onProgresoActualizado = () => {
       this.cargarPuedePelearLobizon();
       this.cargarPuedePelearLuzMala(true);
+      this.cargarDerrotaLuzMala(true);
     };
     this._onTrucoEnd = () => {
       this.cargarPuedePelearLobizon();
       this.cargarPuedePelearLuzMala(true);
+      this.cargarDerrotaLuzMala(true);
     };
     window.addEventListener('historia:progreso-actualizado', this._onProgresoActualizado);
     window.addEventListener('truco-solo:end', this._onTrucoEnd);
@@ -130,7 +134,7 @@ export default class MapaAventura2Scene extends BaseScene {
   }
 
   _crearJefeLuzMala() {
-    new Oponente(this, JEFE2_X, JEFE2_Y, 'luzmala').setDepth(0).setScale(2);
+    this.jefeLuzMala = new Oponente(this, JEFE2_X, JEFE2_Y, 'luzmala').setDepth(0).setScale(2);
     this.zonaJefe2 = new ZonaInteraccionNpc(this, JEFE2_X, JEFE2_Y);
     this.etiquetaBloqueoLuzMala = this.add
       .text(JEFE2_X, JEFE2_Y - 55, 'Derrotá al Lobizón antes', {
@@ -203,6 +207,35 @@ export default class MapaAventura2Scene extends BaseScene {
     this.etiquetaBloqueoLuzMala.setVisible(!this.puedePelearLuzMala);
   }
 
+  async cargarDerrotaLuzMala(animar = false) {
+    try {
+      const res = await fetch(
+        `/api/historia/rivales/${RIVAL_MANDINGA_NIVEL}/puede-pelear`,
+        { headers: authHeaders() },
+      );
+      if (!res.ok) return;
+
+      const data = await res.json();
+      this.luzMalaDerrotada = !!data.puedePelear;
+      this._actualizarDerrotaLuzMala(animar);
+    } catch {
+      this.luzMalaDerrotada = false;
+    }
+  }
+
+  _actualizarDerrotaLuzMala(animar) {
+    if (!this.luzMalaDerrotada) return;
+
+    const jefe = this.jefeLuzMala;
+    if (!jefe || jefe.derrotado || jefe.cayendo) return;
+
+    if (animar) {
+      this.animarDerrotaJefe(jefe);
+    } else {
+      jefe.caerDerrotado(false);
+    }
+  }
+
   iniciarPelea(rivalNivel) {
     if (this.claseHeroe !== null) {
       localStorage.setItem('heroeId', String(this.claseHeroe));
@@ -232,10 +265,15 @@ export default class MapaAventura2Scene extends BaseScene {
       !this.jefeLobizon.derrotado &&
       !this.jefeLobizon.cayendo;
 
+    const luzMalaDisponible =
+      this.puedePelearLuzMala &&
+      !this.jefeLuzMala.derrotado &&
+      !this.jefeLuzMala.cayendo;
+
     const enZonaJefe1 = this.zonaJefe1.update(this.JugadorPrincipal, lobizonDisponible);
     const enZonaJefe2 = this.zonaJefe2.update(
       this.JugadorPrincipal,
-      this.puedePelearLuzMala,
+      luzMalaDisponible,
     );
 
     const interactuar =
@@ -246,7 +284,7 @@ export default class MapaAventura2Scene extends BaseScene {
       this.iniciarPelea(RIVAL_LOBIZON_NIVEL);
     }
 
-    if (enZonaJefe2 && interactuar && this.puedePelearLuzMala) {
+    if (enZonaJefe2 && interactuar && luzMalaDisponible) {
       this.iniciarPelea(RIVAL_LUZMALA_NIVEL);
     }
 

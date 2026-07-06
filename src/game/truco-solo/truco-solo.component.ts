@@ -14,6 +14,8 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { OPONENTES } from '../data/oponente';
+import { FaseOponente } from '../../app/interfaces/faseOponente';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +54,20 @@ export interface VistaHabilidadesRival {
   rasgunoActivo?: boolean;
   rasgunoBloqueando?: boolean;
   aullidoBloqueando?: boolean;
+  destelloBloqueando?: boolean;
+  espejismoActivo?: boolean;
+  espejismoBloqueando?: boolean;
+  espejismoAlternando?: boolean;
+  espejismoMostrarFakePrimero?: boolean;
+  espejismoCartaFalsa?: { numero: number; palo: string };
   cartasOcultasTravesura?: { numero: number; palo: string }[];
+  mandingaFase2Desbloqueada?: boolean;
+  mandingaFase3Desbloqueada?: boolean;
+  mandingaEspejoBloqueando?: boolean;
+  mandingaEnganoBloqueando?: boolean;
+  mandingaEnganoManoOculta?: boolean;
+  mandingaMaldicionBloqueando?: boolean;
+  mandingaMaldicionActivaEnMano?: boolean;
   ultimoMensajeHabilidad?: string;
 }
 
@@ -97,7 +112,20 @@ export interface ManoState {
   rasgunoActivo?: boolean;
   rasgunoBloqueando?: boolean;
   aullidoBloqueando?: boolean;
+  destelloBloqueando?: boolean;
+  espejismoActivo?: boolean;
+  espejismoBloqueando?: boolean;
+  espejismoAlternando?: boolean;
+  espejismoMostrarFakePrimero?: boolean;
+  espejismoCartaFalsa?: Carta;
   cartasOcultasTravesura?: { numero: number; palo: string }[];
+  mandingaFase2Desbloqueada?: boolean;
+  mandingaFase3Desbloqueada?: boolean;
+  mandingaEspejoBloqueando?: boolean;
+  mandingaEnganoBloqueando?: boolean;
+  mandingaEnganoManoOculta?: boolean;
+  mandingaMaldicionBloqueando?: boolean;
+  mandingaMaldicionActivaEnMano?: boolean;
 }
 
 export interface Btn {
@@ -111,6 +139,8 @@ export interface Slot {
   jugador?: Carta;
   maquina?: Carta;
   pending: boolean;
+  espejismoOculto?: boolean;
+  espejismoParpadeo?: boolean;
   winner?: 'Humano' | 'Maquina' | 'Parda';
 }
 
@@ -158,6 +188,16 @@ const SALPICADURA_REVEAL_SEG = 5;
 const TRAVESURA_REVEAL_SEG = 5;
 const RASGUNO_REVEAL_SEG = 3;
 const AULLIDO_REVEAL_SEG = 3;
+const DESTELLO_REVEAL_SEG = 3;
+const ESPEJISMO_REVEAL_SEG = 3;
+const ESPEJISMO_PARPADEO_MS = 2000;
+const MANDINGA_ESPEJO_SEG = 3;
+const MANDINGA_ENGANO_SEG = 5;
+const MANDINGA_MALDICION_SEG = 3;
+
+const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
+  mandinga: 'Mandinga_batalla.png',
+};
 
 // ── Componente ───────────────────────────────────────────────────────────────
 
@@ -207,20 +247,40 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.esPartidaHistoria(this.mano) && !this.gameOver && !!this.mano;
   }
 
+  get mostrarBotonGanar10Puntos(): boolean {
+    return this.mostrarBotonGanarAutomatico && this.esMandinga;
+  }
+
   get accionesBloqueadasPorHabilidadRival(): boolean {
     const m = this.mano;
     return this.salpicaduraRevelando
       || this.travesuraRevelando
       || this.rasgunoRevelando
       || this.rasgunoConfirmando
+      || this.destelloRevelando
+      || this.espejismoRevelando
+      || this.mandingaEspejoRevelando
+      || this.mandingaEnganoRevelando
+      || this.mandingaMaldicionRevelando
+      || this.aullidoRevelando
       || !!this.vistaRival?.salpicaduraBloqueando
       || !!this.vistaRival?.travesuraBloqueando
       || !!this.vistaRival?.rasgunoBloqueando
       || !!this.vistaRival?.aullidoBloqueando
+      || !!this.vistaRival?.destelloBloqueando
+      || !!this.vistaRival?.espejismoBloqueando
+      || !!this.vistaRival?.mandingaEspejoBloqueando
+      || !!this.vistaRival?.mandingaEnganoBloqueando
+      || !!this.vistaRival?.mandingaMaldicionBloqueando
       || !!m?.salpicaduraBloqueando
       || !!m?.travesuraBloqueando
       || !!m?.rasgunoBloqueando
-      || !!m?.aullidoBloqueando;
+      || !!m?.aullidoBloqueando
+      || !!m?.destelloBloqueando
+      || !!m?.espejismoBloqueando
+      || !!m?.mandingaEspejoBloqueando
+      || !!m?.mandingaEnganoBloqueando
+      || !!m?.mandingaMaldicionBloqueando;
   }
 
   /** @deprecated usar accionesBloqueadasPorHabilidadRival */
@@ -236,6 +296,18 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   rasgunoSegundos = 0;
   aullidoRevelando = false;
   aullidoSegundos = 0;
+  destelloRevelando = false;
+  destelloSegundos = 0;
+  espejismoRevelando = false;
+  espejismoSegundos = 0;
+  espejismoMostrarFake = false;
+  espejismoParpadeoAnim = false;
+  mandingaEspejoRevelando = false;
+  mandingaEspejoSegundos = 0;
+  mandingaEnganoRevelando = false;
+  mandingaEnganoSegundos = 0;
+  mandingaMaldicionRevelando = false;
+  mandingaMaldicionSegundos = 0;
   private salpicaduraCartasOriginales: Carta[] = [];
   private rasgunoCartasOriginales: Carta[] = [];
 
@@ -314,6 +386,24 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private aullidoManoId: string | null = null;
   private aullidoTimer: ReturnType<typeof setTimeout> | null = null;
   private aullidoInterval: ReturnType<typeof setInterval> | null = null;
+  private destelloManoId: string | null = null;
+  private destelloTriggerKey: string | null = null;
+  private destelloTimer: ReturnType<typeof setTimeout> | null = null;
+  private destelloInterval: ReturnType<typeof setInterval> | null = null;
+  private espejismoManoId: string | null = null;
+  private espejismoTimer: ReturnType<typeof setTimeout> | null = null;
+  private espejismoInterval: ReturnType<typeof setInterval> | null = null;
+  private espejismoCountdownInterval: ReturnType<typeof setInterval> | null = null;
+  private espejismoParpadeoTimeout: ReturnType<typeof setTimeout> | null = null;
+  private mandingaEspejoManoId: string | null = null;
+  private mandingaEspejoTimer: ReturnType<typeof setTimeout> | null = null;
+  private mandingaEspejoInterval: ReturnType<typeof setInterval> | null = null;
+  private mandingaEnganoManoId: string | null = null;
+  private mandingaEnganoTimer: ReturnType<typeof setTimeout> | null = null;
+  private mandingaEnganoInterval: ReturnType<typeof setInterval> | null = null;
+  private mandingaMaldicionManoId: string | null = null;
+  private mandingaMaldicionTimer: ReturnType<typeof setTimeout> | null = null;
+  private mandingaMaldicionInterval: ReturnType<typeof setInterval> | null = null;
   private rasgunoWatchdog: ReturnType<typeof setInterval> | null = null;
   private rasgunoConfirmando = false;
   private nuevaManoEnCurso = false;
@@ -323,7 +413,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Imagen del rival ──────────────────────────────────────────────────────
 
-  // Slug normalizado del rival (ej. "El Pomberito" -> "pomberito"). Vac\u00edo si no hay rival.
+  // Slug normalizado del rival (ej. "El Pomberito" -> "pomberito"). Vacío si no hay rival.
   get rivalSlug(): string {
     if (!this.rival?.nombre) return '';
     return this.rival.nombre
@@ -335,6 +425,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       .trim();
   }
 
+  get rivalSlugFondo(): string {
+    const slug = this.rivalSlug;
+    if (slug === 'luzmala') return 'lobizon';
+    return slug || 'gaucho';
+  }
+
   // Clase CSS por personaje para poder estilar cada uno por separado.
   get rivalImgClase(): string {
     return `rival-${this.rivalSlug || 'gaucho'}`;
@@ -344,16 +440,78 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.escenarioPractica !== null) return 'assets/gaucho.png';
     const slug = this.rivalSlug;
     if (!slug) return 'assets/gaucho.png';
-    return `assets/oponentes1v1/${slug}_batalla.png`;
+    const archivo = RIVAL_BATALLA_ARCHIVO[slug] ?? `${slug}_batalla.png`;
+    return `assets/oponentes1v1/${archivo}`;
   }
 
   get fondoStyle(): { [key: string]: string } {
     if (this.escenarioPractica !== null) {
       return { 'background-image': `url('assets/multijugador.png')` };
     }
-    const slug = this.rivalSlug;
-    const img = slug ? `assets/fondos1v1/${slug}_fondo.png` : 'assets/multijugador.png';
+    const slug = this.rivalSlugFondo;
+    const img = slug && slug !== 'gaucho'
+      ? `assets/fondos1v1/${slug}_fondo.png`
+      : 'assets/multijugador.png';
     return { 'background-image': `url('${img}')` };
+  }
+
+  get esMandinga(): boolean {
+    return this.rivalSlug === 'mandinga';
+  }
+
+  get rivalIconoPanel(): string {
+    return this.esMandinga ? '😈' : '⚔';
+  }
+
+  readonly mandingaFaseLabels = ['I', 'II', 'III'] as const;
+
+  get mandingaFases(): FaseOponente[] {
+    return OPONENTES.find(o => o.id === 'mandinga')?.fases ?? [];
+  }
+
+  mandingaFaseDesbloqueada(index: number): boolean {
+    if (index === 0) return true;
+    if (index === 1) return this.mandingaFase2Activa;
+    if (index === 2) return this.mandingaFase3Activa;
+    return false;
+  }
+
+  mandingaFaseTipAbierta: number | null = null;
+  mandingaFaseTipX = 0;
+  mandingaFaseTipY = 0;
+
+  abrirMandingaFaseTip(index: number, event: MouseEvent): void {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const anchoTip = 230;
+    const margen = 8;
+    let x = rect.right + 10;
+    if (x + anchoTip > window.innerWidth - margen) {
+      x = rect.left - anchoTip - 10;
+    }
+    this.mandingaFaseTipAbierta = index;
+    this.mandingaFaseTipX = Math.max(margen, x);
+    this.mandingaFaseTipY = rect.top + rect.height / 2;
+    this.cdr.markForCheck();
+  }
+
+  cerrarMandingaFaseTip(): void {
+    this.mandingaFaseTipAbierta = null;
+    this.cdr.markForCheck();
+  }
+
+  get mandingaFase2Activa(): boolean {
+    return !!(this.vistaRival?.mandingaFase2Desbloqueada);
+  }
+
+  get mandingaFase3Activa(): boolean {
+    return !!(this.vistaRival?.mandingaFase3Desbloqueada);
+  }
+
+  get mandingaMaldicionActiva(): boolean {
+    return !!(
+      this.mano?.mandingaMaldicionActivaEnMano
+      || this.vistaRival?.mandingaMaldicionActivaEnMano
+    );
   }
 
   // ── Mini popups de info del panel derecho (habilidades) ───────────────────
@@ -408,6 +566,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
     this.cancelarAullidoTimer();
+    this.cancelarDestelloTimer();
+    this.cancelarEspejismoTimers();
+    this.cancelarMandingaTimers();
     this.rasgunoManoId = null;
 
     this.call('nueva-partida', this.construirBodyPartida());
@@ -447,6 +608,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
     this.cancelarAullidoTimer();
+    this.cancelarDestelloTimer();
+    this.cancelarEspejismoTimers();
+    this.cancelarMandingaTimers();
     if (this.rasgunoWatchdog) {
       clearInterval(this.rasgunoWatchdog);
       this.rasgunoWatchdog = null;
@@ -522,7 +686,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private esperaAccionHumano(m: ManoState): boolean {
-    if (m.salpicaduraBloqueando || m.travesuraBloqueando || this.rasgunoBloqueandoEn(m)) return true;
+    if (m.salpicaduraBloqueando || m.travesuraBloqueando || this.rasgunoBloqueandoEn(m)
+      || m.destelloBloqueando || !!m.vistaHabilidadesRival?.destelloBloqueando
+      || m.espejismoBloqueando || !!m.vistaHabilidadesRival?.espejismoBloqueando
+      || m.mandingaEspejoBloqueando || !!m.vistaHabilidadesRival?.mandingaEspejoBloqueando
+      || m.mandingaEnganoBloqueando || !!m.vistaHabilidadesRival?.mandingaEnganoBloqueando
+      || m.mandingaMaldicionBloqueando || !!m.vistaHabilidadesRival?.mandingaMaldicionBloqueando) return true;
     if (m.envidoPendienteRespuestaHumano || m.trucoPendienteRespuestaHumano) return true;
     if (m.cartaMaquinaEnMesa) return true;
     if (m.cartaHumanoEnMesa) return false;
@@ -603,7 +772,13 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       && endpoint !== 'confirmar-travesura'
       && endpoint !== 'confirmar-rasguno'
       && endpoint !== 'confirmar-aullido'
+      && endpoint !== 'confirmar-destello'
+      && endpoint !== 'confirmar-espejismo'
+      && endpoint !== 'confirmar-mandinga-espejo'
+      && endpoint !== 'confirmar-mandinga-engano'
+      && endpoint !== 'confirmar-mandinga-maldicion'
       && endpoint !== 'ganar-automatico-debug'
+      && endpoint !== 'sumar-puntos-humano-debug'
       && this.accionesBloqueadasPorHabilidadRival) return;
     this.loading = true;
 
@@ -767,6 +942,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
+    this.cancelarDestelloTimer();
+    this.cancelarEspejismoTimers();
     this.call('nueva-partida', this.construirBodyPartida());
   }
 
@@ -804,6 +981,11 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
     this.call('ganar-automatico-debug', { manoId: this.mano.id });
+  }
+
+  ganar10PuntosDebug(): void {
+    if (!this.mano || !this.esMandinga) return;
+    this.call('sumar-puntos-humano-debug', { manoId: this.mano.id });
   }
 
   private registrarVictoriaHistoria(m: ManoState): void {
@@ -888,6 +1070,16 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.turnoBadge = 'Travesura: memorizá tus cartas...';
     } else if (this.salpicaduraRevelando) {
       this.turnoBadge = 'Salpicadura: mirá tus cartas originales...';
+    } else if (this.destelloRevelando) {
+      this.turnoBadge = 'Destello: la Luz Mala te confunde...';
+    } else if (this.espejismoRevelando) {
+      this.turnoBadge = 'Espejismo: no confíes en lo que ves...';
+    } else if (this.mandingaEspejoRevelando) {
+      this.turnoBadge = 'El Espejo: copia tu carta más alta...';
+    } else if (this.mandingaEnganoRevelando) {
+      this.turnoBadge = 'El Engaño: memorizá tus cartas...';
+    } else if (this.mandingaMaldicionRevelando) {
+      this.turnoBadge = 'El Pacto: la mesa está maldita...';
     } else {
       this.turnoBadge = esMiTurno
         ? 'Tu turno — jugá una carta o cantá'
@@ -904,23 +1096,35 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     const cantOp = m.maquina?.mano?.length ?? 0;
     this.actualizarCartasRival(m, cantOp);
 
+    this.manejarSalpicadura(m);
+    this.manejarRasguno(m);
+    this.manejarTravesura(m);
+    this.manejarAullido(m);
+    this.manejarDestello(m);
+    this.manejarEspejismo(m);
+    this.manejarMandingaEspejo(m);
+    this.manejarMandingaEngano(m);
+    this.manejarMandingaMaldicion(m);
+
     this.slots = [0, 1, 2].map(i => {
       const b = m.bazas?.[i];
       const idxActual = m.bazas?.length ?? 0;
       const pendingMaq = !b && i === idxActual && !!m.cartaMaquinaEnMesa;
       const pendingHum = !b && i === idxActual && !!m.cartaHumanoEnMesa && !m.cartaMaquinaEnMesa;
+      const espejismoOculto = pendingMaq && this.espejismoOcultandoMesa(m);
+      const espejismoParpadeoActivo = pendingMaq && this.espejismoAlternandoEnMesa(m);
       return {
         jugador: b?.cartaJugador ?? (pendingHum ? m.cartaHumanoEnMesa : undefined),
-        maquina: b?.cartaMaquina ?? (pendingMaq ? m.cartaMaquinaEnMesa : undefined),
+        maquina: espejismoOculto
+          ? undefined
+          : (b?.cartaMaquina ?? (pendingMaq ? this.cartaMaquinaVisual(m) : undefined)),
         pending: pendingMaq,
+        espejismoOculto,
+        espejismoParpadeo: espejismoParpadeoActivo && this.espejismoParpadeoAnim,
         winner: b?.ganador,
       };
     });
 
-    this.manejarSalpicadura(m);
-    this.manejarRasguno(m);
-    this.manejarTravesura(m);
-    this.manejarAullido(m);
     this.actualizarCartasMano(m);
 
     this.buildBtns(m, esMiTurno, pendEnv, pendTru);
@@ -987,6 +1191,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private cartaEsOculta(carta: Carta, m: ManoState): boolean {
+    if (this.mandingaEnganoRevelando || this.mandingaEnganoBloqueandoEn(m)) {
+      return false;
+    }
+    if (this.mandingaEnganoManoOcultaEn(m)) {
+      return true;
+    }
     if (this.travesuraRevelando || m.travesuraBloqueando || !!m.vistaHabilidadesRival?.travesuraBloqueando) {
       return false;
     }
@@ -1174,8 +1384,390 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  private destelloBloqueandoEn(m: ManoState): boolean {
+    return !!(
+      m.destelloBloqueando
+      || m.vistaHabilidadesRival?.destelloBloqueando
+    );
+  }
+
+  private cancelarDestelloTimer(): void {
+    if (this.destelloTimer) {
+      clearTimeout(this.destelloTimer);
+      this.destelloTimer = null;
+    }
+    if (this.destelloInterval) {
+      clearInterval(this.destelloInterval);
+      this.destelloInterval = null;
+    }
+    this.destelloRevelando = false;
+    this.destelloSegundos = 0;
+    this.destelloManoId = null;
+    this.destelloTriggerKey = null;
+  }
+
+  private manejarDestello(m: ManoState): void {
+    const bloqueando = this.destelloBloqueandoEn(m);
+    if (!bloqueando) {
+      if (!this.destelloTimer) {
+        this.destelloRevelando = false;
+        this.destelloSegundos = 0;
+        this.destelloManoId = null;
+        this.destelloTriggerKey = null;
+      }
+      return;
+    }
+
+    const triggerKey = `${m.id}-baza-${m.bazas?.length ?? 0}`;
+    if (this.destelloTriggerKey === triggerKey) return;
+
+    if (this.destelloTimer) clearTimeout(this.destelloTimer);
+    if (this.destelloInterval) clearInterval(this.destelloInterval);
+
+    this.destelloManoId = m.id;
+    this.destelloTriggerKey = triggerKey;
+    this.destelloRevelando = true;
+    this.destelloSegundos = DESTELLO_REVEAL_SEG;
+
+    this.destelloInterval = setInterval(() => {
+      this.destelloSegundos = Math.max(0, this.destelloSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.destelloTimer = setTimeout(() => {
+      this.destelloTimer = null;
+      if (this.destelloInterval) clearInterval(this.destelloInterval);
+      this.destelloInterval = null;
+      this.destelloRevelando = false;
+      this.destelloSegundos = 0;
+      this.cdr.markForCheck();
+      if (this.mano?.id === m.id) {
+        this.confirmarHabilidadRival('confirmar-destello', m.id);
+      }
+    }, DESTELLO_REVEAL_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
+  private espejismoBloqueandoEn(m: ManoState): boolean {
+    return !!(
+      m.espejismoBloqueando
+      || m.vistaHabilidadesRival?.espejismoBloqueando
+    );
+  }
+
+  private espejismoActivoEn(m: ManoState): boolean {
+    return !!(
+      m.espejismoActivo
+      || m.vistaHabilidadesRival?.espejismoActivo
+    );
+  }
+
+  private espejismoAlternandoEn(m: ManoState): boolean {
+    return !!(
+      m.espejismoAlternando
+      || m.vistaHabilidadesRival?.espejismoAlternando
+    );
+  }
+
+  /** Carta rival boca abajo mientras dura el cartel de Espejismo (3 s). */
+  private espejismoOcultandoMesa(m: ManoState): boolean {
+    return this.espejismoActivoEn(m)
+      && (this.espejismoBloqueandoEn(m) || this.espejismoRevelando);
+  }
+
+  private espejismoAlternandoEnMesa(m: ManoState): boolean {
+    return this.espejismoActivoEn(m)
+      && this.espejismoAlternandoEn(m)
+      && !this.espejismoOcultandoMesa(m);
+  }
+
+  private espejismoCartaFalsaDe(m: ManoState): Carta | null {
+    const ref = m.espejismoCartaFalsa ?? m.vistaHabilidadesRival?.espejismoCartaFalsa;
+    if (!ref) return null;
+    return this.normalizarCarta(ref as Carta);
+  }
+
+  private cartaMaquinaVisual(m: ManoState): Carta | undefined {
+    const real = m.cartaMaquinaEnMesa;
+    if (!real) return undefined;
+    if (this.espejismoOcultandoMesa(m)) return undefined;
+    if (!this.espejismoAlternandoEnMesa(m)) return this.normalizarCarta(real);
+
+    const fake = this.espejismoCartaFalsaDe(m);
+    if (!fake) return this.normalizarCarta(real);
+
+    return this.espejismoMostrarFake ? fake : this.normalizarCarta(real);
+  }
+
+  private cancelarEspejismoParpadeo(): void {
+    if (this.espejismoInterval) {
+      clearInterval(this.espejismoInterval);
+      this.espejismoInterval = null;
+    }
+    if (this.espejismoParpadeoTimeout) {
+      clearTimeout(this.espejismoParpadeoTimeout);
+      this.espejismoParpadeoTimeout = null;
+    }
+    this.espejismoParpadeoAnim = false;
+  }
+
+  private cancelarEspejismoTimers(): void {
+    if (this.espejismoTimer) {
+      clearTimeout(this.espejismoTimer);
+      this.espejismoTimer = null;
+    }
+    if (this.espejismoCountdownInterval) {
+      clearInterval(this.espejismoCountdownInterval);
+      this.espejismoCountdownInterval = null;
+    }
+    this.cancelarEspejismoParpadeo();
+    this.espejismoRevelando = false;
+    this.espejismoSegundos = 0;
+    this.espejismoManoId = null;
+    this.espejismoMostrarFake = false;
+  }
+
+  private iniciarEspejismoParpadeo(m: ManoState): void {
+    if (this.espejismoInterval) return;
+
+    const primero = !!(m.espejismoMostrarFakePrimero ?? m.vistaHabilidadesRival?.espejismoMostrarFakePrimero);
+    this.espejismoMostrarFake = primero;
+
+    this.espejismoInterval = setInterval(() => {
+      this.espejismoParpadeoAnim = true;
+      this.espejismoMostrarFake = !this.espejismoMostrarFake;
+      if (this.espejismoParpadeoTimeout) clearTimeout(this.espejismoParpadeoTimeout);
+      this.espejismoParpadeoTimeout = setTimeout(() => {
+        this.espejismoParpadeoAnim = false;
+        this.cdr.markForCheck();
+      }, 280);
+      if (this.mano) this.actualizarCartaEspejismoEnMesa(this.mano);
+      this.cdr.markForCheck();
+    }, ESPEJISMO_PARPADEO_MS);
+  }
+
+  private actualizarCartaEspejismoEnMesa(m: ManoState): void {
+    const idx = m.bazas?.length ?? 0;
+    if (!this.slots[idx]?.pending) return;
+    const oculto = this.espejismoOcultandoMesa(m);
+    this.slots[idx] = {
+      ...this.slots[idx],
+      espejismoOculto: oculto,
+      maquina: oculto ? undefined : this.cartaMaquinaVisual(m),
+      espejismoParpadeo: !oculto && this.espejismoParpadeoAnim,
+    };
+  }
+
+  private manejarEspejismo(m: ManoState): void {
+    if (!this.espejismoActivoEn(m)) {
+      if (!this.espejismoTimer && !this.espejismoInterval) {
+        this.cancelarEspejismoTimers();
+      }
+      return;
+    }
+
+    if (this.espejismoAlternandoEn(m) && !this.espejismoBloqueandoEn(m)) {
+      this.iniciarEspejismoParpadeo(m);
+    }
+
+    const bloqueando = this.espejismoBloqueandoEn(m);
+    if (!bloqueando) return;
+
+    const triggerKey = `${m.id}-espejismo-baza0`;
+    if (this.espejismoManoId === triggerKey) return;
+
+    if (this.espejismoTimer) clearTimeout(this.espejismoTimer);
+    if (this.espejismoCountdownInterval) clearInterval(this.espejismoCountdownInterval);
+
+    this.espejismoManoId = triggerKey;
+    this.espejismoRevelando = true;
+    this.espejismoSegundos = ESPEJISMO_REVEAL_SEG;
+    this.actualizarCartaEspejismoEnMesa(m);
+
+    this.espejismoCountdownInterval = setInterval(() => {
+      this.espejismoSegundos = Math.max(0, this.espejismoSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.espejismoTimer = setTimeout(() => {
+      this.espejismoTimer = null;
+      if (this.espejismoCountdownInterval) clearInterval(this.espejismoCountdownInterval);
+      this.espejismoCountdownInterval = null;
+      this.espejismoRevelando = false;
+      this.espejismoSegundos = 0;
+      this.cdr.markForCheck();
+      if (this.mano?.id === m.id) {
+        this.confirmarHabilidadRival('confirmar-espejismo', m.id);
+      }
+    }, ESPEJISMO_REVEAL_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
+  private mandingaEspejoBloqueandoEn(m: ManoState): boolean {
+    return !!(m.mandingaEspejoBloqueando || m.vistaHabilidadesRival?.mandingaEspejoBloqueando);
+  }
+
+  private mandingaEnganoBloqueandoEn(m: ManoState): boolean {
+    return !!(m.mandingaEnganoBloqueando || m.vistaHabilidadesRival?.mandingaEnganoBloqueando);
+  }
+
+  private mandingaMaldicionBloqueandoEn(m: ManoState): boolean {
+    return !!(m.mandingaMaldicionBloqueando || m.vistaHabilidadesRival?.mandingaMaldicionBloqueando);
+  }
+
+  private mandingaEnganoManoOcultaEn(m: ManoState): boolean {
+    return !!(m.mandingaEnganoManoOculta || m.vistaHabilidadesRival?.mandingaEnganoManoOculta);
+  }
+
+  private cancelarMandingaTimers(): void {
+    const cancel = (
+      timer: ReturnType<typeof setTimeout> | null,
+      interval: ReturnType<typeof setInterval> | null,
+    ) => {
+      if (timer) clearTimeout(timer);
+      if (interval) clearInterval(interval);
+    };
+    cancel(this.mandingaEspejoTimer, this.mandingaEspejoInterval);
+    cancel(this.mandingaEnganoTimer, this.mandingaEnganoInterval);
+    cancel(this.mandingaMaldicionTimer, this.mandingaMaldicionInterval);
+    this.mandingaEspejoTimer = null;
+    this.mandingaEspejoInterval = null;
+    this.mandingaEnganoTimer = null;
+    this.mandingaEnganoInterval = null;
+    this.mandingaMaldicionTimer = null;
+    this.mandingaMaldicionInterval = null;
+    this.mandingaEspejoRevelando = false;
+    this.mandingaEnganoRevelando = false;
+    this.mandingaMaldicionRevelando = false;
+    this.mandingaEspejoSegundos = 0;
+    this.mandingaEnganoSegundos = 0;
+    this.mandingaMaldicionSegundos = 0;
+    this.mandingaEspejoManoId = null;
+    this.mandingaEnganoManoId = null;
+    this.mandingaMaldicionManoId = null;
+  }
+
+  private manejarMandingaEspejo(m: ManoState): void {
+    if (!this.mandingaEspejoBloqueandoEn(m)) {
+      if (!this.mandingaEspejoTimer) {
+        this.mandingaEspejoRevelando = false;
+        this.mandingaEspejoSegundos = 0;
+      }
+      return;
+    }
+
+    const triggerKey = `${m.id}-mandinga-espejo`;
+    if (this.mandingaEspejoManoId === triggerKey) return;
+
+    if (this.mandingaEspejoTimer) clearTimeout(this.mandingaEspejoTimer);
+    if (this.mandingaEspejoInterval) clearInterval(this.mandingaEspejoInterval);
+
+    this.mandingaEspejoManoId = triggerKey;
+    this.mandingaEspejoRevelando = true;
+    this.mandingaEspejoSegundos = MANDINGA_ESPEJO_SEG;
+
+    this.mandingaEspejoInterval = setInterval(() => {
+      this.mandingaEspejoSegundos = Math.max(0, this.mandingaEspejoSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.mandingaEspejoTimer = setTimeout(() => {
+      this.mandingaEspejoTimer = null;
+      if (this.mandingaEspejoInterval) clearInterval(this.mandingaEspejoInterval);
+      this.mandingaEspejoInterval = null;
+      this.mandingaEspejoRevelando = false;
+      this.mandingaEspejoSegundos = 0;
+      this.cdr.markForCheck();
+      if (this.mano?.id === m.id) {
+        this.confirmarHabilidadRival('confirmar-mandinga-espejo', m.id);
+      }
+    }, MANDINGA_ESPEJO_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
+  private manejarMandingaEngano(m: ManoState): void {
+    if (!this.mandingaEnganoBloqueandoEn(m)) {
+      if (!this.mandingaEnganoTimer) {
+        this.mandingaEnganoRevelando = false;
+        this.mandingaEnganoSegundos = 0;
+      }
+      return;
+    }
+
+    const triggerKey = `${m.id}-mandinga-engano`;
+    if (this.mandingaEnganoManoId === triggerKey) return;
+
+    if (this.mandingaEnganoTimer) clearTimeout(this.mandingaEnganoTimer);
+    if (this.mandingaEnganoInterval) clearInterval(this.mandingaEnganoInterval);
+
+    this.mandingaEnganoManoId = triggerKey;
+    this.mandingaEnganoRevelando = true;
+    this.mandingaEnganoSegundos = MANDINGA_ENGANO_SEG;
+
+    this.mandingaEnganoInterval = setInterval(() => {
+      this.mandingaEnganoSegundos = Math.max(0, this.mandingaEnganoSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.mandingaEnganoTimer = setTimeout(() => {
+      this.mandingaEnganoTimer = null;
+      if (this.mandingaEnganoInterval) clearInterval(this.mandingaEnganoInterval);
+      this.mandingaEnganoInterval = null;
+      this.mandingaEnganoRevelando = false;
+      this.mandingaEnganoSegundos = 0;
+      this.cdr.markForCheck();
+      if (this.mano?.id === m.id) {
+        this.confirmarHabilidadRival('confirmar-mandinga-engano', m.id);
+      }
+    }, MANDINGA_ENGANO_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
+  private manejarMandingaMaldicion(m: ManoState): void {
+    if (!this.mandingaMaldicionBloqueandoEn(m)) {
+      if (!this.mandingaMaldicionTimer) {
+        this.mandingaMaldicionRevelando = false;
+        this.mandingaMaldicionSegundos = 0;
+      }
+      return;
+    }
+
+    const triggerKey = `${m.id}-mandinga-maldicion`;
+    if (this.mandingaMaldicionManoId === triggerKey) return;
+
+    if (this.mandingaMaldicionTimer) clearTimeout(this.mandingaMaldicionTimer);
+    if (this.mandingaMaldicionInterval) clearInterval(this.mandingaMaldicionInterval);
+
+    this.mandingaMaldicionManoId = triggerKey;
+    this.mandingaMaldicionRevelando = true;
+    this.mandingaMaldicionSegundos = MANDINGA_MALDICION_SEG;
+
+    this.mandingaMaldicionInterval = setInterval(() => {
+      this.mandingaMaldicionSegundos = Math.max(0, this.mandingaMaldicionSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.mandingaMaldicionTimer = setTimeout(() => {
+      this.mandingaMaldicionTimer = null;
+      if (this.mandingaMaldicionInterval) clearInterval(this.mandingaMaldicionInterval);
+      this.mandingaMaldicionInterval = null;
+      this.mandingaMaldicionRevelando = false;
+      this.mandingaMaldicionSegundos = 0;
+      this.cdr.markForCheck();
+      if (this.mano?.id === m.id) {
+        this.confirmarHabilidadRival('confirmar-mandinga-maldicion', m.id);
+      }
+    }, MANDINGA_MALDICION_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
   private confirmarHabilidadRival(
-    endpoint: 'confirmar-salpicadura' | 'confirmar-travesura' | 'confirmar-rasguno' | 'confirmar-aullido',
+    endpoint: 'confirmar-salpicadura' | 'confirmar-travesura' | 'confirmar-rasguno' | 'confirmar-aullido' | 'confirmar-destello' | 'confirmar-espejismo' | 'confirmar-mandinga-espejo' | 'confirmar-mandinga-engano' | 'confirmar-mandinga-maldicion',
     manoId: string,
   ): void {
     if (endpoint === 'confirmar-rasguno') this.rasgunoConfirmando = true;
@@ -1185,7 +1777,17 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rasgunoManoId = null;
       this.rasgunoConfirmando = false;
       this.aullidoManoId = null;
+      this.destelloManoId = null;
+      this.destelloTriggerKey = null;
+      this.espejismoManoId = null;
+      this.mandingaEspejoManoId = null;
+      this.mandingaEnganoManoId = null;
+      this.mandingaMaldicionManoId = null;
       this.recibirMano(data);
+      if (endpoint === 'confirmar-espejismo' && this.mano) {
+        this.iniciarEspejismoParpadeo(this.mano);
+        this.actualizarCartaEspejismoEnMesa(this.mano);
+      }
       return this.correrMaquinas();
     }).catch(err => {
       this.rasgunoManoId = null;
@@ -1204,6 +1806,17 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.aullidoBloqueandoEn(data)) {
         this.cancelarAullidoTimer();
       }
+      if (!this.destelloBloqueandoEn(data)) {
+        this.cancelarDestelloTimer();
+      }
+      if (!this.espejismoActivoEn(data)) {
+        this.cancelarEspejismoTimers();
+      }
+      if (!this.mandingaEspejoBloqueandoEn(data)
+        && !this.mandingaEnganoBloqueandoEn(data)
+        && !this.mandingaMaldicionBloqueandoEn(data)) {
+        this.cancelarMandingaTimers();
+      }
     }
     this.mano = data;
     this.updateEventosHabilidad(data);
@@ -1213,6 +1826,21 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.aullidoBloqueandoEn(data) && this.aullidoManoId !== data.id) {
       this.manejarAullido(data);
+    }
+    if (this.destelloBloqueandoEn(data) && this.destelloTriggerKey !== `${data.id}-baza-${data.bazas?.length ?? 0}`) {
+      this.manejarDestello(data);
+    }
+    if (this.espejismoBloqueandoEn(data) && this.espejismoManoId !== `${data.id}-espejismo-baza0`) {
+      this.manejarEspejismo(data);
+    }
+    if (this.mandingaEspejoBloqueandoEn(data) && this.mandingaEspejoManoId !== `${data.id}-mandinga-espejo`) {
+      this.manejarMandingaEspejo(data);
+    }
+    if (this.mandingaEnganoBloqueandoEn(data) && this.mandingaEnganoManoId !== `${data.id}-mandinga-engano`) {
+      this.manejarMandingaEngano(data);
+    }
+    if (this.mandingaMaldicionBloqueandoEn(data) && this.mandingaMaldicionManoId !== `${data.id}-mandinga-maldicion`) {
+      this.manejarMandingaMaldicion(data);
     }
   }
 
