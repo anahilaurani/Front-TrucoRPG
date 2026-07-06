@@ -254,7 +254,7 @@ export default class MapaAventura1Scene extends BaseScene {
   async cargarPuedeEntrarCueva(animar = false) {
     try {
       const res = await fetch(
-        `/api/historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puede-pelear`,
+        `${environment.apiUrl}/api/Historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puede-pelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;
