@@ -57,7 +57,15 @@ export class LoginComponent {
         this.router.navigate(['/home']);
       },
       error: (err) => {
-        this.errorServidor = err.error?.error ?? 'Email o contraseña incorrectos.';
+        const body = err.error;
+        const mensaje = (typeof body === 'object' && body !== null)
+          ? (body as Record<string, unknown>)['detail']
+            ?? (body as Record<string, unknown>)['message']
+            ?? (body as Record<string, unknown>)['error']
+          : null;
+        this.errorServidor = typeof mensaje === 'string' && mensaje
+          ? mensaje
+          : 'Email o contraseña incorrectos.';
         this.toast.error(this.errorServidor);
         this.cargando = false;
       }
