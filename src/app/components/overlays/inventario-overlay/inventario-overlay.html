@@ -1,6 +1,9 @@
 <div class="contenedor-baul">
   <div class="titulo-baul">INVENTARIO</div>
-
+  <div class="monedas-tienda">
+      <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
+      <span class="cantidad-monedas">{{ monedas }}</span>
+    </div>
   <div class="categoria-baul">
     <button
       class="categoria"
@@ -26,9 +29,10 @@
   </div>
 
   <div class="cuadricula-inventario">
-    @for (item of itemsFiltrados; track item.id) {
+    @for (item of itemsFiltrados; track item.itemTiendaId) {
       <div class="slot-item" (click)="seleccionarItem(item)" style="cursor: pointer">
-        <img [src]="item.img" [alt]="item.nombre" class="item-icono" />
+        <img [src]="item.itemTienda.img" [alt]="item.itemTienda.nombre" class="item-icono" />
+
         @if (item.cantidad > 1) {
           <span class="cantidad-item">{{ item.cantidad }}</span>
         }
