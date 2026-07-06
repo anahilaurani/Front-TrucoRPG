@@ -1579,7 +1579,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       if (tipoEnv === 'Envido' || tipoEnv === 'EnvidoEnvido')
         raw.push(['REAL ENVIDO', '#ffaa00',
           () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Real Envido' })]);
-      if (tipoEnv !== 'Falta Envido')
+      // El backend normaliza el tipo como 'FaltaEnvido' (sin espacio): comparar contra
+      // ambos, si no el botón aparecía aunque la máquina ya hubiera cantado la falta.
+      if (tipoEnv !== 'FaltaEnvido' && tipoEnv !== 'Falta Envido')
         raw.push(['FALTA ENVIDO', '#ff8800',
           () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Falta Envido' })]);
       raw.push(['NO QUIERO', '#ff4444',

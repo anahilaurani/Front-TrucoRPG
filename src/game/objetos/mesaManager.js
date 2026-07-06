@@ -4,16 +4,23 @@ export default class MesaManager {
    * @param {*} jugador
    * @param {*} salaService
    * @param {*} uiService
-   * @param {Object|null} anclajesPorModo - opcional. Si se pasa, ubica cada sala
-   *   pública debajo de la mesa fija del modo correspondiente.
-   *   Formato: { '1v1': {x, y}, '2v2': {x, y}, '3v3': {x, y} }
+   * @param {Object|null} anclajesPorModo
+   * @param {Phaser.GameObjects.Group|null} mesasDecoracionGroup
    */
-  constructor(scene, jugador, salaService, uiService, anclajesPorModo = null) {
+  constructor(
+    scene,
+    jugador,
+    salaService,
+    uiService,
+    anclajesPorModo = null,
+    mesasDecoracionGroup = null,
+  ) {
     this.scene = scene;
     this.jugador = jugador;
     this.salaService = salaService;
     this.uiService = uiService;
     this.anclajesPorModo = anclajesPorModo;
+    this.mesasDecoracionGroup = mesasDecoracionGroup;
 
     this.mesasPublicasGroup = this.scene.physics.add.group();
 
@@ -25,7 +32,6 @@ export default class MesaManager {
     if (!this.salaService || this._destroyed) return;
 
     try {
-      // Reconectar si el hub fue desconectado (ej: después de abandonar una sala)
       await this.salaService.conectar();
 
       const [s1, s2, s3] = await Promise.all([
@@ -47,10 +53,9 @@ export default class MesaManager {
       this.mesasPublicasGroup.clear(true, true);
 
       if (this.anclajesPorModo) {
-        // Modo anclado: cada sala pública aparece debajo de su mesa fija
         const salasPorModo = { '1v1': s1, '2v2': s2, '3v3': s3 };
-        const OFFSET_Y  = 140; // distancia debajo de la mesa fija
-        const ESPACIO_X = 110; // separación horizontal si hay varias salas del mismo modo
+        const OFFSET_Y = 140;
+        const ESPACIO_X = 110;
 
         Object.entries(salasPorModo).forEach(([, salas]) => {
           salas.forEach((sala, index) => {
@@ -58,20 +63,59 @@ export default class MesaManager {
             if (!ancla) return;
             const posX = ancla.x + (index - (salas.length - 1) / 2) * ESPACIO_X;
             const posY = ancla.y + OFFSET_Y;
-            this.crearMesaDeJuego(posX, posY, sala);
+
+            const spriteAUsar = sala.modo === '1v1' ? 'MesaEspera' : 'MesaEjemplo2';
+            this.crearMesaDeJuego(posX, posY, sala, spriteAUsar);
           });
         });
       } else {
-        // Comportamiento original (pulpería)
         const todasLasSalas = [...s1, ...s2, ...s3];
-        let origenX  = 966;
-        let origenY  = 344;
-        let espacioX = 240;
+
+        if (this.mesasDecoracionGroup) {
+          this.mesasDecoracionGroup.getChildren().forEach((mesaDeco) => {
+            mesaDeco.setVisible(true);
+            if (mesaDeco.body) mesaDeco.body.enable = true;
+          });
+        }
+
+        const posicionesDisponibles = [
+          { x: 1040, y: 370 }, // Espacio Mesa 3
+          { x: 1480, y: 370 }, // Espacio Mesa 4
+          { x: 1050, y: 560 }, // Espacio Mesa 6
+          { x: 1605, y: 570 }, // Espacio Mesa 5
+        ];
 
         todasLasSalas.forEach((sala, index) => {
-          const posX = origenX + index * espacioX;
-          const posY = origenY;
-          this.crearMesaDeJuego(posX, posY, sala);
+          const coord = posicionesDisponibles[index] || {
+            x: 1040 + (index - posicionesDisponibles.length) * 280,
+            y: 750,
+          };
+
+          const posX = coord.x;
+          const posY = coord.y;
+
+          if (this.mesasDecoracionGroup) {
+            this.mesasDecoracionGroup.getChildren().forEach((mesaDeco) => {
+              const xRef = mesaDeco.posXOriginal ?? mesaDeco.x;
+              const yRef = mesaDeco.posYOriginal ?? mesaDeco.y;
+
+              const distancia = Phaser.Math.Distance.Between(xRef, yRef, posX, posY);
+
+              if (distancia < 20) {
+                mesaDeco.setVisible(false);
+                if (mesaDeco.body) mesaDeco.body.enable = false;
+              }
+            });
+          }
+
+          let spriteAUsar = 'MesaEspera';
+          if (sala.modo === '2v2' || sala.gameMode === '2v2') {
+            spriteAUsar = 'MesaEjemplo2';
+          } else if (sala.modo === '3v3' || sala.gameMode === '3v3') {
+            spriteAUsar = 'MesaEjemplo';
+          }
+
+          this.crearMesaDeJuego(posX, posY, sala, spriteAUsar);
         });
       }
     } catch (error) {
@@ -79,14 +123,18 @@ export default class MesaManager {
     }
   }
 
-  crearMesaDeJuego(x, y, sala) {
-    const mesa = this.mesasPublicasGroup.create(x, y, 'mesa_juego');
+  crearMesaDeJuego(x, y, sala, spriteKey = 'MesaEspera') {
+    const mesa = this.mesasPublicasGroup.create(x, y, spriteKey);
     mesa.setScale(1).setImmovable(true);
+
+    if (this.scene.anims.exists(spriteKey + '_idle')) {
+      mesa.play(spriteKey + '_idle');
+    }
 
     const textoContador = this.scene.add
       .text(x, y - 45, `SALA: ${sala.codigo}\n${sala.jugadores}/${sala.maxJugadores}`, {
-        fontFamily: 'Jersey 20',
-        fontSize: '20px',
+        fontFamily: "'Jersey 20'",
+        fontSize: '17px',
         color: '#ffffff',
         backgroundColor: '#000000aa',
         align: 'center',

@@ -95,15 +95,15 @@ export default class MapaAventura2Scene extends BaseScene {
     this.puedePelearLobizon = false;
     this.puedePelearLuzMala = false;
     this.cargarPuedePelearLobizon();
-    this.cargarPuedePelearLuzMala();
+    this.cargarPuedePelearLuzMala(false);
 
     this._onProgresoActualizado = () => {
       this.cargarPuedePelearLobizon();
-      this.cargarPuedePelearLuzMala();
+      this.cargarPuedePelearLuzMala(true);
     };
     this._onTrucoEnd = () => {
       this.cargarPuedePelearLobizon();
-      this.cargarPuedePelearLuzMala();
+      this.cargarPuedePelearLuzMala(true);
     };
     window.addEventListener('historia:progreso-actualizado', this._onProgresoActualizado);
     window.addEventListener('truco-solo:end', this._onTrucoEnd);
@@ -115,7 +115,7 @@ export default class MapaAventura2Scene extends BaseScene {
   }
 
   _crearJefeLobizon() {
-    new Oponente(this, JEFE1_X, JEFE1_Y, 'lobizon').setDepth(0).setScale(3);
+    this.jefeLobizon = new Oponente(this, JEFE1_X, JEFE1_Y, 'lobizon').setDepth(0).setScale(3);
     this.zonaJefe1 = new ZonaInteraccionNpc(this, JEFE1_X, JEFE1_Y);
     this.etiquetaBloqueoLobizon = this.add
       .text(JEFE1_X, JEFE1_Y - 55, 'Derrotá al Pomberito antes', {
@@ -166,7 +166,7 @@ export default class MapaAventura2Scene extends BaseScene {
     this.etiquetaBloqueoLobizon.setVisible(!this.puedePelearLobizon);
   }
 
-  async cargarPuedePelearLuzMala() {
+  async cargarPuedePelearLuzMala(animar = false) {
     try {
       const res = await fetch(
         `${environment.apiUrl}/api/historia/rivales/${RIVAL_LUZMALA_NIVEL}/puede-pelear`,
@@ -177,9 +177,24 @@ export default class MapaAventura2Scene extends BaseScene {
       const data = await res.json();
       this.puedePelearLuzMala = !!data.puedePelear;
       this._actualizarEtiquetaBloqueoLuzMala();
+      this._actualizarDerrotaLobizon(animar);
     } catch {
       this.puedePelearLuzMala = false;
       this._actualizarEtiquetaBloqueoLuzMala();
+    }
+  }
+
+  // Si puede pelear con la Luz Mala es porque el Lobizón ya fue derrotado.
+  _actualizarDerrotaLobizon(animar) {
+    if (!this.puedePelearLuzMala) return;
+
+    const jefe = this.jefeLobizon;
+    if (!jefe || jefe.derrotado || jefe.cayendo) return;
+
+    if (animar) {
+      this.animarDerrotaJefe(jefe);
+    } else {
+      jefe.caerDerrotado(false);
     }
   }
 
@@ -198,6 +213,13 @@ export default class MapaAventura2Scene extends BaseScene {
   }
 
   update() {
+    // durante la animación de derrota se frena todo
+    if (this._animandoDerrota) {
+      this.JugadorPrincipal.setVelocity(0);
+      this.botonInteractuarPresionado = false;
+      return;
+    }
+
     this.JugadorPrincipal.update(this.keys, this.teclaE);
 
     const interactuoMobile = this.botonInteractuarPresionado;
@@ -205,10 +227,12 @@ export default class MapaAventura2Scene extends BaseScene {
     this.portalMapaAventura3.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
     this.portalMapaAventura1.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
 
-    const enZonaJefe1 = this.zonaJefe1.update(
-      this.JugadorPrincipal,
-      this.puedePelearLobizon,
-    );
+    const lobizonDisponible =
+      this.puedePelearLobizon &&
+      !this.jefeLobizon.derrotado &&
+      !this.jefeLobizon.cayendo;
+
+    const enZonaJefe1 = this.zonaJefe1.update(this.JugadorPrincipal, lobizonDisponible);
     const enZonaJefe2 = this.zonaJefe2.update(
       this.JugadorPrincipal,
       this.puedePelearLuzMala,
@@ -218,7 +242,7 @@ export default class MapaAventura2Scene extends BaseScene {
       Phaser.Input.Keyboard.JustDown(this.teclaE) ||
       this.botonInteractuarPresionado;
 
-    if (enZonaJefe1 && interactuar && this.puedePelearLobizon) {
+    if (enZonaJefe1 && interactuar && lobizonDisponible) {
       this.iniciarPelea(RIVAL_LOBIZON_NIVEL);
     }
 
