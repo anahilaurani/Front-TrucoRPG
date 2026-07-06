@@ -16,7 +16,7 @@ export class Header {
   authService     = inject(AuthService);
 
   headerType      = signal('');
-  usuario         = computed(() => this.authService.obtenerUsuario());
+  readonly usuario = this.authService.usuario;
   inicial         = computed(() => this.usuario()?.nombre?.charAt(0).toUpperCase() ?? '?');
   avatarUrl       = computed(() => this.authService.avatarUrl());
   dropdownAbierto = signal(false);
