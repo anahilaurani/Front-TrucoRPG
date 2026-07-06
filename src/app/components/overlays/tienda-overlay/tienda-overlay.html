@@ -1,15 +1,21 @@
 <div class="interfaz-tienda">
   <div class="contenedor-tienda">
+    <div class="monedas-tienda">
+      <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
+      <span class="cantidad-monedas">{{ monedas }}</span>
+    </div>
     @for (estante of datos; track estante.categoria) {
       <div class="estante">
         <div class="cartel-estante">{{ estante.categoria }}</div>
 
         @for (objeto of estante.objetos; track objeto.id) {
-          <div class="objeto" 
-               [class.seleccionado]="objetoActivo === objeto"
-               [class.fijado]="objetoFijado === objeto"
-               (mouseenter)="mostrarInfo(objeto)"
-               (click)="seleccionarObjeto(objeto)">
+          <div
+            class="objeto"
+            [class.seleccionado]="objetoActivo === objeto"
+            [class.fijado]="objetoFijado === objeto"
+            (mouseenter)="mostrarInfo(objeto)"
+            (click)="seleccionarObjeto(objeto)"
+          >
             <img [src]="objeto.img" [alt]="objeto.nombre" />
             <div class="cartelito-simple">
               <span class="precio">${{ objeto.precio }}</span>
@@ -21,8 +27,22 @@
   </div>
 
   <div class="pantalla-detalles">
-    @if (objetoActivo) {
-      
+    @if (mensajeResultado) {
+      <div class="cartel-resultado animate-pixel" [class.resultado-error]="esError">
+        <h4 class="titulo-alerta">{{ esError ? '¡ERROR!' : '¡ÉXITO!' }}</h4>
+        <div class="separador-pixel" [class.alerta]="esError" [class.exito]="!esError"></div>
+        <p class="texto-alerta">{{ mensajeResultado }}</p>
+        <button
+          class="btn-pixel"
+          [class.no]="esError"
+          [class.si]="!esError"
+          (click)="limpiarMensaje()"
+        >
+          ACEPTAR
+        </button>
+      </div>
+
+    } @else if (objetoActivo) {
       @if (objetoFijado && !confirmandoCompra) {
         <button class="btn-cerrar-inspector" (click)="liberarSeleccion()">X</button>
       }
@@ -33,7 +53,7 @@
             <img [src]="objetoActivo.img" [alt]="objetoActivo.nombre" class="img-grande" />
           </div>
           <h4 class="titulo-detalle">{{ objetoActivo.nombre }}</h4>
-          
+
           @if (objetoFijado) {
             <span class="tag-fijado">Fijado</span>
           } @else {
@@ -42,11 +62,13 @@
 
           <div class="separador-pixel"></div>
           <p class="descripcion-detalle">{{ objetoActivo.descripcion }}</p>
-          
-          <button class="boton-comprar-fijo" 
-                  [disabled]="!objetoFijado"
-                  [class.deshabilitado]="!objetoFijado"
-                  (click)="confirmandoCompra = true">
+
+          <button
+            class="boton-comprar-fijo"
+            [disabled]="!objetoFijado"
+            [class.deshabilitado]="!objetoFijado"
+            (click)="confirmandoCompra = true"
+          >
             @if (objetoFijado) {
               COMPRAR (${{ objetoActivo.precio }})
             } @else {
@@ -54,21 +76,23 @@
             }
           </button>
         </div>
-      } 
-      
-      @else {
+
+      } @else {
         <div class="cartel-confirmacion animate-pixel">
           <h4 class="titulo-alerta">¿ESTÁS SEGURO?</h4>
           <div class="separador-pixel alerta"></div>
-          <p class="texto-alerta">¿Deseas comprar <strong>{{ objetoActivo.nombre }}</strong> por <span class="resaltar-precio">${{ objetoActivo.precio }}</span>?</p>
-          
+          <p class="texto-alerta">
+            ¿Deseas comprar <strong>{{ objetoActivo.nombre }}</strong> por
+            <span class="resaltar-precio">${{ objetoActivo.precio }}</span
+            >?
+          </p>
+
           <div class="acciones-confirmar">
             <button class="btn-pixel si" (click)="confirmarAccionCompra()">SÍ</button>
             <button class="btn-pixel no" (click)="cancelarCompra()">NO</button>
           </div>
         </div>
       }
-
     } @else {
       <div class="detalles-vacio">
         <p>Pasa el cursor sobre un objeto para inspeccionarlo...</p>
