@@ -194,6 +194,10 @@ const MANDINGA_ESPEJO_SEG = 3;
 const MANDINGA_ENGANO_SEG = 5;
 const MANDINGA_MALDICION_SEG = 3;
 
+const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
+  mandinga: 'Mandinga_batalla.png',
+};
+
 // ── Componente ───────────────────────────────────────────────────────────────
 
 @Component({
@@ -242,7 +246,6 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.esPartidaHistoria(this.mano) && !this.gameOver && !!this.mano;
   }
 
-  /** SOLO PRUEBAS — Sumar 10 puntos contra El Mandinga. Eliminar antes de producción. */
   get mostrarBotonGanar10Puntos(): boolean {
     return this.mostrarBotonGanarAutomatico && this.esMandinga;
   }
@@ -436,7 +439,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.escenarioPractica !== null) return 'assets/gaucho.png';
     const slug = this.rivalSlug;
     if (!slug) return 'assets/gaucho.png';
-    return `assets/oponentes1v1/${slug}_batalla.png`;
+    const archivo = RIVAL_BATALLA_ARCHIVO[slug] ?? `${slug}_batalla.png`;
+    return `assets/oponentes1v1/${archivo}`;
   }
 
   get fondoStyle(): { [key: string]: string } {
@@ -978,7 +982,6 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.call('ganar-automatico-debug', { manoId: this.mano.id });
   }
 
-  // SOLO PRUEBAS — Sumar 10 puntos al humano contra El Mandinga. Eliminar antes de producción.
   ganar10PuntosDebug(): void {
     if (!this.mano || !this.esMandinga) return;
     this.call('sumar-puntos-humano-debug', { manoId: this.mano.id });

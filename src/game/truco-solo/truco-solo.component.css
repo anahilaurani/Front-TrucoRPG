@@ -1087,11 +1087,10 @@
   transform: translateY(48px);
 }
 
-/* Mandinga — también cuadrado (1:1). */
 .rival-img.rival-mandinga {
-  max-width: 240px;
-  max-height: 250px;
-  transform: translateY(40px);
+  max-width: 500px;
+  max-height: 330px;
+  transform: translateY(42px);
 }
 
 /* Pombero — lienzo ancho (1.83:1); necesita más ancho para no quedar bajito. */
