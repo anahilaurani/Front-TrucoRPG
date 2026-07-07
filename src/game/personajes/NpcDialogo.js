@@ -19,7 +19,7 @@ export default class NpcDialogo {
     this.x = x;
     this.y = y;
 
-    const { escala = 1.3, depth = 3 } = opciones;
+    const { escala = 1.4, depth = 0 } = opciones;
 
     this.npc = new Npc(escena, x, y, textura).setDepth(depth).setScale(escala);
 

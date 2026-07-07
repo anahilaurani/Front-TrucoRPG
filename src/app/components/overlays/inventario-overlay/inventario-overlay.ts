@@ -38,14 +38,14 @@ export class InventarioOverlay {
 
   seleccionarItem(item: any) {
     const itemTienda = item.itemTienda;
-    if (itemTienda && itemTienda.categoria === 'ARMARIO' && itemTienda.spriteKey) {
+    if (itemTienda && itemTienda.categoria === 'HABILIDADES') {
       this.itemPorEquipar = itemTienda;
     }
   }
 
   confirmarEquipacion() {
     if (this.itemPorEquipar) {
-      this.historiaService.equiparSkinDesdeArmario(this.itemPorEquipar.spriteKey);
+      console.log('Equipando habilidad:', this.itemPorEquipar.nombre);
     }
     this.itemPorEquipar = null;
   }

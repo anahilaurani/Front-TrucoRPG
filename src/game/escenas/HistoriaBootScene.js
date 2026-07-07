@@ -25,17 +25,61 @@ export default class HistoriaBootScene extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64,
     });
+    this.load.spritesheet('personaje1marron', './assets/sprites/personaje1marron.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje1azul', './assets/sprites/personaje1azul.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje1rojo', './assets/sprites/personaje1rojo.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje2rosa', './assets/sprites/personaje2rosa.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje2rojo', './assets/sprites/personaje2rojo.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje2marron', './assets/sprites/personaje2marron.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje2azul', './assets/sprites/personaje2azul.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje3rosa', './assets/sprites/personaje3rosa.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje3marron', './assets/sprites/personaje3marron.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje3azul', './assets/sprites/personaje3azul.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('personaje3rojo', './assets/sprites/personaje3rojo.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
     this.load.spritesheet('Nuri', './assets/sprites/Nuri.png', {
       frameWidth: 64,
-      frameHeight: 64
+      frameHeight: 64,
     });
     this.load.spritesheet('Facu', './assets/sprites/Facu.png', {
       frameWidth: 64,
-      frameHeight: 64
+      frameHeight: 64,
     });
     this.load.spritesheet('Ale', './assets/sprites/Ale.png', {
       frameWidth: 64,
-      frameHeight: 64
+      frameHeight: 64,
     });
 
     this.load.tilemapTiledJSON('mapa', './assets/mapa-principal/mapa-principal.json');
@@ -69,9 +113,8 @@ export default class HistoriaBootScene extends Phaser.Scene {
     this.load.image('percha', './assets/mapa-pulperia/perchero.png');
     this.load.image('mesa', './assets/mapa-pulperia/mesa.png');
     this.load.image('lena', './assets/mapa-pulperia/lena.png');
-    this.load.image('silla1', './assets/mapa-pulperia/silla_costado.png')
-    this.load.image('silla2', './assets/mapa-pulperia/silla_frente.png')
-
+    this.load.image('silla1', './assets/mapa-pulperia/silla_costado.png');
+    this.load.image('silla2', './assets/mapa-pulperia/silla_frente.png');
 
     //mapa casa
     this.load.image('InteriorCasa', './assets/mapa-casa/InteriorCasa.png');
@@ -92,7 +135,7 @@ export default class HistoriaBootScene extends Phaser.Scene {
     this.load.image('ParedesMontaña', './assets/mapa-aventura-1/ParedesMontaña.png');
     this.load.image('Piedras Av', './assets/mapa-aventura-1/Piedras.png');
     this.load.image('Vegetacion Av', './assets/mapa-aventura-1/Vegetacion.png');
-    this.load.image('Cueva Av', './assets/mapa-aventura-1/Cueva.png')
+    this.load.image('Cueva Av', './assets/mapa-aventura-1/Cueva.png');
 
     //mapa aventura 2
     this.load.tilemapTiledJSON('mapa-aventura-2', './assets/mapa-aventura-2/mapa-aventura-2.json');
@@ -121,8 +164,10 @@ export default class HistoriaBootScene extends Phaser.Scene {
     });
     dummy.setVisible(false);
 
-    const personajeElegido = this.registry.get('playerSprite') || 'nene-hacha';
+    let personajeFinal = this.registry.get('playerSprite') || 'personaje1';
 
-    this.scene.start('MapaPrincipal', { playerSprite: personajeElegido });
+    this.registry.set('playerSprite', personajeFinal);
+
+    this.scene.start('MapaPrincipal', { playerSprite: personajeFinal });
   }
 }
