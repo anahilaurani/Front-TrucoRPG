@@ -54,3 +54,81 @@ main {
         padding: 0;
     }
 }
+
+/* ── Pregunta: rejugar rivales o seguir con todo desbloqueado ─────────────── */
+.rejugar-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000000cc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.rejugar-box {
+    max-width: 440px;
+    width: calc(100% - 2rem);
+    padding: 1.6rem 1.8rem;
+    background: #1e1408;
+    border: 2px solid #6a4a20;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    font-family: 'Jersey 10', monospace;
+    letter-spacing: 1px;
+}
+
+.rejugar-titulo {
+    font-size: 1.3rem;
+    color: #ffd88a;
+    margin-bottom: 0.6rem;
+}
+
+.rejugar-sub {
+    font-size: 0.95rem;
+    color: #c8a878;
+    line-height: 1.5;
+    margin-bottom: 1.2rem;
+}
+
+.rejugar-btns {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.rejugar-btn {
+    font-family: inherit;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    border: 2px solid #6a4a20;
+    transition: background 0.15s, color 0.15s;
+}
+
+.rejugar-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.rejugar-btn-si {
+    background: #573a04;
+    color: #ffe6b8;
+}
+
+.rejugar-btn-si:hover:not(:disabled) {
+    background: #6a4a20;
+    color: #ffffff;
+}
+
+.rejugar-btn-no {
+    background: transparent;
+    color: #c8a878;
+}
+
+.rejugar-btn-no:hover:not(:disabled) {
+    background: rgba(106, 74, 32, 0.25);
+    color: #f5e6c8;
+}

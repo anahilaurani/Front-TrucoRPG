@@ -11,6 +11,26 @@
     <app-prologo (prologoTerminado)="alTerminarPrologo()"></app-prologo>
   }
 
+  @if (mostrarPreguntaRejugar) {
+    <div class="rejugar-overlay">
+      <div class="rejugar-box">
+        <div class="rejugar-titulo">¡Ya derrotaste a todos los rivales!</div>
+        <div class="rejugar-sub">
+          ¿Querés volver a enfrentarlos desde el principio? Tus monedas,
+          habilidades y ropa se conservan.
+        </div>
+        <div class="rejugar-btns">
+          <button class="rejugar-btn rejugar-btn-si" [disabled]="reiniciandoRivales" (click)="rejugarRivales()">
+            {{ reiniciandoRivales ? 'Reiniciando…' : 'Volver a derrotarlos' }}
+          </button>
+          <button class="rejugar-btn rejugar-btn-no" [disabled]="reiniciandoRivales" (click)="jugarComoEsta()">
+            Jugar así como está
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   @if (vistaActual === 'en-juego') {
    <div class="contenedor-juego-wrapper">
     <div id="historia-container"

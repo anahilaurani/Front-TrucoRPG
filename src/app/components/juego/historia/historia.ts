@@ -15,6 +15,9 @@ import { SalaService } from '../../../services/sala.service';
 import { PulperiaUiService } from '../../../services/pulperiaOverlay/pulperia-overlay-config';
 import { personajePorId } from '../../../../game/data/personaje';
 
+/** Nivel del rival final (Mandinga): con este derrotado, la historia está completa. */
+const NIVEL_RIVAL_FINAL = 5;
+
 @Component({
   selector: 'app-historia',
   standalone: true,
@@ -38,6 +41,10 @@ export class Historia implements OnInit, OnDestroy {
   cargandoEstado = true;
   vistaActual: 'seleccion-heroe' | 'prologo' | 'en-juego' = 'seleccion-heroe';
 
+  /** Pregunta al reingresar con la historia ya completada. */
+  mostrarPreguntaRejugar = false;
+  reiniciandoRivales = false;
+
   mostrarTrucoSolo = false;
   mostrarTruco2v2 = false;
   mostrarTruco3v3 = false;
@@ -60,7 +67,7 @@ export class Historia implements OnInit, OnDestroy {
           this.vistaActual = (vistaGuardada as any) || 'en-juego';
 
           if (this.vistaActual === 'en-juego') {
-            this.alTerminarPrologo();
+            this.evaluarRejugarHistoria();
           }
         } else {
           this.vistaActual = 'seleccion-heroe';
@@ -93,6 +100,48 @@ export class Historia implements OnInit, OnDestroy {
         alert('Error al guardar personaje: ' + (err.error || err.message));
       },
     });
+  }
+
+  /**
+   * Si el jugador ya derrotó a todos los rivales, pregunta si quiere volver a
+   * derrotarlos o seguir jugando con todo desbloqueado. Si no, arranca directo.
+   */
+  private evaluarRejugarHistoria(): void {
+    this.historiaService.obtenerProgreso().subscribe({
+      next: (progreso) => {
+        if (progreso.ultimoRivalDerrotadoNivel >= NIVEL_RIVAL_FINAL) {
+          this.mostrarPreguntaRejugar = true;
+        } else {
+          this.alTerminarPrologo();
+        }
+      },
+      error: () => this.alTerminarPrologo(),
+    });
+  }
+
+  /** Reinicia solo el estado de rivales (conserva puntos, monedas, ropa, etc.) y entra. */
+  rejugarRivales(): void {
+    if (this.reiniciandoRivales) return;
+    this.reiniciandoRivales = true;
+    this.historiaService.reiniciarRivales().subscribe({
+      next: () => {
+        this.reiniciandoRivales = false;
+        this.mostrarPreguntaRejugar = false;
+        this.alTerminarPrologo();
+      },
+      error: (err) => {
+        console.error('No se pudo reiniciar el progreso de rivales', err);
+        this.reiniciandoRivales = false;
+        this.mostrarPreguntaRejugar = false;
+        this.alTerminarPrologo();
+      },
+    });
+  }
+
+  /** Entra al modo historia sin tocar el progreso. */
+  jugarComoEsta(): void {
+    this.mostrarPreguntaRejugar = false;
+    this.alTerminarPrologo();
   }
 
   alTerminarPrologo(): void {

@@ -10,6 +10,11 @@ export interface Personaje {
   spriteKey: string;
 }
 
+export interface ProgresoHistoria {
+  ultimoRivalDerrotadoNivel: number;
+  puntosAcumulados: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -37,6 +42,15 @@ export class HistoriaService {
 
   verificarPersonajeBD(): Observable<{ tienePersonaje: boolean }> {
     return this.http.get<{ tienePersonaje: boolean }>(`${this.apiUrl}/verificarPersonaje`);
+  }
+
+  obtenerProgreso(): Observable<ProgresoHistoria> {
+    return this.http.get<ProgresoHistoria>(`${this.apiUrl}/progreso`);
+  }
+
+  /** Vuelve a 0 solo el estado de rivales derrotados; conserva puntos, monedas, ropa, etc. */
+  reiniciarRivales(): Observable<ProgresoHistoria> {
+    return this.http.post<ProgresoHistoria>(`${this.apiUrl}/reiniciar-rivales`, {});
   }
 
   obtenerPersonajeBD(): Observable<Personaje> {
