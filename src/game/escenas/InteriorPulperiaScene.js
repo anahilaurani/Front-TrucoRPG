@@ -184,6 +184,23 @@ export default class InteriorPulperiaScene extends BaseScene {
       }),
     ];
 
+    // cartelitos sobre las mesas de juego
+    const estiloCartelMesa = {
+      fontFamily: '"Jersey 10"',
+      fontSize: '16px',
+      color: '#ffffff',
+      backgroundColor: '#573a04',
+      padding: { x: 8, y: 4 },
+    };
+    this.cartelMultijugador = this.add
+      .text(1283, 100, 'Multijugador', estiloCartelMesa)
+      .setOrigin(0.5)
+      .setDepth(10);
+    this.cartelSolitario = this.add
+      .text(1595, 100, 'Partida en solitario', estiloCartelMesa)
+      .setOrigin(0.5)
+      .setDepth(10);
+
     const salaService = this.game.registry.get('salaService');
     const uiService = this.game.registry.get('uiService');
 
