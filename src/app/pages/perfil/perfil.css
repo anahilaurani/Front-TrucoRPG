@@ -250,6 +250,16 @@ main {
   color: #6a3030;
 }
 
+.fila-volver {
+  justify-content: center;
+  color: #d8b060;
+}
+
+.fila-volver:hover {
+  background: rgba(106, 74, 32, 0.25);
+  color: #ffd88a;
+}
+
 
 /* ── Formulario cambio de contraseña ───────────────────────────── */
 .fila-toggle-pass {
