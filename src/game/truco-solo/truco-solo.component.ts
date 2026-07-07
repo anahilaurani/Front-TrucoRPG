@@ -601,6 +601,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.bubbleTimer) clearTimeout(this.bubbleTimer);
     if (this.bubbleHumanoTimer) clearTimeout(this.bubbleHumanoTimer);
     if (this.gameOverTimer) clearTimeout(this.gameOverTimer);
+    if (this.derrotaFinalTimer) clearTimeout(this.derrotaFinalTimer);
     this.limpiarEnvidoSeq();
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.cancelarCountdown();
@@ -929,6 +930,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   nuevaPartida(): void {
     this.gameOver = false;
+    this.derrotaFinalMostrando = false;
+    this.derrotaFinalTerminada = false;
+    if (this.derrotaFinalTimer) { clearTimeout(this.derrotaFinalTimer); this.derrotaFinalTimer = null; }
     this.victoriaHistoriaRegistrada = false;
     this.eventosHabilidad = [];
     this.habilidadCartaIdx = null;
@@ -977,6 +981,22 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   /** victoria mandinga */
   get esVictoriaFinalHistoria(): boolean {
     return this.gameOverWon && this.esMandinga && this.rivalNivel !== null;
+  }
+
+  // ── Animación de derrota final del Mandinga (antes de los créditos) ────────
+  derrotaFinalMostrando = false;
+  derrotaFinalTerminada = false;
+  private derrotaFinalTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Muestra al Mandinga despidiéndose y recién después arranca los créditos. */
+  private iniciarDerrotaFinal(): void {
+    if (this.derrotaFinalMostrando || this.derrotaFinalTerminada) return;
+    this.derrotaFinalMostrando = true;
+    this.derrotaFinalTimer = setTimeout(() => {
+      this.derrotaFinalMostrando = false;
+      this.derrotaFinalTerminada = true;
+      this.cdr.markForCheck();
+    }, 5200);
   }
 
   /** Se ejecuta cuando el jugador termina de ver los créditos finales. */
@@ -1043,6 +1063,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
           if (this.gameOverWon && this.rivalNivel !== null) {
             this.registrarVictoriaHistoria(m);
           }
+          if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
           this.cdr.markForCheck();
         }, this.duracionSecuenciaEnvido(m) + 800);
         this.cdr.markForCheck();
@@ -1053,6 +1074,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.gameOverWon && this.rivalNivel !== null) {
         this.registrarVictoriaHistoria(m);
       }
+      if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
       this.cdr.markForCheck();
       return;
     }

@@ -663,6 +663,53 @@
   animation: fadeIn 0.3s ease;
 }
 
+/* ── Derrota final del Mandinga: se despide y se desvanece antes de los créditos ── */
+.derrota-final {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+  padding: 16px;
+}
+
+.derrota-final-img {
+  max-width: min(420px, 60vw);
+  max-height: min(340px, 45vh);
+  object-fit: contain;
+  filter: drop-shadow(0 0 30px rgba(255, 60, 30, 0.5));
+  animation: derrotaDesvanecer 5s ease-in forwards;
+}
+
+.derrota-final-texto {
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  color: #ffcc88;
+  text-shadow: 0 0 12px rgba(255, 120, 40, 0.7);
+  opacity: 0;
+  animation: derrotaTextoIn 0.9s ease 0.7s forwards;
+}
+
+.derrota-final-sub {
+  font-size: 14px;
+  color: #cc8866;
+  opacity: 0;
+  animation: derrotaTextoIn 0.9s ease 1.6s forwards;
+}
+
+@keyframes derrotaDesvanecer {
+  0%   { opacity: 0; transform: translateY(10px); filter: grayscale(0) blur(0); }
+  12%  { opacity: 1; transform: translateY(0); }
+  55%  { opacity: 1; transform: translateY(0); filter: grayscale(0.2) blur(0); }
+  100% { opacity: 0; transform: translateY(-45px) scale(1.04); filter: grayscale(1) blur(6px); }
+}
+
+@keyframes derrotaTextoIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1087,9 +1134,10 @@
   transform: translateY(48px);
 }
 
+/* Mandinga — lienzo cuadrado; cap en vh para que la cabeza no se corte arriba. */
 .rival-img.rival-mandinga {
-  max-width: 500px;
-  max-height: 330px;
+  max-width: min(500px, 40vw);
+  max-height: min(295px, 30vh);
   transform: translateY(42px);
 }
 
@@ -1107,11 +1155,12 @@
   transform: translateY(38px);
 }
 
-/* Luz Mala — figura vertical dentro de un lienzo muy ancho. */
+/* Luz Mala — figura vertical que ocupa todo el alto del lienzo: cap chico en vh
+   para que nunca se corte contra el borde superior de la ventana. */
 .rival-img.rival-luzmala {
-  max-width: 540px;
-  max-height: 300px;
-  transform: translateY(0);
+  max-width: min(540px, 40vw);
+  max-height: min(235px, 25vh);
+  transform: translateY(20px);
 }
 
 /* Gaucho — rival por defecto; lienzo apaisado (1.83:1) con la figura centrada. */

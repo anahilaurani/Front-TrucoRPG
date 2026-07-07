@@ -4,6 +4,7 @@ import JugadorPrincipal from '../personajes/JugadorPrincipal.js';
 import Oponente from '../personajes/Oponente.js';
 import Portal from '../objetos/Portal.js';
 import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
+import BarreraPinches from '../objetos/BarreraPinches.js';
 
 const RIVAL_LOBIZON_NIVEL = 3;
 const RIVAL_LUZMALA_NIVEL = 4;
@@ -14,6 +15,16 @@ const JEFE1_Y = 445;
 
 const JEFE2_X = 1086;
 const JEFE2_Y = 139;
+
+// Barrera de pinches en el corredor superior (camino a la Luz Mala)
+const BARRERA_PINCHES_X = 368;
+const BARRERA_PINCHES_Y = 160;
+const BARRERA_PINCHES_ALTO = 128;
+
+// Barrera de pinches que tapa la puerta al mapa 3 (arriba de la Luz Mala)
+const BARRERA_PUERTA_X = 1104;
+const BARRERA_PUERTA_Y = 80;
+const BARRERA_PUERTA_ANCHO = 224;
 
 function authHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -89,6 +100,27 @@ export default class MapaAventura2Scene extends BaseScene {
       x: 1092,
       y: 131,
     });
+
+    // pinches que bloquean el camino a la Luz Mala hasta derrotar al Lobizón
+    this.barreraPinches = new BarreraPinches(
+      this,
+      BARRERA_PINCHES_X,
+      BARRERA_PINCHES_Y,
+      BARRERA_PINCHES_ALTO,
+      'Derrotá al Lobizón para pasar',
+    );
+    this.barreraPinches.agregarColision(this.JugadorPrincipal);
+
+    // pinches que tapan la puerta al mapa 3 hasta derrotar a la Luz Mala
+    this.barreraPuerta = new BarreraPinches(
+      this,
+      BARRERA_PUERTA_X,
+      BARRERA_PUERTA_Y,
+      BARRERA_PUERTA_ANCHO,
+      'Derrotá a la Luz Mala para pasar',
+      { horizontal: true },
+    );
+    this.barreraPuerta.agregarColision(this.JugadorPrincipal);
 
     this._crearJefeLobizon();
     this._crearJefeLuzMala();
@@ -189,16 +221,24 @@ export default class MapaAventura2Scene extends BaseScene {
   }
 
   // Si puede pelear con la Luz Mala es porque el Lobizón ya fue derrotado.
+  // El jefe cae y después se hunden los pinches que bloquean el camino.
   _actualizarDerrotaLobizon(animar) {
     if (!this.puedePelearLuzMala) return;
 
     const jefe = this.jefeLobizon;
-    if (!jefe || jefe.derrotado || jefe.cayendo) return;
+    if (!jefe || jefe.derrotado || jefe.cayendo) {
+      // por las dudas: si el jefe ya cayó pero la barrera quedó puesta
+      if (jefe?.derrotado) this.barreraPinches?.desbloquearInmediato();
+      return;
+    }
 
     if (animar) {
-      this.animarDerrotaJefe(jefe);
+      this.animarDerrotaJefe(jefe, {
+        alTerminar: () => this.barreraPinches?.desbloquear(this.JugadorPrincipal),
+      });
     } else {
       jefe.caerDerrotado(false);
+      this.barreraPinches?.desbloquearInmediato();
     }
   }
 
@@ -223,16 +263,24 @@ export default class MapaAventura2Scene extends BaseScene {
     }
   }
 
+  // La Luz Mala cae y los pinches de la puerta al mapa 3 se queman.
   _actualizarDerrotaLuzMala(animar) {
     if (!this.luzMalaDerrotada) return;
 
     const jefe = this.jefeLuzMala;
-    if (!jefe || jefe.derrotado || jefe.cayendo) return;
+    if (!jefe || jefe.derrotado || jefe.cayendo) {
+      // por las dudas: si el jefe ya cayó pero la barrera quedó puesta
+      if (jefe?.derrotado) this.barreraPuerta?.desbloquearInmediato();
+      return;
+    }
 
     if (animar) {
-      this.animarDerrotaJefe(jefe);
+      this.animarDerrotaJefe(jefe, {
+        alTerminar: () => this.barreraPuerta?.desbloquearConFuego(this.JugadorPrincipal),
+      });
     } else {
       jefe.caerDerrotado(false);
+      this.barreraPuerta?.desbloquearInmediato();
     }
   }
 
@@ -247,7 +295,7 @@ export default class MapaAventura2Scene extends BaseScene {
 
   update() {
     // durante la animación de derrota se frena todo
-    if (this._animandoDerrota) {
+    if (this._animandoDerrota || this.barreraPinches?.animando || this.barreraPuerta?.animando) {
       this.JugadorPrincipal.setVelocity(0);
       this.botonInteractuarPresionado = false;
       return;

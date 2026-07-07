@@ -242,7 +242,17 @@
   @if (gameOver) {
   <div class="game-over-overlay" (click)="$event.stopPropagation()">
     @if (esVictoriaFinalHistoria) {
+    @if (!derrotaFinalTerminada) {
+    <!-- Animación de derrota del Mandinga: se despide y se desvanece -->
+    <div class="derrota-final">
+      <img class="derrota-final-img" [src]="rivalImgSrc" alt="Mandinga derrotado"
+        (error)="$any($event.target).src = 'assets/gaucho.png'" />
+      <div class="derrota-final-texto">«Felicidades... me has derrotado.»</div>
+      <div class="derrota-final-sub">El Mandinga se desvanece entre las llamas...</div>
+    </div>
+    } @else {
     <app-creditos (creditosTerminado)="finalizarCreditos()"></app-creditos>
+    }
     } @else {
     <div class="game-over-box">
       <div class="go-title" [class.go-win]="gameOverWon" [class.go-lose]="!gameOverWon">
