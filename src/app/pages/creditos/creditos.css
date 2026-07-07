@@ -198,7 +198,7 @@ main {
 
 .staff-roll {
   width: 100%;
-  animation: subir-creditos 26s linear forwards;
+  animation: subir-creditos 30s linear forwards;
 }
 
 .staff-linea {
@@ -222,11 +222,11 @@ main {
 }
 
 @keyframes subir-creditos {
-  0% {
-    transform: translateY(100%);
+  from {
+    transform: translateY(45%);
   }
 
-  100% {
+  to {
     transform: translateY(-100%);
   }
 }
