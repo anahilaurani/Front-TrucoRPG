@@ -241,6 +241,9 @@
   <!-- ── GAME OVER OVERLAY ───────────────────────────────────────────────── -->
   @if (gameOver) {
   <div class="game-over-overlay" (click)="$event.stopPropagation()">
+    @if (esVictoriaFinalHistoria) {
+    <app-creditos (creditosTerminado)="finalizarCreditos()"></app-creditos>
+    } @else {
     <div class="game-over-box">
       <div class="go-title" [class.go-win]="gameOverWon" [class.go-lose]="!gameOverWon">
         {{ gameOverWon ? '¡GANASTE!' : '¡PERDISTE!' }}
@@ -255,6 +258,7 @@
         <button class="go-btn go-btn-exit" (click)="confirmarSalir()">Salir al mapa</button>
       </div>
     </div>
+    }
   </div>
   }
 

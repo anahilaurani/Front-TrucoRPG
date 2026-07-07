@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { OPONENTES } from '../data/oponente';
 import { FaseOponente } from '../../app/interfaces/faseOponente';
+import { Creditos } from '../../app/pages/creditos/creditos';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -203,7 +204,7 @@ const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
 @Component({
   selector: 'app-truco-solo',
   standalone: true,
-  imports: [CommonModule, NgStyle],
+  imports: [CommonModule, NgStyle, Creditos],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './truco-solo.component.html',
   styleUrl: './truco-solo.component.css',
@@ -971,6 +972,20 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cancelarSalir(): void {
     this.mostrarConfirmSalir = false;
+  }
+
+  /** victoria mandinga */
+  get esVictoriaFinalHistoria(): boolean {
+    return this.gameOverWon && this.esMandinga && this.rivalNivel !== null;
+  }
+
+  /** Se ejecuta cuando el jugador termina de ver los créditos finales. */
+  finalizarCreditos(): void {
+    localStorage.removeItem('historiaPartida');
+    localStorage.removeItem('rivalNivel');
+    localStorage.removeItem('origenPulperia');
+    window.dispatchEvent(new CustomEvent('truco-solo:end'));
+    this.router.navigate(['/home']);
   }
 
   // SOLO PRUEBAS — Forzar victoria a 30 puntos en historia. Eliminar antes de producción.
