@@ -14,11 +14,6 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
       volume: 0.5,
     });
 
-    // El sonido se reproduce en loop mientras el jugador camina y solo se
-    // detiene dentro de update(). Si la escena se pausa, duerme o se cierra
-    // (al interactuar con un portal, abrir un diálogo, cambiar de escena, etc.)
-    // update() deja de ejecutarse y los pasos quedarían sonando para siempre.
-    // Atamos el corte del sonido al ciclo de vida de la escena para evitarlo.
     const detenerPasos = () => {
       if (this.sonidoPasos && (this.sonidoPasos.isPlaying || this.sonidoPasos.isPaused)) {
         this.sonidoPasos.stop();
@@ -41,7 +36,18 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
   }
 
   verificarYCrearAnimaciones(escena, spriteKey) {
-    if (!escena.anims.exists(`${spriteKey}-quieto`)) {
+    if (escena.anims.exists(`${spriteKey}-quieto`)) {
+      const anim = escena.anims.get(`${spriteKey}-quieto`);
+      if (anim && anim.frames && anim.frames.length > 0) {
+        return; 
+      }
+    }
+
+    if (!escena.textures.exists(spriteKey)) {
+      return;
+    }
+
+    try {
       escena.anims.create({
         key: `${spriteKey}-quieto`,
         frames: escena.anims.generateFrameNumbers(spriteKey, { start: 0, end: 3 }),
@@ -76,12 +82,12 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
         frameRate: 8,
         repeat: -1,
       });
+    } catch (e) {
+      console.warn(`No se pudieron inicializar las animaciones para ${spriteKey} aún:`, e);
     }
   }
 
   update(keys) {
-    // Velocidad configurable desde Configuración ("Velocidad del personaje").
-    // Se lee de localStorage para que el cambio aplique sin recompilar; 250 por defecto.
     const guardada = Number(localStorage.getItem('cfg_velocidad'));
     const velocidad = Number.isFinite(guardada) && guardada > 0 ? guardada : 250;
 
@@ -116,7 +122,16 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
     }
 
     const currentSkin = this.texture.key;
+    
     this.verificarYCrearAnimaciones(this.scene, currentSkin);
+
+    if (!this.scene.anims.exists(`${currentSkin}-quieto`)) {
+      return;
+    }
+    const animCheck = this.scene.anims.get(`${currentSkin}-quieto`);
+    if (!animCheck || !animCheck.frames || animCheck.frames.length === 0) {
+      return;
+    }
 
     if (moverIzquierda) {
       this.anims.play(`${currentSkin}-caminando-izquierda`, true);

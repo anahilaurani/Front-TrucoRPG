@@ -53,6 +53,15 @@ export class HistoriaService {
     return this.http.post(`${this.apiUrl}/crearPersonaje`, body);
   }
 
+  equiparAvatarBD(spriteKeyNuevo: string): Observable<{ mensaje: string }> {
+    const body = { 
+      SpriteKeyNuevo: spriteKeyNuevo 
+    };
+
+    console.log('Enviando PUT a /equipar-avatar con el body:', body);
+    return this.http.put<{ mensaje: string }>(`${this.apiUrl}/equipar-avatar`, body);
+  }
+
   setHeroeSeleccionado(id: number): void {
     this.heroeIdSeleccionado = id;
   }
@@ -68,16 +77,17 @@ export class HistoriaService {
 
   obtenerSpriteKey(): string {
     if (this.spriteKeyBD) {
-      return this.spriteKeyBD;
+      return this.spriteKeyBD.replace('.png', '');
     }
 
     if (this.heroeIdSeleccionado !== null) {
       const heroe = personajePorId(this.heroeIdSeleccionado);
       if (heroe && heroe.spriteKey) {
-        return heroe.spriteKey;
+        return heroe.spriteKey.replace('.png', '');
       }
     }
-    return 'personaje';
+    
+    return 'personaje1'; 
   }
 
   iniciarJuego(contenedorId: string, salaService: any, uiService: any): void {
@@ -121,13 +131,25 @@ export class HistoriaService {
     }
   }
 
-  equiparSkinDesdeArmario(spriteKey: string): void {
-    if (this.juegoInstance) {
-      this.juegoInstance.registry.set('playerSprite', spriteKey);
-    }
-    const evento = new CustomEvent('phaser:cambiarSkin', { detail: spriteKey });
-    window.dispatchEvent(evento);
-    this.cambiarSkinSource.next(spriteKey);
+  equiparSkinDesdeArmario(spriteKeyItem: string, spriteKeyVisual: string): void {
+    this.equiparAvatarBD(spriteKeyItem).subscribe({
+      next: (res) => {
+        console.log('Backend actualizado con éxito:', res.mensaje);
+        
+        this.spriteKeyBD = spriteKeyVisual;
+
+        if (this.juegoInstance) {
+          this.juegoInstance.registry.set('playerSprite', spriteKeyVisual);
+        }
+
+        const evento = new CustomEvent('phaser:cambiarSkin', { detail: spriteKeyVisual });
+        window.dispatchEvent(evento);
+        this.cambiarSkinSource.next(spriteKeyVisual);
+      },
+      error: (err) => {
+        console.error('Error al intentar equipar el avatar en la BD:', err);
+      }
+    });
   }
 
   pausarEscena(key: string): void {

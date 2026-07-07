@@ -19,6 +19,11 @@ export const TUTORIALES = {
       camaraZoom: 1.8,
     },
     {
+      texto: 'Y cuando necesites comprar algo, acercate al mostrador y presiona la letra E para interactuar conmigo!',
+      enfoque: 'npc',
+      seguirJugador: true,
+    },
+    {
       texto: 'Tomate tu tiempo, explorá y divertite.',
       enfoque: 'npc',
       seguirJugador: true,
