@@ -22,21 +22,54 @@ export default class SalaMultijugadorScene extends BaseScene {
     this.crearControlesMobile();
     this.cameras.main.fadeIn(800, 0, 0, 0);
 
-    // Tilemap (reutiliza los assets de la pulpería)
+    // Tilemap (reutiliza los assets de la pulpería, con toda su decoración)
     const map = this.make.tilemap({ key: 'mapaPulperia' });
     const barraTileSet = map.addTilesetImage('BarPulperia', 'BarPulperia');
     const paredesTileSet = map.addTilesetImage('Paredes', 'ParedesPulperia');
     const pisoTileSet = map.addTilesetImage('Piso', 'PisoPulperia');
     const rackTileSet = map.addTilesetImage('RackPulperia', 'RackPulperia');
+    const perchaTileSet = map.addTilesetImage('percha', 'percha');
+    const alfombraTileSet = map.addTilesetImage('alfombra', 'alfombra');
+    const mesaTileset = map.addTilesetImage('mesa', 'mesa');
+    const chinitaTileset = map.addTilesetImage('chinita', 'nenaSentada');
+    const gaucho1Tileset = map.addTilesetImage('gaucho', 'gaucho');
+    const gaucho2Tileset = map.addTilesetImage('gaucho2', 'gaucho2');
+    const gaucho3Tileset = map.addTilesetImage('gaucho3', 'gaucho3');
+    const silla1Tileset = map.addTilesetImage('silla1', 'silla1');
+    const silla2Tileset = map.addTilesetImage('silla2', 'silla2');
+    const lenaTileset = map.addTilesetImage('lena', 'lena');
+    const objetosMesa1Tileset = map.addTilesetImage('ObjetosMesa', 'ObjetosMesa');
+    const objetosMesa2Tileset = map.addTilesetImage('ObjetosMesa2', 'ObjetosMesa2');
 
     map.createLayer('Base', pisoTileSet);
-    map.createLayer('Paredes', paredesTileSet);
+    map.createLayer('Paredes', [paredesTileSet, alfombraTileSet]);
     map.createLayer('Estantes', [rackTileSet, pisoTileSet]);
-    const barraLayer = map.createLayer('Barra', barraTileSet);
+    const objetos2Layer = map.createLayer('Objetos2', [mesaTileset, lenaTileset]);
+    const personajesLayer = map.createLayer('Personajes', [
+      gaucho1Tileset,
+      gaucho2Tileset,
+      gaucho3Tileset,
+      chinitaTileset,
+    ]);
+    map.createLayer('Objetos1', [
+      mesaTileset,
+      perchaTileSet,
+      silla1Tileset,
+      silla2Tileset,
+      alfombraTileSet,
+    ]);
+    const objetosMesaLayer = map.createLayer('Objetos3', [
+      objetosMesa1Tileset,
+      objetosMesa2Tileset,
+    ]);
+    const barraLayer = map.createLayer('Barra', [barraTileSet]);
     const marcoLayer = map.createLayer('Marco', paredesTileSet);
     const colisionesLayer = map.createLayer('Colisiones', paredesTileSet);
     colisionesLayer.setCollisionByExclusion([-1]);
 
+    objetosMesaLayer.setDepth(2);
+    objetos2Layer.setDepth(2);
+    personajesLayer.setDepth(1);
     barraLayer.setDepth(2);
     marcoLayer.setDepth(3);
 
@@ -73,37 +106,67 @@ export default class SalaMultijugadorScene extends BaseScene {
       .setScrollFactor(0)
       .setDepth(10);
 
-    // Texturas de sillas (generadas en runtime)
-    this._generarTexturasSilla();
+    // Animaciones de mesas estilo pulpería (pueden existir si ya se visitó la pulpería)
+    if (!this.anims.exists('MesaEspera_idle')) {
+      this.anims.create({
+        key: 'MesaEspera_idle',
+        frames: this.anims.generateFrameNumbers('MesaEspera', { start: 0, end: 26 }),
+        frameRate: 6,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists('MesaEjemplo2_idle')) {
+      this.anims.create({
+        key: 'MesaEjemplo2_idle',
+        frames: this.anims.generateFrameNumbers('MesaEjemplo2', { start: 0, end: 3 }),
+        frameRate: 6,
+        repeat: -1,
+      });
+    }
 
-    // 3 mesas: una por modo
+    // 3 mesas: una por modo (misma mesa que usa la pulpería)
     const configMesas = [
       { x: 750,  y: 350, gameMode: '1v1', label: '1 VS 1', jugadores: 1 },
       { x: 1050, y: 350, gameMode: '2v2', label: '2 VS 2', jugadores: 2 },
       { x: 1350, y: 350, gameMode: '3v3', label: '3 VS 3', jugadores: 3 },
     ];
 
-    configMesas.forEach(({ x, y, label, jugadores }) => {
-      // Sillas
-      this._dibujarSillas(x, y, jugadores);
+    // geometría del sprite MesaEspera (256x160, origen al centro)
+    const SILLA_DX = 99;  // distancia horizontal de las sillas al centro de la mesa
+    const SILLA_DY = 24;  // altura de la silla que ya trae el sprite
+    const SILLA_SEP = 46; // separación vertical entre sillas del mismo lado
 
-      // Label del modo
+    configMesas.forEach(({ x, y, label, jugadores }) => {
+      // Cartelito del modo (mismo estilo que los carteles de la pulpería)
       this.add
         .text(x, y - 102, label, {
-          fontFamily: 'Jersey 20',
-          fontSize: '22px',
-          color: '#FFD700',
-          backgroundColor: '#00000099',
-          stroke: '#000000',
-          strokeThickness: 3,
-          padding: { x: 10, y: 5 },
+          fontFamily: '"Jersey 10"',
+          fontSize: '16px',
+          color: '#ffffff',
+          backgroundColor: '#573a04',
+          padding: { x: 8, y: 4 },
         })
         .setOrigin(0.5)
         .setDepth(5);
+
+      // Pava, mate y cartas quietas sobre la mesa (mismos objetos de la pulpería)
+      this.add.image(x, y + 6, 'ObjetosMesa').setDepth(1);
+
+      // Sillas extra: n por lado (el sprite ya trae 1 de cada lado)
+      const offsetsExtra =
+        jugadores === 3
+          ? [SILLA_DY - SILLA_SEP, SILLA_DY + SILLA_SEP]
+          : jugadores === 2
+            ? [SILLA_DY - SILLA_SEP]
+            : [];
+      offsetsExtra.forEach((dy) => {
+        this.add.image(x - SILLA_DX, y + dy, 'silla1').setFlipX(true).setDepth(0);
+        this.add.image(x + SILLA_DX, y + dy, 'silla1').setDepth(0);
+      });
     });
 
     this.puntosDeInteraccion = configMesas.map(({ x, y, gameMode }) =>
-      new PuntoInteraccion(this, x, y, 'multijugador', 'mesa_juego', 0.9, {
+      new PuntoInteraccion(this, x, y, 'multijugador', 'MesaEspera', 1, {
         gameMode,
         subVista: 'tradicional',
       }),
@@ -311,56 +374,6 @@ export default class SalaMultijugadorScene extends BaseScene {
     // Animación de las partículas en el update
     this._portalZona = { x, y };
     this._portalAngle = 0;
-  }
-
-  /** Genera dos texturas reutilizables: silla mirando al norte y al sur */
-  _generarTexturasSilla() {
-    const W = 36;  // ancho silla
-    const H = 32;  // alto silla
-    const ASIENTO  = 0x8B5E3C;
-    const RESPALDO = 0x4A2808;
-    const BORDE    = 0x2D1804;
-
-    // silla_n → respaldo arriba (para sillas por encima de la mesa)
-    if (!this.textures.exists('silla_n')) {
-      const gn = this.make.graphics({ x: 0, y: 0, add: false });
-      gn.fillStyle(BORDE);    gn.fillRect(0, 0, W, H);
-      gn.fillStyle(RESPALDO); gn.fillRect(1, 1, W - 2, 7);
-      gn.fillStyle(ASIENTO);  gn.fillRect(1, 8, W - 2, H - 9);
-      gn.generateTexture('silla_n', W, H);
-      gn.destroy();
-    }
-
-    // silla_s → respaldo abajo (para sillas por debajo de la mesa)
-    if (!this.textures.exists('silla_s')) {
-      const gs = this.make.graphics({ x: 0, y: 0, add: false });
-      gs.fillStyle(BORDE);    gs.fillRect(0, 0, W, H);
-      gs.fillStyle(ASIENTO);  gs.fillRect(1, 1, W - 2, H - 9);
-      gs.fillStyle(RESPALDO); gs.fillRect(1, H - 8, W - 2, 7);
-      gs.generateTexture('silla_s', W, H);
-      gs.destroy();
-    }
-  }
-
-  /**
-   * Dibuja `n` sillas arriba y `n` sillas abajo de la mesa en (x, y).
-   * @param {number} x
-   * @param {number} y
-   * @param {number} n - jugadores por equipo (1, 2 o 3)
-   */
-  _dibujarSillas(x, y, n) {
-    const sep    = 45;  // separación horizontal entre sillas
-    const offsetY = 68; // distancia vertical desde el centro de la mesa
-
-    for (let i = 0; i < n; i++) {
-      const dx = (i - (n - 1) / 2) * sep;
-
-      // Silla arriba de la mesa (respaldo al norte)
-      this.add.image(x + dx, y - offsetY, 'silla_n').setDepth(1);
-
-      // Silla abajo de la mesa (respaldo al sur)
-      this.add.image(x + dx, y + offsetY, 'silla_s').setDepth(2);
-    }
   }
 
   shutdown() {
