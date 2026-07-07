@@ -132,6 +132,7 @@ export class Truco3v3Component implements OnInit, OnDestroy {
   gameOver = false;
   gameOverGanamos = false;
   mostrarConfirmSalir = false;
+  mostrarMenuSenias = false;
   toastMsg = '';
   toastTipo: 'error' | 'info' = 'error';
 
@@ -161,6 +162,11 @@ export class Truco3v3Component implements OnInit, OnDestroy {
       }),
       this.sala.jugadorDesconectado$.subscribe(v => {
         if (v) this.showToast('Un jugador se desconectó de la partida.');
+      }),
+
+      this.sala.senia3v3Recibida$.subscribe(({ tipo, deRol }) => {
+        if (!tipo) return;
+        this.mostrarDialogo(deRol, `👁 ${tipo}`);
       }),
     );
   }
@@ -554,5 +560,15 @@ export class Truco3v3Component implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => { this.toastMsg = ''; this.cdr.markForCheck(); }, tipo === 'info' ? 2600 : 4000);
+  }
+
+  // ── Señas ─────────────────────────────────────────────────────
+  abrirMenuSenias(): void {
+    this.mostrarMenuSenias = true;
+  }
+
+  enviarSenia(tipo: string): void {
+    this.hub('EnviarSenia3v3', tipo);
+    this.mostrarMenuSenias = false;
   }
 }

@@ -163,9 +163,35 @@
       <div class="yo-info">
         <img src="assets/gaucho.png" class="avatar-yo" alt="yo" />
         <span class="yo-nombre">{{ yoNombre }} ({{ miRol }})</span>
+        <button class="senia-btn"
+          (click)="abrirMenuSenias()">
+          Enviar Seña
+        </button>
         @if (esMano(miRol)) { <span class="mano-badge">MANO</span> }
         @if (dialogos[miRol]) {
           <div class="dialogo-burbuja burbuja-bottom">{{ dialogos[miRol]!.texto }}</div>
+        }
+        @if (mostrarMenuSenias) {
+        <div class="sena-overlay">
+          <div class="sena-box">
+            <h3>Elegí una seña</h3>
+            <button (click)="enviarSenia('anchoEspada')">
+              Ancho de Espada
+            </button>
+            <button (click)="enviarSenia('anchoBasto')">
+              Ancho de Basto
+            </button>
+            <button (click)="enviarSenia('sieteEspada')">
+              7 de Espada
+            </button>
+            <button (click)="enviarSenia('sieteOro')">
+              7 de Oro
+            </button>
+            <button (click)="enviarSenia('ninguna')">
+              Nada importante
+            </button>
+          </div>
+        </div>
         }
       </div>
       <div class="fan-wrap-3v3">

@@ -39,6 +39,7 @@ export interface SalaPublicaInfo {
 export class SalaService {
   private hub: signalR.HubConnection;
   private seniaRecibidaSource = new Subject<string>();
+  private senia3v3RecibidaSource = new Subject<{ tipo: string; deRol: string }>();
 
   // ── 1v1 observables ─────────────────────────────────────────
   codigoSala$          = new BehaviorSubject<string>('');
@@ -67,6 +68,7 @@ export class SalaService {
 
   // ── Señas observable ─────────────────────────────────────────
   seniaRecibida$ = this.seniaRecibidaSource.asObservable();
+  senia3v3Recibida$ = this.senia3v3RecibidaSource.asObservable();
 
   constructor(private auth: AuthService) {
     this.hub = new signalR.HubConnectionBuilder()
@@ -130,6 +132,10 @@ export class SalaService {
     // ── Señas evento ────────────────────────────────────────
     this.hub.on('RecibirSenia2v2', (tipo: string) => {
       this.seniaRecibidaSource.next(tipo);
+    });
+
+    this.hub.on('RecibirSenia3v3', (tipo: string, deRol: string) => {
+      this.senia3v3RecibidaSource.next({ tipo, deRol });
     });
   }
 
