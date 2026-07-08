@@ -1,120 +1,249 @@
-<main>
-  <div class="connection-container">
-    <app-connection-status></app-connection-status>
-  </div>
+@if (!uiService.esMultijugadorPhaser) {
+  <main>
+    <div class="connection-container">
+      <app-connection-status></app-connection-status>
+    </div>
+    <div class="menu-wrapper">
+      <div class="contenedor-menu">
+        <div class="menu-sep"></div>
+        <a (click)="abrirModalCrear()" style="cursor: pointer">
+          <span>CREAR SALA</span>
+        </a>
+        <a (click)="abrirModalUnirse()" style="cursor: pointer">
+          <span>UNIRSE A SALA</span>
+        </a>
+        <a (click)="abrirModalBuscar()" style="cursor: pointer"><span>BUSCAR PARTIDA</span></a>
+        <div class="menu-sep"></div>
+        <a (click)="volver()" style="cursor: pointer"><span>VOLVER</span></a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Unirse a sala -->
+  @if (modalAbierto) {
+    <div class="modal-overlay" (click)="cerrarModal()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <h2 class="modal-titulo">UNIRSE A SALA</h2>
+        <div class="menu-sep"></div>
+        <input
+          class="modal-input"
+          [(ngModel)]="codigoIngresado"
+          placeholder="CÓDIGO DE SALA"
+          maxlength="6"
+          (keyup.enter)="confirmarUnirse()"
+          autofocus
+        />
+        @if (errorUnirse) {
+          <p class="modal-error">{{ errorUnirse }}</p>
+        }
+        <button class="boton-unirse" (click)="confirmarUnirse()" [disabled]="cargando">
+          {{ cargando ? 'Conectando...' : 'UNIRSE' }}
+        </button>
+        <button class="boton-qr" (click)="abrirEscanerQr()" [disabled]="cargando">
+          <span class="boton-qr-icono">▣</span> CONECTAR CON QR
+        </button>
+        <a class="boton-cancelar" (click)="cerrarModal()">CANCELAR</a>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Crear sala -->
+  @if (modalCrearAbierto) {
+    <div class="modal-overlay" (click)="cerrarModalCrear()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <h2 class="modal-titulo">CREAR SALA</h2>
+        <div class="menu-sep"></div>
+        <label class="modal-check">
+          <input type="checkbox" [(ngModel)]="salaPublica" />
+          <span>Sala pública</span>
+        </label>
+        <p class="modal-hint">
+          {{
+            salaPublica
+              ? 'Aparecerá en "Buscar partida" para que cualquiera se una.'
+              : 'Privada: solo se entra con el código o el QR.'
+          }}
+        </p>
+        <button class="boton-unirse" (click)="confirmarCrear()">CREAR</button>
+        <a class="boton-cancelar" (click)="cerrarModalCrear()">CANCELAR</a>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Buscar partida -->
+  @if (modalBuscarAbierto) {
+    <div class="modal-overlay" (click)="cerrarModalBuscar()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <h2 class="modal-titulo">BUSCAR PARTIDA</h2>
+        <div class="menu-sep"></div>
+
+        @if (cargandoBuscar) {
+          <p class="modal-hint">Buscando salas...</p>
+        } @else if (errorBuscar) {
+          <p class="modal-error">{{ errorBuscar }}</p>
+        } @else if (salasPublicas.length === 0) {
+          <p class="modal-hint">No hay salas públicas disponibles ahora mismo.</p>
+        } @else {
+          <ul class="salas-lista">
+            @for (s of salasPublicas; track s.codigo) {
+              <li class="sala-item">
+                <div class="sala-info">
+                  <span class="sala-codigo">{{ s.codigo }}</span>
+                  <span class="sala-estado">
+                    {{ gameMode === '1v1' ? 'Esperando rival' : 'Esperando jugadores' }}
+                    ({{ s.jugadores }}/{{ s.maxJugadores }})
+                  </span>
+                </div>
+                <button
+                  class="boton-unirse sala-unir"
+                  (click)="unirseASalaDisponible(s.codigo)"
+                  [disabled]="cargando"
+                >
+                  UNIRSE
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (errorUnirse) {
+          <p class="modal-error">{{ errorUnirse }}</p>
+        }
+
+        <button class="boton-qr" (click)="refrescarSalas()" [disabled]="cargandoBuscar || cargando">
+          ↻ REFRESCAR
+        </button>
+        <a class="boton-cancelar" (click)="cerrarModalBuscar()">CANCELAR</a>
+      </div>
+    </div>
+  }
+
+  <!-- Escáner de QR -->
+  @if (escanerAbierto) {
+    <app-qr-scanner
+      (codigoLeido)="onCodigoQr($event)"
+      (cerrado)="cerrarEscanerQr()"
+    ></app-qr-scanner>
+  }
+} @else {
   <div class="menu-wrapper">
     <div class="contenedor-menu">
       <div class="menu-sep"></div>
-      <a (click)="abrirModalCrear()" style="cursor:pointer">
+      <a (click)="abrirModalCrear()" style="cursor: pointer">
         <span>CREAR SALA</span>
       </a>
-      <a (click)="abrirModalUnirse()" style="cursor:pointer">
+      <a (click)="abrirModalUnirse()" style="cursor: pointer">
         <span>UNIRSE A SALA</span>
       </a>
-      <a (click)="abrirModalBuscar()" style="cursor:pointer"><span>BUSCAR PARTIDA</span></a>
+      <a (click)="abrirModalBuscar()" style="cursor: pointer"><span>BUSCAR PARTIDA</span></a>
       <div class="menu-sep"></div>
-      <a routerLink="/menu-multijugador-tipo"><span>VOLVER</span></a>
     </div>
   </div>
-</main>
 
-<!-- Modal: Unirse a sala -->
-@if (modalAbierto) {
-  <div class="modal-overlay" (click)="cerrarModal()">
-    <div class="modal-panel" (click)="$event.stopPropagation()">
-      <h2 class="modal-titulo">UNIRSE A SALA</h2>
-      <div class="menu-sep"></div>
-      <input
-        class="modal-input"
-        [(ngModel)]="codigoIngresado"
-        placeholder="CÓDIGO DE SALA"
-        maxlength="6"
-        (keyup.enter)="confirmarUnirse()"
-        autofocus
-      />
-      @if (errorUnirse) {
-        <p class="modal-error">{{ errorUnirse }}</p>
-      }
-      <button class="boton-unirse" (click)="confirmarUnirse()" [disabled]="cargando">
-        {{ cargando ? 'Conectando...' : 'UNIRSE' }}
-      </button>
-      <button class="boton-qr" (click)="abrirEscanerQr()" [disabled]="cargando">
-        <span class="boton-qr-icono">▣</span> CONECTAR CON QR
-      </button>
-      <a class="boton-cancelar" (click)="cerrarModal()">CANCELAR</a>
+  <!-- Modal: Unirse a sala -->
+  @if (modalAbierto) {
+    <div class="modal-overlay" (click)="cerrarModal()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <h2 class="modal-titulo">UNIRSE A SALA</h2>
+        <div class="menu-sep"></div>
+        <input
+          class="modal-input"
+          [(ngModel)]="codigoIngresado"
+          placeholder="CÓDIGO DE SALA"
+          maxlength="6"
+          (keyup.enter)="confirmarUnirse()"
+          autofocus
+        />
+        @if (errorUnirse) {
+          <p class="modal-error">{{ errorUnirse }}</p>
+        }
+        <button class="boton-unirse" (click)="confirmarUnirse()" [disabled]="cargando">
+          {{ cargando ? 'Conectando...' : 'UNIRSE' }}
+        </button>
+        <button class="boton-qr" (click)="abrirEscanerQr()" [disabled]="cargando">
+          <span class="boton-qr-icono">▣</span> CONECTAR CON QR
+        </button>
+        <a class="boton-cancelar" (click)="cerrarModal()">CANCELAR</a>
+      </div>
     </div>
-  </div>
-}
+  }
 
-<!-- Modal: Crear sala -->
-@if (modalCrearAbierto) {
-  <div class="modal-overlay" (click)="cerrarModalCrear()">
-    <div class="modal-panel" (click)="$event.stopPropagation()">
-      <h2 class="modal-titulo">CREAR SALA</h2>
-      <div class="menu-sep"></div>
-      <label class="modal-check">
-        <input type="checkbox" [(ngModel)]="salaPublica" />
-        <span>Sala pública</span>
-      </label>
-      <p class="modal-hint">
-        {{ salaPublica
-          ? 'Aparecerá en "Buscar partida" para que cualquiera se una.'
-          : 'Privada: solo se entra con el código o el QR.' }}
-      </p>
-      <button class="boton-unirse" (click)="confirmarCrear()">CREAR</button>
-      <a class="boton-cancelar" (click)="cerrarModalCrear()">CANCELAR</a>
+  <!-- Modal: Crear sala -->
+  @if (modalCrearAbierto) {
+    <div class="modal-overlay" (click)="cerrarModalCrear()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <h2 class="modal-titulo">CREAR SALA</h2>
+        <div class="menu-sep"></div>
+        <label class="modal-check">
+          <input type="checkbox" [(ngModel)]="salaPublica" />
+          <span>Sala pública</span>
+        </label>
+        <p class="modal-hint">
+          {{
+            salaPublica
+              ? 'Aparecerá en "Buscar partida" para que cualquiera se una.'
+              : 'Privada: solo se entra con el código o el QR.'
+          }}
+        </p>
+        <button class="boton-unirse" (click)="confirmarCrear()">CREAR</button>
+        <a class="boton-cancelar" (click)="cerrarModalCrear()">CANCELAR</a>
+      </div>
     </div>
-  </div>
-}
+  }
 
-<!-- Modal: Buscar partida -->
-@if (modalBuscarAbierto) {
-  <div class="modal-overlay" (click)="cerrarModalBuscar()">
-    <div class="modal-panel" (click)="$event.stopPropagation()">
-      <h2 class="modal-titulo">BUSCAR PARTIDA</h2>
-      <div class="menu-sep"></div>
+  <!-- Modal: Buscar partida -->
+  @if (modalBuscarAbierto) {
+    <div class="modal-overlay" (click)="cerrarModalBuscar()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <h2 class="modal-titulo">BUSCAR PARTIDA</h2>
+        <div class="menu-sep"></div>
 
-      @if (cargandoBuscar) {
-        <p class="modal-hint">Buscando salas...</p>
-      } @else if (errorBuscar) {
-        <p class="modal-error">{{ errorBuscar }}</p>
-      } @else if (salasPublicas.length === 0) {
-        <p class="modal-hint">No hay salas públicas disponibles ahora mismo.</p>
-      } @else {
-        <ul class="salas-lista">
-          @for (s of salasPublicas; track s.codigo) {
-            <li class="sala-item">
-              <div class="sala-info">
-                <span class="sala-codigo">{{ s.codigo }}</span>
-                <span class="sala-estado">
-                  {{ gameMode === '1v1' ? 'Esperando rival' : 'Esperando jugadores' }}
-                  ({{ s.jugadores }}/{{ s.maxJugadores }})
-                </span>
-              </div>
-              <button class="boton-unirse sala-unir" (click)="unirseASalaDisponible(s.codigo)" [disabled]="cargando">
-                UNIRSE
-              </button>
-            </li>
-          }
-        </ul>
-      }
+        @if (cargandoBuscar) {
+          <p class="modal-hint">Buscando salas...</p>
+        } @else if (errorBuscar) {
+          <p class="modal-error">{{ errorBuscar }}</p>
+        } @else if (salasPublicas.length === 0) {
+          <p class="modal-hint">No hay salas públicas disponibles ahora mismo.</p>
+        } @else {
+          <ul class="salas-lista">
+            @for (s of salasPublicas; track s.codigo) {
+              <li class="sala-item">
+                <div class="sala-info">
+                  <span class="sala-codigo">{{ s.codigo }}</span>
+                  <span class="sala-estado">
+                    {{ gameMode === '1v1' ? 'Esperando rival' : 'Esperando jugadores' }}
+                    ({{ s.jugadores }}/{{ s.maxJugadores }})
+                  </span>
+                </div>
+                <button
+                  class="boton-unirse sala-unir"
+                  (click)="unirseASalaDisponible(s.codigo)"
+                  [disabled]="cargando"
+                >
+                  UNIRSE
+                </button>
+              </li>
+            }
+          </ul>
+        }
 
-      @if (errorUnirse) {
-        <p class="modal-error">{{ errorUnirse }}</p>
-      }
+        @if (errorUnirse) {
+          <p class="modal-error">{{ errorUnirse }}</p>
+        }
 
-      <button class="boton-qr" (click)="refrescarSalas()" [disabled]="cargandoBuscar || cargando">
-        ↻ REFRESCAR
-      </button>
-      <a class="boton-cancelar" (click)="cerrarModalBuscar()">CANCELAR</a>
+        <button class="boton-qr" (click)="refrescarSalas()" [disabled]="cargandoBuscar || cargando">
+          ↻ REFRESCAR
+        </button>
+        <a class="boton-cancelar" (click)="cerrarModalBuscar()">CANCELAR</a>
+      </div>
     </div>
-  </div>
-}
+  }
 
-<!-- Escáner de QR -->
-@if (escanerAbierto) {
-  <app-qr-scanner
-    (codigoLeido)="onCodigoQr($event)"
-    (cerrado)="cerrarEscanerQr()"
-  ></app-qr-scanner>
+  <!-- Escáner de QR -->
+  @if (escanerAbierto) {
+    <app-qr-scanner
+      (codigoLeido)="onCodigoQr($event)"
+      (cerrado)="cerrarEscanerQr()"
+    ></app-qr-scanner>
+  }
 }

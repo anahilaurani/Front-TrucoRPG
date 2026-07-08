@@ -742,7 +742,14 @@ export class TrucoSolo2v2Component implements OnInit, OnDestroy {
   cancelarSalir():   void { this.mostrarConfirmSalir = false; }
   async confirmarSalir(): Promise<void> {
     this.mostrarConfirmSalir = false;
-    this.router.navigate(['/home']);
+    const esPulperia = localStorage.getItem('origenPulperia') === '1';
+    localStorage.removeItem('origenPulperia');
+    if (esPulperia) {
+      // Lanzado como overlay desde la pulpería: notificar a Historia para cerrar
+      window.dispatchEvent(new CustomEvent('truco-2v2:end'));
+    } else {
+      this.router.navigate(['/home']);
+    }
   }
 
   // ── Acciones del humano hacia su compañero ────────────────────

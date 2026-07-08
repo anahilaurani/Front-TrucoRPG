@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { HEROES } from '../../../game/data/heroes';
+import { PulperiaUiService } from '../../services/pulperiaOverlay/pulperia-overlay-config';
 
 @Component({
   selector: 'app-seleccion-personaje',
@@ -12,17 +13,21 @@ import { HEROES } from '../../../game/data/heroes';
   styleUrl: './seleccion-personaje.css',
 })
 export class SeleccionPersonaje {
-  @Input() standalone = true; // false cuando se embebe dentro de otro componente
-  @Input() volverRuta: string | null = null; // ruta a la que debe volver el botón
+  @Input() standalone = true;
+  @Input() volverRuta: string | null = null;
 
   heroes = HEROES;
   selectedHeroId: number | null = null;
-  readonly esTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  readonly esTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   @Output() heroeConfirmado = new EventEmitter<number>();
   @Output() solicitarVolver = new EventEmitter<void>();
 
-  constructor(private location: Location, private router: Router) {}
+  constructor(
+    private location: Location,
+    private router: Router,
+    protected uiService: PulperiaUiService,
+  ) {}
 
   seleccionarHeroe(id: number): void {
     this.selectedHeroId = id;

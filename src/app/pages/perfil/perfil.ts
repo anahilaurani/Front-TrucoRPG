@@ -1,5 +1,7 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth/auth.service';
 
 const HEROES: Record<number, { nombre: string; color: string; descripcion: string }> = {
@@ -24,7 +26,7 @@ export const AVATARES = [
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule, CommonModule],
   templateUrl: './perfil.html',
   styleUrl: './perfil.css',
 })
@@ -32,7 +34,7 @@ export class PerfilComponent {
   private authService = inject(AuthService);
   private router      = inject(Router);
 
-  usuario    = computed(() => this.authService.obtenerUsuario());
+  usuario    = this.authService.usuario;
   inicial    = computed(() => this.usuario()?.nombre?.charAt(0).toUpperCase() ?? '?');
   avatarUrl  = computed(() => this.authService.avatarUrl());
   heroe      = computed(() => {
@@ -44,6 +46,14 @@ export class PerfilComponent {
   readonly avatares    = AVATARES;
   pickerAbierto        = signal(false);
 
+  formPassAbierto  = false;
+  passwordActual   = '';
+  passwordNueva    = '';
+  passwordConfirmar = '';
+  mensajePass      = '';
+  errorPass        = false;
+  guardandoPass    = false;
+
   seleccionarAvatar(src: string): void {
     this.authService.setAvatar(src);
     this.pickerAbierto.set(false);
@@ -52,6 +62,55 @@ export class PerfilComponent {
   quitarAvatar(): void {
     this.authService.setAvatar(null);
     this.pickerAbierto.set(false);
+  }
+
+  toggleFormPass(): void {
+    this.formPassAbierto = !this.formPassAbierto;
+    this.mensajePass = '';
+    this.passwordActual = '';
+    this.passwordNueva = '';
+    this.passwordConfirmar = '';
+  }
+
+  cambiarPassword(): void {
+    this.mensajePass = '';
+    this.errorPass = false;
+
+    if (!this.passwordActual || !this.passwordNueva || !this.passwordConfirmar) {
+      this.errorPass = true;
+      this.mensajePass = 'Completá todos los campos.';
+      return;
+    }
+
+    if (this.passwordNueva !== this.passwordConfirmar) {
+      this.errorPass = true;
+      this.mensajePass = 'Las contraseñas nuevas no coinciden.';
+      return;
+    }
+
+    if (this.passwordNueva.length < 6) {
+      this.errorPass = true;
+      this.mensajePass = 'La nueva contraseña debe tener al menos 6 caracteres.';
+      return;
+    }
+
+    this.guardandoPass = true;
+
+    this.authService.cambiarPassword(this.passwordActual, this.passwordNueva).subscribe({
+      next: (res) => {
+        this.guardandoPass = false;
+        this.errorPass = false;
+        this.mensajePass = res.message ?? 'Contraseña actualizada correctamente.';
+        this.passwordActual = '';
+        this.passwordNueva = '';
+        this.passwordConfirmar = '';
+      },
+      error: (err) => {
+        this.guardandoPass = false;
+        this.errorPass = true;
+        this.mensajePass = err?.error?.message ?? err?.error?.title ?? 'No se pudo cambiar la contraseña.';
+      },
+    });
   }
 
   cerrarSesion(): void {

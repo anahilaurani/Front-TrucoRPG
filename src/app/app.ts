@@ -3,11 +3,12 @@ import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { Header } from './components/header/header';
 import { Footer } from './components/footer/footer';
+import { ToastComponent } from './components/toast/toast';
 import { AudioService } from './services/audio.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Footer],
+  imports: [RouterOutlet, Header, Footer, ToastComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -60,8 +61,16 @@ export class App implements OnInit, OnDestroy {
     }
   };
 
-  solicitarPantallaCompleta(): void {
-    document.documentElement.requestFullscreen().catch(() => {});
+  async solicitarRotacion(): Promise<void> {
+    // 1. Fullscreen (requerido por la mayoría de browsers antes de lock)
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen().catch(() => {});
+    }
+    // 2. Forzar orientación landscape
+    const orientation = screen.orientation as any;
+    if (orientation?.lock) {
+      await orientation.lock('landscape').catch(() => {});
+    }
   }
 
   private _onOrientationChange = () => {

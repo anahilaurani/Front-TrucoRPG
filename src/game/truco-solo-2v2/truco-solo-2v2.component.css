@@ -1,4 +1,8 @@
 /* Estilos específicos del componente solo 2v2 que no están en los archivos compartidos */
+.root {
+  background-image: url('/assets/multijugador.png') !important;
+  background-color: transparent !important;
+}
 
 /* Indicador de "mano" de la ronda (quién abre y juega primero tras una parda) */
 .mano-badge {
@@ -26,8 +30,15 @@
 }
 
 @keyframes parpadeo {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .sin-cartas {
@@ -43,7 +54,7 @@
 .game-over-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,8 +79,14 @@
   letter-spacing: 3px;
   text-align: center;
 }
-.go-win  { color: #c8a030; }
-.go-lose { color: #cc4444; }
+
+.go-win {
+  color: #c8a030;
+}
+
+.go-lose {
+  color: #cc4444;
+}
 
 .go-subtitle {
   font-family: var(--font-data);
@@ -96,18 +113,40 @@
   border-radius: 3px;
   transition: filter 0.1s;
 }
-.go-btn:hover { filter: brightness(1.2); }
 
-.go-btn-play { background: #1a3d22; border-color: #2a7a3a; color: #4adc6a; }
-.go-btn-exit { background: #3a1010; border-color: #7a3020; color: #dd7070; }
+.go-btn:hover {
+  filter: brightness(1.2);
+}
+
+.go-btn-play {
+  background: #1a3d22;
+  border-color: #2a7a3a;
+  color: #4adc6a;
+}
+
+.go-btn-exit {
+  background: #3a1010;
+  border-color: #7a3020;
+  color: #dd7070;
+}
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ── Botón Acciones (órdenes al compañero) ──────────────────────────────── */
-.left-panel { display: flex; flex-direction: column; }
+.left-panel {
+  display: flex;
+  flex-direction: column;
+}
 
 .acciones-btn {
   margin-top: auto;
@@ -124,8 +163,15 @@
   transition: background 0.12s, border-color 0.12s, transform 0.08s;
   width: 100%;
 }
-.acciones-btn:hover { background: #2a1e0c; border-color: #c8a030; }
-.acciones-btn:active { transform: scale(0.97); }
+
+.acciones-btn:hover {
+  background: #2a1e0c;
+  border-color: #c8a030;
+}
+
+.acciones-btn:active {
+  transform: scale(0.97);
+}
 
 /* ── Modal overlay ───────────────────────────────────────────────────────── */
 .acciones-overlay {
@@ -154,8 +200,15 @@
 }
 
 @keyframes accionesIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .acciones-title {
@@ -203,22 +256,35 @@
   transition: background 0.1s, transform 0.08s;
   border: 1px solid;
 }
-.accion-item:active { transform: scale(0.96); }
-.accion-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.accion-item:active {
+  transform: scale(0.96);
+}
+
+.accion-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .accion-jugar {
   background: #1a2a12;
   border-color: #4a8a28;
   color: #88dd44;
 }
-.accion-jugar:not(:disabled):hover { background: #223614; }
+
+.accion-jugar:not(:disabled):hover {
+  background: #223614;
+}
 
 .accion-consulta {
   background: #12202a;
   border-color: #2a6a9a;
   color: #55aadd;
 }
-.accion-consulta:hover { background: #162838; }
+
+.accion-consulta:hover {
+  background: #162838;
+}
 
 .acciones-cerrar {
   font-family: var(--font-data, 'VT323', monospace);
@@ -233,4 +299,30 @@
   align-self: center;
   transition: color 0.1s, border-color 0.1s;
 }
-.acciones-cerrar:hover { color: #c89030; border-color: #5a4020; }
+
+.acciones-cerrar:hover {
+  color: #c89030;
+  border-color: #5a4020;
+}
+
+/* ── Responsive landscape mobile ─────────────────────────────── */
+/* Elimina el gap del panel izquierdo cuando hay pocos botones   */
+@media (max-height: 560px) {
+  .btn-list {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .acciones-btn {
+    margin-top: 8px !important;
+    font-size: 15px;
+    padding: 5px 4px;
+  }
+}
+
+@media (max-height: 440px) {
+  .acciones-btn {
+    font-size: 13px !important;
+    padding: 4px 3px !important;
+  }
+}

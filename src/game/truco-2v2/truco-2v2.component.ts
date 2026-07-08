@@ -540,7 +540,15 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
   async confirmarSalir(): Promise<void> {
     this.mostrarConfirmSalir = false;
     await this.sala.abandonar();
-    this.router.navigate(['/home']);
+    // Desde historia: cerrar el overlay y volver a la pulpería (sin navegar).
+    if (localStorage.getItem('multiEnHistoria') === '1') {
+      localStorage.removeItem('multiEnHistoria');
+      window.dispatchEvent(new CustomEvent('truco-2v2-multi:end'));
+      return;
+    }
+    const volverASala = localStorage.getItem('origenSalaMulti') === '1';
+    localStorage.removeItem('origenSalaMulti');
+    this.router.navigate([volverASala ? '/multijugador-mapa' : '/home']);
   }
 
   private showToast(msg: string, tipo: 'error' | 'info' = 'error'): void {

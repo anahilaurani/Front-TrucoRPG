@@ -89,6 +89,7 @@ const API = '/api/truco3v3';
     '../truco-solo/truco-solo.component.css',
     '../truco-2v2/truco-2v2.component.css',
     '../truco-3v3/truco-3v3.component.css',
+    './truco-solo-3v3.component.css',
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -593,7 +594,16 @@ export class TrucoSolo3v3Component implements OnInit, OnDestroy {
 
   salirPartida():    void { this.mostrarConfirmSalir = true; }
   cancelarSalir():   void { this.mostrarConfirmSalir = false; }
-  confirmarSalir():  void { this.mostrarConfirmSalir = false; this.router.navigate(['/home']); }
+  confirmarSalir(): void {
+    this.mostrarConfirmSalir = false;
+    const esPulperia = localStorage.getItem('origenPulperia') === '1';
+    localStorage.removeItem('origenPulperia');
+    if (esPulperia) {
+      window.dispatchEvent(new CustomEvent('truco-3v3:end'));
+    } else {
+      this.router.navigate(['/home']);
+    }
+  }
 
   // ── Acciones ──────────────────────────────────────────────────
   abrirAcciones():  void { this.mostrarAcciones = true;  this.cdr.markForCheck(); }

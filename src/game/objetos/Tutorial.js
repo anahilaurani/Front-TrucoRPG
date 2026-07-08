@@ -1,6 +1,8 @@
+import Phaser from 'phaser';
+
 export default class Tutorial {
   /**
-   * @param {Phaser.Scene} escena 
+   * @param {Phaser.Scene} escena
    * @param {string} idTutorial
    * @param {Array<Object>} pasos
    */
@@ -11,25 +13,20 @@ export default class Tutorial {
     this.pasoActual = 0;
     this.activo = false;
 
-    // nos fijamos si el jugador ya miró el tutorial
     this.yaVisto = localStorage.getItem(this.idTutorial) === 'true';
   }
 
   iniciar() {
-    // si lo vio no lo mostramos y seguimos con la escena 
-    if (this.yaVisto) {
-      return false;
-    }
+    if (this.yaVisto) return false;
 
     this.activo = true;
     this.pasoActual = 0;
+    this.subPasoCamaraPresentado = false;
 
-    // bloqueamos al avatar del jugador para que no se mueva 
     if (this.escena.JugadorPrincipal && this.escena.JugadorPrincipal.body) {
       this.escena.JugadorPrincipal.setVelocity(0);
     }
 
-    // ejecutamos el primer paso
     this.ejecutarPaso();
 
     this.escena.input.on('pointerdown', () => this.avanzar());
@@ -41,7 +38,6 @@ export default class Tutorial {
   update() {
     if (!this.activo) return;
 
-    // Bloqueo estricto de movimiento en el update
     if (this.escena.JugadorPrincipal) {
       this.escena.JugadorPrincipal.update(
         {
@@ -67,53 +63,97 @@ export default class Tutorial {
 
   ejecutarPaso() {
     const paso = this.pasos[this.pasoActual];
+    const camara = this.escena.cameras.main;
+
+    if (!paso) return;
 
     if (paso.texto) {
       if (!this.globoContenedor) {
         this.crearGloboTexto(
           paso.enfoqueNpc || {
-            x: this.escena.cameras.main.midPoint.x,
-            y: this.escena.cameras.main.midPoint.y + 60,
+            x: camara.midPoint.x,
+            y: camara.midPoint.y + 60,
           },
           paso.texto,
         );
       } else {
+        this.globoContenedor.setVisible(true);
         this.textoGlobo.setText(paso.texto);
       }
     }
 
-    if (paso.camaraDestino) {
-      this.escena.cameras.main.stopFollow();
-      this.escena.cameras.main.pan(
-        paso.camaraDestino.x,
-        paso.camaraDestino.y,
-        paso.camaraTiempo || 1500,
-        'Power2',
-      );
-    } else if (paso.seguirJugador) {
-      this.escena.cameras.main.pan(
-        this.escena.JugadorPrincipal.x,
-        this.escena.JugadorPrincipal.y,
-        1500,
-        'Power2',
-        false,
-        (camera, progress) => {
-          if (progress === 1) camera.startFollow(this.escena.JugadorPrincipal, true, 0.1, 0.1);
-        },
-      );
+    this.subPasoCamaraPresentado = false;
+
+    if (!paso.texto && paso.camaraDestino) {
+      this.moverCamaraHaciaObjetivo(paso);
+    }
+
+    if (paso.seguirJugador) {
+      this.regresarCamaraOriginal();
     }
   }
 
   avanzar() {
     if (!this.activo) return;
 
-    this.pasoActual++;
+    const paso = this.pasos[this.pasoActual];
 
+    if (paso && paso.camaraDestino && !this.subPasoCamaraPresentado) {
+      this.moverCamaraHaciaObjetivo(paso);
+      return;
+    }
+
+    if (paso && paso.camaraDestino && this.subPasoCamaraPresentado) {
+      if (this.globoContenedor) this.globoContenedor.setVisible(false);
+
+      this.regresarCamaraOriginal(() => {
+        this.irAlSiguientePaso();
+      });
+      return;
+    }
+
+    this.irAlSiguientePaso();
+  }
+
+  irAlSiguientePaso() {
+    this.pasoActual++;
     if (this.pasoActual < this.pasos.length) {
       this.ejecutarPaso();
     } else {
       this.finalizar();
     }
+  }
+
+  moverCamaraHaciaObjetivo(paso) {
+    this.escena.game.canvas.style.imageRendering = 'pixelated';
+    const camara = this.escena.cameras.main;
+    this.camaraEstabaSiguiendo = camara._follow;
+    camara.stopFollow();
+
+    this.subPasoCamaraPresentado = true;
+
+    if (this.globoContenedor) this.globoContenedor.setVisible(false);
+
+    camara.pan(paso.camaraDestino.x, paso.camaraDestino.y, paso.camaraTiempo || 1200, 'Power2');
+    camara.zoomTo(paso.camaraZoom || 1.5, paso.camaraTiempo || 1200, 'Power2');
+  }
+
+  regresarCamaraOriginal(onCompleteCallback = null) {
+    const camara = this.escena.cameras.main;
+    const paso = this.pasos[this.pasoActual];
+
+    const destinoX = paso?.enfoqueNpc ? paso.enfoqueNpc.x : this.escena.JugadorPrincipal.x;
+    const destinoY = paso?.enfoqueNpc ? paso.enfoqueNpc.y : this.escena.JugadorPrincipal.y;
+
+    camara.zoomTo(1, 1000, 'Power2');
+    camara.pan(destinoX, destinoY, 1000, 'Power2', false, (camera, progress) => {
+      if (progress === 1) {
+        if (this.camaraEstabaSiguiendo) {
+          camera.startFollow(this.camaraEstabaSiguiendo, true, 0.1, 0.1);
+        }
+        if (onCompleteCallback) onCompleteCallback();
+      }
+    });
   }
 
   finalizar() {
@@ -136,9 +176,9 @@ export default class Tutorial {
   }
 
   crearGloboTexto(posicion, mensaje) {
-    const ancho = 160;
-    const alto = 50;
-    const pad = 10;
+    const ancho = 180;
+    const alto = 70;
+    const pad = 15;
     this.globoContenedor = this.escena.add.container(posicion.x, posicion.y - 60).setDepth(100);
 
     const fondo = this.escena.add.graphics();
@@ -160,8 +200,8 @@ export default class Tutorial {
 
     this.textoGlobo = this.escena.add
       .text(0, ry + rh / 2, mensaje, {
-        fontFamily: 'Jersey 20',
-        fontSize: '11px',
+        fontFamily: "'Jersey 20'", 
+        fontSize: '18px',
         color: '#2d1910',
         align: 'center',
         wordWrap: { width: ancho },

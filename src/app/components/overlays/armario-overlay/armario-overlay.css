@@ -1,0 +1,267 @@
+.armario-container *,
+.armario-container {
+    font-family: 'Jersey 20', sans-serif;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+}
+
+.armario-container {
+    background-color: #3a221d;
+    background-image: radial-gradient(#2a1612 1px, transparent 1px);
+    background-size: 16px 16px;
+    width: 95vw;           
+    max-width: 900px;
+    min-height: 90vh;      
+    height: auto;
+    border: 6px solid #000;
+    box-shadow: inset -8px -8px 0px #1a0f0d, 8px 8px 0px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column; 
+    padding: 12px;
+    row-gap: 12px;
+    margin: 0 auto;
+}
+
+.armario-body {
+    display: flex;
+    flex-direction: column; 
+    flex: 1;
+    row-gap: 15px;
+    column-gap: 0px;
+}
+
+.preview-section, 
+.items-section {
+    flex: 1;
+    background-color: #231516;
+    padding: 16px;
+    border: 4px solid #000;
+    box-shadow: inset 0 -4px 0px #150c0d, 0 6px 0px #5e3a24;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-section {
+    min-height: 240px;
+}
+
+.espejo-marco {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #436475;
+    border: 4px solid #000;
+    box-shadow: inset 4px 4px 0px #1d323d, inset -4px -4px 0px #638fa3;
+    flex: 1;
+    overflow: hidden;
+}
+
+.espejo-reflejo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        115deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.15) 45%,
+        rgba(255, 255, 255, 0.25) 48%,
+        transparent 52%
+    );
+    pointer-events: none;
+    z-index: 2;
+}
+
+.avatar-display {
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar-grande {
+    max-height: 85%;
+    max-width: 85%;
+    object-fit: contain;
+    filter: drop-shadow(0px 4px 0px rgba(0, 0, 0, 0.6));
+}
+
+.sub {
+    color: #ffcc00;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.armario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px; 
+    justify-content: center;
+    align-content: start;
+    flex: 1;
+    overflow-y: auto;   
+    padding-right: 4px;  
+    max-height: 280px; 
+}
+
+.grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: 4px solid #000;
+    box-shadow: inset -4px -4px 0px #0f0f0f;
+    cursor: pointer;
+    height: 85px; 
+    box-sizing: border-box;
+}
+
+.grid-item:hover {
+    background-color: #282828;
+    border-color: #ffcc00;
+}
+
+.grid-item.active {
+    background-color: #2a1612;
+    border-color: #ffd83d; 
+    box-shadow: inset 4px 4px 0px #000;
+}
+
+.item-icon {
+    width: 48px;       
+    height: 48px;    
+    display: flex;
+    justify-content: center; 
+    align-items: center;   
+    margin-bottom: 4px;
+}
+
+.item-icon img {
+    width: 100%;        
+    height: 100%;       
+    object-fit: contain; 
+    image-rendering: pixelated;
+}
+
+.actions-wrapper {
+    min-height: 75px; 
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1a0f0d;
+    border: 4px solid #000;
+    padding: 12px;
+}
+
+.actions-panel {
+    display: flex;
+    flex-direction: column; 
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.info-text, .placeholder-text {
+    font-size: 1.1rem;
+    color: #fff;
+    margin: 0;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.placeholder-text {
+    color: #70524d;
+    letter-spacing: 1px;
+}
+
+.buttons-row {
+    display: flex;
+    gap: 12px;
+    width: 100%; 
+}
+
+.btn-confirmar, 
+.btn-cancelar {
+    flex: 1;
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    color: #fff;
+    border: 4px solid #000;
+    padding: 8px 0;
+    cursor: pointer;
+}
+
+.btn-confirmar { background-color: #00a824; box-shadow: 0 4px 0 #006616; }
+.btn-confirmar:hover { background-color: #00cc2c; }
+
+.btn-cancelar { background-color: #a80000; box-shadow: 0 4px 0 #660000; }
+.btn-cancelar:hover { background-color: #cc0000; }
+
+.btn-confirmar:active, .btn-cancelar:active {
+    box-shadow: 0 0px 0 #000;
+    transform: translateY(4px);
+}
+
+.armario-grid::-webkit-scrollbar { width: 8px; }
+.armario-grid::-webkit-scrollbar-track { background: #150c0d; }
+.armario-grid::-webkit-scrollbar-thumb { background: #5e3a24; border: 2px solid #000; }
+
+@media (min-width: 768px) {
+    .armario-container {
+        width: 75vw;
+        height: 560px;
+        min-height: auto;
+        padding: 20px;
+        row-gap: 15px;
+    }
+
+    .armario-body {
+        flex-direction: row;
+        column-gap: 20px;
+        row-gap: 0;
+        height: calc(100% - 90px); 
+    }
+
+    .preview-section {
+        min-height: auto;
+    }
+
+    .sub {
+        text-align: left;
+    }
+
+    .armario-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 100px));
+        gap: 12px; 
+        max-height: none;
+    }
+
+    .grid-item {
+        height: 100px;
+    }
+
+    .item-icon {
+        width: 64px;       
+        height: 64px;    
+    }
+
+    .actions-panel {
+        flex-direction: row; 
+        justify-content: space-between;
+    }
+
+    .buttons-row {
+        width: 40%; 
+    }
+}

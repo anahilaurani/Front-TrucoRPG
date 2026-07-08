@@ -1,0 +1,136 @@
+<app-page-wrapper>
+<main>
+  <div class="grimorio-escena">
+    <!-- Título sobre el libro -->
+    <div class="grimorio-header">
+      <span class="grimorio-deco">✦</span>
+      <h1 class="grimorio-titulo">Bestiario de Oponentes</h1>
+      <span class="grimorio-deco">✦</span>
+    </div>
+
+    <!-- El libro físico -->
+    <div class="libro">
+      <div class="libro-canto-top"></div>
+
+      <div class="libro-paginas">
+        <!-- Página izquierda: índice de oponentes -->
+        <div class="pagina pagina-izq">
+          <div class="margen-vert"></div>
+          <div class="clasp clasp-tl"></div>
+
+          <h2 class="pagina-sec-titulo">✦ Criaturas ✦</h2>
+          <div class="sep-libro"></div>
+
+          <nav class="capitulos-nav">
+            @for (op of oponentes; track op.id; let i = $index) {
+              <button
+                class="cap-btn"
+                [class.activo]="oponenteActivo() === i"
+                (click)="seleccionar(i)"
+              >
+                <span class="cap-icono">{{ op.icono }}</span>
+                <div class="cap-info">
+                  <span class="cap-titulo">{{ op.nombre }}</span>
+                  <span class="cap-desc">{{ op.apodo }}</span>
+                </div>
+              </button>
+            }
+          </nav>
+
+          <div class="clasp clasp-bl"></div>
+        </div>
+
+        <!-- Lomo con costura -->
+        <div class="lomo">
+          <div class="lomo-stitch"></div>
+          <div class="lomo-gema">⚜</div>
+          <div class="lomo-stitch"></div>
+        </div>
+
+        <!-- Página derecha: ficha del oponente -->
+        <div class="pagina pagina-der" [class.volteando]="animando()">
+          <div class="margen-vert margen-der"></div>
+          <div class="clasp clasp-tr"></div>
+
+          <!-- Header del oponente -->
+          <div class="cap-header">
+            <div class="retrato-marco">
+              <img class="retrato-img" [src]="oponente.imagen" [alt]="oponente.nombre" />
+            </div>
+            <div>
+              <h2 class="cap-nombre">{{ oponente.nombre }}</h2>
+              <p class="cap-sub">{{ oponente.apodo }}</p>
+            </div>
+          </div>
+          <div class="sep-libro"></div>
+
+          <div class="entradas-scroll">
+            <!-- Texto de introducción -->
+            <p class="oponente-intro">{{ oponente.intro }}</p>
+
+            <!-- Habilidades normales (Nahuelito, Pombero, Lobizón, Luz Mala) -->
+            @if (oponente.habilidades) {
+              @for (h of oponente.habilidades; track h.nombre) {
+                <div class="entrada">
+                  @if (h.tag) {
+                    <span [class]="'entrada-tag ' + tagCss(h.tag)">{{ h.tag }}</span>
+                  }
+                  <h3 class="entrada-titulo">{{ h.nombre }}</h3>
+                  <p class="entrada-texto">{{ h.texto }}</p>
+                  @if (h.nota) {
+                    <div class="entrada-nota">📌 {{ h.nota }}</div>
+                  }
+                </div>
+              }
+            }
+
+            <!-- Diseño especial de progresión: El Mandinga -->
+            @if (oponente.fases) {
+              <div class="fases-progresion">
+                @for (fase of oponente.fases; track fase.titulo; let i = $index) {
+                  <div class="fase-item">
+                    <div class="fase-marcador">
+                      <span class="fase-num">{{ i + 1 }}</span>
+                      @if (i < oponente.fases.length - 1) {
+                        <span class="fase-linea"></span>
+                      }
+                    </div>
+                    <div class="fase-contenido">
+                      <span class="fase-rango">{{ fase.rango }}</span>
+                      <h3 class="entrada-titulo">{{ fase.titulo }}</h3>
+                      <p class="entrada-texto">{{ fase.texto }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Navegación entre oponentes -->
+          <div class="pagina-nav">
+            <button class="nav-btn" (click)="anterior()" [disabled]="oponenteActivo() === 0">
+              ❮ Ant.
+            </button>
+            <span class="nav-indicador">{{ oponenteActivo() + 1 }} / {{ oponentes.length }}</span>
+            <button
+              class="nav-btn"
+              (click)="siguiente()"
+              [disabled]="oponenteActivo() === oponentes.length - 1"
+            >
+              Sig. ❯
+            </button>
+          </div>
+
+          <div class="clasp clasp-br"></div>
+          <div class="page-curl"></div>
+        </div>
+      </div>
+      <!-- /libro-paginas -->
+
+      <div class="libro-canto-bottom"></div>
+    </div>
+
+    <a routerLink="/tutorial" class="volver-btn">← Volver al Tutorial</a>
+  </div>
+</main>
+</app-page-wrapper>

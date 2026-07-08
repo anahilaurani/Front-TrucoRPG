@@ -1,0 +1,270 @@
+* {
+    font-family: 'Jersey 20';
+}
+
+.contenedor-baul {
+    background-color: #1a130b;
+    width: min(450px, 92vw);
+    height: fit-content;
+    align-self: center;
+    border: 6px solid #000;
+    box-shadow: inset -6px -6px -6px #140d0c;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    position: relative;
+    margin-top: 20px;
+    align-self: center;
+}
+
+.titulo-baul {
+    background-color: #5d4834;
+    color: #ffcc00;
+    border: 3px solid #000;
+    padding: 4px 12px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 3px 3px 0px #000;
+    align-self: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.categoria-baul {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    width: 100%;
+}
+
+.categoria {
+    background-color: #4b3929;
+    color: #b28c58;
+    border: 3px solid #4b3a29;
+    border-bottom: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.pestacategoriana:hover {
+    background-color: #2f1f20;
+    color: #e8aa40;
+}
+
+.categoria.activa {
+    background-color: #5d4834;
+    color: #ffcc00;
+    padding-top: 8px;
+}
+
+.cuadricula-inventario {
+    background-color: #5d4834;
+    border: 4px solid #4b3a29;
+    padding: 15px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.slot-item {
+    background-color: #2d1d1c;
+    border: 3px solid #000;
+    box-shadow: inset 3px 3px 0px #140d0c, 2px 2px 0px #3d2725;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.slot-item:hover:not(.vacio) {
+    background-color: #3d2725;
+    border-color: #ffcc00;
+}
+
+.slot-item.vacio {
+    background-color: #160d0c;
+    box-shadow: inset 3px 3px 0px #090505;
+    cursor: default;
+}
+
+.item-icono {
+    width: 80%;
+    height: 80%;
+    image-rendering: pixelated;
+    object-fit: contain;
+}
+
+.cantidad-item {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+}
+
+.cuadricula-inventario::-webkit-scrollbar {
+    width: 12px;
+}
+
+.cuadricula-inventario::-webkit-scrollbar-track {
+    background: #0c0707;
+    border-left: 3px solid #000;
+}
+
+.cuadricula-inventario::-webkit-scrollbar-thumb {
+    background: #4a2f15;
+    border: 3px solid #000;
+}
+
+.overlay-confirmacion {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.cartel-confirmacion {
+    background-color: #2d1d1c;
+    border: 6px solid #000;
+    box-shadow: inset -4px -4px -4px #140d0c, 4px 4px 0px rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    width: min(300px, 82vw);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.texto-confirmacion {
+    color: #ffcc00;
+    font-size: 1.2rem;
+    text-shadow: 2px 2px 0px #000;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.botones-confirmacion {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.btn-cartel {
+    background-color: #5d4834;
+    color: #fff;
+    border: 3px solid #000;
+    padding: 6px 16px;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px #000;
+    text-transform: uppercase;
+}
+
+.btn-cartel:hover {
+    background-color: #4b3929;
+    color: #ffcc00;
+}
+
+.btn-cartel:active {
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}
+
+.monedas-tienda {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #1a0f0d;
+    border: 3px solid #000;
+    padding: 4px 10px;
+    box-shadow: inset -2px -2px 0px #0b0605, 3px 3px 0px rgba(0, 0, 0, 0.3);
+    z-index: 5;
+}
+
+.monedas-baul {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #0c0707;
+    border: 3px solid #000;
+    padding: 4px 10px;
+    box-shadow: inset -2px -2px 0px #000, 3px 3px 0px rgba(0, 0, 0, 0.3);
+    z-index: 5;
+}
+
+.cantidad-monedas {
+    color: #ffcc00;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 0px #000;
+    line-height: 1;
+}
+
+.pixel-coin {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: #ffcc00;
+    box-shadow:
+        0 -2px 0 #000, 0 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000,
+        inset -2px -2px 0 #b38f00,
+        inset 2px 2px 0 #ffe066;
+    position: relative;
+}
+
+.pixel-coin::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    width: 4px;
+    height: 8px;
+    background-color: #b38f00;
+    box-shadow: inset 0 2px 0 #000;
+}
+
+@media (max-width: 479px) {
+    .categoria {
+        min-height: 52px;
+        padding: 12px 4px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (min-width: 480px) {
+    .titulo-baul {
+        margin-top: 0;
+        font-size: 1.6rem;
+    }
+
+    .categoria {
+        font-size: 1.1rem;
+        padding: 6px 12px;
+        letter-spacing: 1px;
+        min-height: auto;
+    }
+}

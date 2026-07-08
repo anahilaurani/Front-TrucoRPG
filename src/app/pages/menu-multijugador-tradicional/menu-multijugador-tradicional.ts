@@ -1,18 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { RouterLink, Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { ConnectionStatusComponent } from '../../components/connection-status/connection-status';
 import { QrScannerComponent } from '../../components/qr-scanner/qr-scanner';
 import { SalaService, SalaPublicaInfo } from '../../services/sala.service';
+import { ToastService } from '../../services/toast/toast.service';
+import { PulperiaUiService } from '../../services/pulperiaOverlay/pulperia-overlay-config';
 
 @Component({
   selector: 'app-menu-multijugador-tradicional',
-  imports: [CommonModule, RouterLink, ConnectionStatusComponent, QrScannerComponent, FormsModule],
+  standalone: true,
+  imports: [CommonModule, ConnectionStatusComponent, QrScannerComponent, FormsModule],
   templateUrl: './menu-multijugador-tradicional.html',
   styleUrl: './menu-multijugador-tradicional.css',
 })
-export class MenuMultijugadorTradicional implements OnInit {
+export class MenuMultijugadorTradicional implements OnInit, OnDestroy {
   modalAbierto = false;
   escanerAbierto = false;
   codigoIngresado = '';
@@ -20,23 +24,45 @@ export class MenuMultijugadorTradicional implements OnInit {
   cargando = false;
   gameMode: '1v1' | '2v2' | '3v3' = '1v1';
 
-  // ── Crear sala (modal con opción pública) ──────────────────────
   modalCrearAbierto = false;
   salaPublica = false;
 
-  // ── Buscar partida (salas públicas) ────────────────────────────
   modalBuscarAbierto = false;
   salasPublicas: SalaPublicaInfo[] = [];
   cargandoBuscar = false;
   errorBuscar = '';
 
-  constructor(private sala: SalaService, private router: Router, private route: ActivatedRoute) {}
+  private subService?: Subscription;
+
+  constructor(
+    private sala: SalaService,
+    private router: Router,
+    private route: ActivatedRoute,
+    protected uiService: PulperiaUiService,
+    private toast: ToastService,
+  ) {}
 
   ngOnInit(): void {
-    this.gameMode = (this.route.snapshot.queryParamMap.get('gameMode') as any) ?? '1v1';
+    if (this.uiService.esMultijugadorPhaser) {
+      this.subService = this.uiService.estadoOverlay$.subscribe((config) => {
+        if (config?.datos?.gameMode) {
+          this.gameMode = config.datos.gameMode;
+        }
+
+        if (config?.datos?.codigoSugerido) {
+          const codigoMesa = config.datos.codigoSugerido;
+          this.unirseConCodigo(codigoMesa);
+        }
+      });
+    } else {
+      this.gameMode = (this.route.snapshot.queryParamMap.get('gameMode') as any) ?? '1v1';
+    }
   }
 
-  // ── Crear sala ─────────────────────────────────────────────────
+  ngOnDestroy(): void {
+    if (this.subService) this.subService.unsubscribe();
+  }
+
   abrirModalCrear() {
     this.salaPublica = false;
     this.modalCrearAbierto = true;
@@ -48,12 +74,19 @@ export class MenuMultijugadorTradicional implements OnInit {
 
   confirmarCrear() {
     this.modalCrearAbierto = false;
-    this.router.navigate(['/menu-multijugador-tradicional-sala'], {
-      queryParams: { mode: 'crear', gameMode: this.gameMode, publica: this.salaPublica },
-    });
+    if (this.uiService.esMultijugadorPhaser) {
+      this.uiService.cambiarSubVista('sala', {
+        mode: 'crear',
+        gameMode: this.gameMode,
+        publica: this.salaPublica,
+      });
+    } else {
+      this.router.navigate(['/menu-multijugador-tradicional-sala'], {
+        queryParams: { mode: 'crear', gameMode: this.gameMode, publica: this.salaPublica },
+      });
+    }
   }
 
-  // ── Buscar partida ─────────────────────────────────────────────
   async abrirModalBuscar() {
     this.modalBuscarAbierto = true;
     await this.refrescarSalas();
@@ -72,6 +105,7 @@ export class MenuMultijugadorTradicional implements OnInit {
       this.salasPublicas = await this.sala.listarSalasPublicas(this.gameMode);
     } catch {
       this.errorBuscar = 'No se pudieron cargar las salas. Verificá la conexión.';
+      this.toast.error(this.errorBuscar);
       this.salasPublicas = [];
     } finally {
       this.cargandoBuscar = false;
@@ -79,8 +113,6 @@ export class MenuMultijugadorTradicional implements OnInit {
   }
 
   async unirseASalaDisponible(codigo: string) {
-    // El modal queda abierto: si falla, mostramos el error y refrescamos la lista;
-    // si la unión funciona, unirseConCodigo navega fuera de esta pantalla.
     await this.unirseConCodigo(codigo, () => this.refrescarSalas());
   }
 
@@ -104,7 +136,6 @@ export class MenuMultijugadorTradicional implements OnInit {
     this.escanerAbierto = false;
   }
 
-  /** Recibe el código leído desde el QR e intenta unirse automáticamente. */
   onCodigoQr(codigo: string) {
     this.escanerAbierto = false;
     this.codigoIngresado = (codigo ?? '').toUpperCase().trim();
@@ -122,10 +153,6 @@ export class MenuMultijugadorTradicional implements OnInit {
     await this.unirseConCodigo(codigo);
   }
 
-  /**
-   * Une al jugador a una sala por código (usado tanto por el modal de código como
-   * por la lista de salas públicas). Si falla, ejecuta onError (p. ej. refrescar lista).
-   */
   private async unirseConCodigo(codigo: string, onError?: () => void) {
     this.errorUnirse = '';
     this.cargando = true;
@@ -133,19 +160,45 @@ export class MenuMultijugadorTradicional implements OnInit {
       this.sala.reset();
       await this.sala.conectar();
       const ok = await this.sala.unirseASala(codigo);
+
       if (!ok) {
         this.errorUnirse = 'Sala no encontrada o llena.';
         this.cargando = false;
         if (onError) onError();
         return;
       }
-      this.router.navigate(['/menu-multijugador-tradicional-sala'], {
-        queryParams: { mode: 'unirse', gameMode: this.gameMode },
-      });
+
+      if (this.uiService.esMultijugadorPhaser) {
+        this.uiService.cambiarSubVista('sala', {
+          mode: 'unirse',
+          gameMode: this.gameMode,
+          codigoSugerido: null,
+        });
+      } else {
+        this.router.navigate(['/menu-multijugador-tradicional-sala'], {
+          queryParams: { mode: 'unirse', gameMode: this.gameMode },
+        });
+      }
     } catch {
       this.errorUnirse = 'Error de conexión. Verificá que el servidor esté activo.';
+      this.toast.error(this.errorUnirse);
       this.cargando = false;
       if (onError) onError();
+    }
+  }
+
+  cerrar() {
+    this.uiService.cerrarOverlay();
+    window.dispatchEvent(new CustomEvent('resume-game'));
+  }
+
+  volver() {
+    if (this.uiService.esMultijugadorPhaser) {
+      this.uiService.cambiarSubVista('tipo');
+    } else {
+      this.router.navigate(['/menu-multijugador-tipo'], {
+        queryParams: { gameMode: this.gameMode },
+      });
     }
   }
 }

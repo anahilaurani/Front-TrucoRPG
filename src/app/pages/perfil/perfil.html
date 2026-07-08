@@ -51,10 +51,59 @@
     </a>
     <div class="sep"></div>
 
+    <!-- Cambiar contraseña -->
+    <button class="fila-accion fila-toggle-pass" (click)="toggleFormPass()">
+      <span>Cambiar contraseña</span>
+      <span class="arrow">{{ formPassAbierto ? '▾' : '›' }}</span>
+    </button>
+
+    @if (formPassAbierto) {
+      <div class="form-pass">
+        <input
+          type="password"
+          class="pass-input"
+          [(ngModel)]="passwordActual"
+          placeholder="Contraseña actual"
+          autocomplete="current-password"
+        />
+        <input
+          type="password"
+          class="pass-input"
+          [(ngModel)]="passwordNueva"
+          placeholder="Nueva contraseña"
+          autocomplete="new-password"
+        />
+        <input
+          type="password"
+          class="pass-input"
+          [(ngModel)]="passwordConfirmar"
+          placeholder="Confirmar nueva contraseña"
+          autocomplete="new-password"
+        />
+
+        @if (mensajePass) {
+          <p class="pass-msg" [class.pass-ok]="!errorPass" [class.pass-err]="errorPass">
+            {{ mensajePass }}
+          </p>
+        }
+
+        <button class="pass-btn" [disabled]="guardandoPass" (click)="cambiarPassword()">
+          {{ guardandoPass ? 'Guardando…' : 'Confirmar cambio' }}
+        </button>
+      </div>
+    }
+
+    <div class="sep"></div>
+
     <button class="fila-accion fila-cerrar" (click)="cerrarSesion()">
       <span>Cerrar Sesión</span>
       <span class="arrow">›</span>
     </button>
+    <div class="sep"></div>
+
+    <a class="fila-accion fila-volver" routerLink="/home">
+      <span>← Volver</span>
+    </a>
 
   </div>
 </main>

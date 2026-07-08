@@ -65,11 +65,146 @@ input::placeholder {
   color: #8a6840;
 }
 
+input.invalido {
+  border-color: #e05050;
+  box-shadow: 0 0 8px rgba(224, 80, 80, 0.25);
+}
+
 .error {
   color: #e05050;
   font-family: 'Jersey 10', monospace;
   font-size: 1rem;
   margin-top: 5px;
+}
+
+/* ── Carteles (pop ups) ─────────────────────────────────────────── */
+.cartel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+  padding: 8px 12px;
+  font-family: 'Jersey 10', monospace;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  animation: cartelIn 0.18s ease-out;
+}
+
+.cartel-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.3em;
+  height: 1.3em;
+  border-radius: 50%;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.cartel-error {
+  background: #2a0f0f;
+  border: 2px solid #e05050;
+  color: #ffd0d0;
+  box-shadow: 0 0 14px rgba(224, 80, 80, 0.45), 0 4px 16px rgba(0, 0, 0, 0.55);
+}
+
+.cartel-error .cartel-icono {
+  background: #e05050;
+  color: #241808;
+}
+
+@keyframes cartelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Panel lateral de carteles (fuera del modal) ────────────────── */
+.carteles-laterales {
+  position: fixed;
+  /* Pegado al borde derecho del modal (centrado, ~270px de medio ancho) */
+  top: 50%;
+  left: calc(50% + 270px + 16px);
+  transform: translateY(-50%);
+  width: min(280px, 22vw);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.carteles-laterales .cartel {
+  margin-top: 0;
+  pointer-events: auto;
+}
+
+/* En pantallas angostas, los carteles van abajo y a lo ancho */
+@media (max-width: 1100px) {
+  .carteles-laterales {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    transform: none;
+    width: auto;
+  }
+}
+
+/* ── Cartel verde de éxito (overlay centrado) ───────────────────── */
+.cartel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 6, 4, 0.78);
+  animation: cartelIn 0.2s ease-out;
+}
+
+.cartel-exito {
+  width: min(420px, 90vw);
+  background: rgba(28, 18, 6, 0.97);
+  border: 2px solid #60c060;
+  box-shadow: 0 0 40px rgba(96, 192, 96, 0.35), inset 0 0 24px rgba(0, 0, 0, 0.4);
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.cartel-exito-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #60c060;
+  color: #60c060;
+  font-size: 1.8rem;
+  text-shadow: 0 0 14px rgba(96, 192, 96, 0.5);
+}
+
+.cartel-exito-titulo {
+  font-family: 'Jersey 10', monospace;
+  font-size: 1.7rem;
+  letter-spacing: 2px;
+  color: #80d080;
+  text-shadow: 0 0 16px rgba(96, 192, 96, 0.4);
+  margin: 0;
+}
+
+.cartel-exito-texto {
+  font-family: 'Jersey 10', monospace;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+  color: #c8e8c8;
+  margin: 0;
 }
 
 .requisitos {

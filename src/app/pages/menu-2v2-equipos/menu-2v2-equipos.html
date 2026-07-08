@@ -1,19 +1,172 @@
+@if (!uiService.esMultijugadorPhaser) {
+  <main>
+    <div class="connection-container">
+      <app-connection-status></app-connection-status>
+    </div>
+    <div class="menu-wrapper">
+      <div class="contenedor-menu">
+        <h2 class="titulo-equipos">SELECCIÓN DE EQUIPOS</h2>
+        <div class="menu-sep"></div>
 
-<main>
-  <div class="connection-container">
-    <app-connection-status></app-connection-status>
-  </div>
+        <!-- Equipos -->
+        <div class="equipos-arena">
+          <!-- Equipo San Martín -->
+          <div
+            class="equipo-panel equipo-san-martin"
+            [class.seleccionado]="miEquipo === 'sanMartin'"
+            [class.lleno]="equipoDeshabilitado('sanMartin')"
+          >
+            <div class="equipo-header">
+              <span class="equipo-escudo">⚔</span>
+              <div class="equipo-nombre-wrap">
+                <span class="equipo-nombre">EQUIPO</span>
+                <span class="equipo-apellido">SAN MARTÍN</span>
+              </div>
+              @if (estadoEquipos?.countSanMartin === cupoPorEquipo) {
+                <span class="equipo-badge-lleno">COMPLETO</span>
+              }
+            </div>
+
+            <div class="equipo-slots">
+              @for (slot of slotsSanMartin; track $index) {
+                <div class="slot" [class.ocupado]="slot.ocupado" [class.es-yo]="slot.esYo">
+                  <span class="slot-av" [class.dim]="!slot.ocupado"></span>
+                  <span class="slot-txt">
+                    @if (slot.esYo) {
+                      👑 VOS
+                    } @else if (slot.ocupado) {
+                      JUGADOR {{ slot.posicion }}
+                    } @else {
+                      LIBRE
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+
+            <button
+              class="btn-unirse btn-san-martin"
+              (click)="elegirEquipo('sanMartin')"
+              [disabled]="equipoDeshabilitado('sanMartin')"
+            >
+              @if (miEquipo === 'sanMartin') {
+                ✓ EN ESTE EQUIPO
+              } @else if (estadoEquipos?.countSanMartin === cupoPorEquipo) {
+                COMPLETO
+              } @else {
+                UNIRME
+              }
+            </button>
+          </div>
+
+          <!-- VS divider -->
+          <div class="vs-divider">
+            <span class="vs-texto">VS</span>
+          </div>
+
+          <!-- Equipo Belgrano -->
+          <div
+            class="equipo-panel equipo-belgrano"
+            [class.seleccionado]="miEquipo === 'belgrano'"
+            [class.lleno]="equipoDeshabilitado('belgrano')"
+          >
+            <div class="equipo-header">
+              <span class="equipo-escudo">🏛</span>
+              <div class="equipo-nombre-wrap">
+                <span class="equipo-nombre">EQUIPO</span>
+                <span class="equipo-apellido">BELGRANO</span>
+              </div>
+              @if (estadoEquipos?.countBelgrano === cupoPorEquipo) {
+                <span class="equipo-badge-lleno">COMPLETO</span>
+              }
+            </div>
+
+            <div class="equipo-slots">
+              @for (slot of slotsBelgrano; track $index) {
+                <div class="slot" [class.ocupado]="slot.ocupado" [class.es-yo]="slot.esYo">
+                  <span class="slot-av" [class.dim]="!slot.ocupado"></span>
+                  <span class="slot-txt">
+                    @if (slot.esYo) {
+                      👑 VOS
+                    } @else if (slot.ocupado) {
+                      JUGADOR {{ slot.posicion }}
+                    } @else {
+                      LIBRE
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+
+            <button
+              class="btn-unirse btn-belgrano"
+              (click)="elegirEquipo('belgrano')"
+              [disabled]="equipoDeshabilitado('belgrano')"
+            >
+              @if (miEquipo === 'belgrano') {
+                ✓ EN ESTE EQUIPO
+              } @else if (estadoEquipos?.countBelgrano === cupoPorEquipo) {
+                COMPLETO
+              } @else {
+                UNIRME
+              }
+            </button>
+          </div>
+        </div>
+
+        <div class="menu-sep"></div>
+
+        <!-- Estado de listos -->
+        @if (lobbyListos && lobbyListos.listos > 0) {
+          <div class="listos-estado">
+            {{ lobbyListos.listos }} / {{ lobbyListos.requeridos }} listos para jugar
+          </div>
+        }
+
+        @if (errorMsg) {
+          <p class="error-msg">{{ errorMsg }}</p>
+        }
+
+        <!-- COMENZAR -->
+        @if (estadoEquipos?.equiposListos && miEquipo) {
+          <button
+            class="boton-comenzar"
+            [class.listo]="miListo"
+            (click)="comenzar()"
+            [disabled]="miListo"
+          >
+            @if (miListo) {
+              ✓ LISTO — Esperando al resto...
+            } @else {
+              COMENZAR PARTIDA
+            }
+          </button>
+        } @else {
+          <div class="esperando-equipos">
+            @if (!miEquipo) {
+              Elegí tu equipo para continuar
+            } @else {
+              Esperando que todos elijan equipo...
+            }
+          </div>
+        }
+
+        <a class="boton-abandonar" (click)="abandonar()">Abandonar Sala</a>
+      </div>
+    </div>
+  </main>
+} @else {
   <div class="menu-wrapper">
     <div class="contenedor-menu">
-
       <h2 class="titulo-equipos">SELECCIÓN DE EQUIPOS</h2>
       <div class="menu-sep"></div>
 
-      <!-- Equipos -->
       <div class="equipos-arena">
-
-        <!-- Equipo San Martín -->
-        <div class="equipo-panel equipo-san-martin" [class.seleccionado]="miEquipo === 'sanMartin'" [class.lleno]="equipoDeshabilitado('sanMartin')">
+        <div
+          class="equipo-panel equipo-san-martin"
+          [class.seleccionado]="miEquipo === 'sanMartin'"
+          [class.lleno]="equipoDeshabilitado('sanMartin')"
+        >
           <div class="equipo-header">
             <span class="equipo-escudo">⚔</span>
             <div class="equipo-nombre-wrap">
@@ -30,9 +183,13 @@
               <div class="slot" [class.ocupado]="slot.ocupado" [class.es-yo]="slot.esYo">
                 <span class="slot-av" [class.dim]="!slot.ocupado"></span>
                 <span class="slot-txt">
-                  @if (slot.esYo) { 👑 VOS }
-                  @else if (slot.ocupado) { JUGADOR {{ slot.posicion }} }
-                  @else { LIBRE }
+                  @if (slot.esYo) {
+                    👑 VOS
+                  } @else if (slot.ocupado) {
+                    JUGADOR {{ slot.posicion }}
+                  } @else {
+                    LIBRE
+                  }
                 </span>
               </div>
             }
@@ -43,19 +200,25 @@
             (click)="elegirEquipo('sanMartin')"
             [disabled]="equipoDeshabilitado('sanMartin')"
           >
-            @if (miEquipo === 'sanMartin') { ✓ EN ESTE EQUIPO }
-            @else if (estadoEquipos?.countSanMartin === cupoPorEquipo) { COMPLETO }
-            @else { UNIRME }
+            @if (miEquipo === 'sanMartin') {
+              ✓ EN ESTE EQUIPO
+            } @else if (estadoEquipos?.countSanMartin === cupoPorEquipo) {
+              COMPLETO
+            } @else {
+              UNIRME
+            }
           </button>
         </div>
 
-        <!-- VS divider -->
         <div class="vs-divider">
           <span class="vs-texto">VS</span>
         </div>
 
-        <!-- Equipo Belgrano -->
-        <div class="equipo-panel equipo-belgrano" [class.seleccionado]="miEquipo === 'belgrano'" [class.lleno]="equipoDeshabilitado('belgrano')">
+        <div
+          class="equipo-panel equipo-belgrano"
+          [class.seleccionado]="miEquipo === 'belgrano'"
+          [class.lleno]="equipoDeshabilitado('belgrano')"
+        >
           <div class="equipo-header">
             <span class="equipo-escudo">🏛</span>
             <div class="equipo-nombre-wrap">
@@ -72,9 +235,13 @@
               <div class="slot" [class.ocupado]="slot.ocupado" [class.es-yo]="slot.esYo">
                 <span class="slot-av" [class.dim]="!slot.ocupado"></span>
                 <span class="slot-txt">
-                  @if (slot.esYo) { 👑 VOS }
-                  @else if (slot.ocupado) { JUGADOR {{ slot.posicion }} }
-                  @else { LIBRE }
+                  @if (slot.esYo) {
+                    👑 VOS
+                  } @else if (slot.ocupado) {
+                    JUGADOR {{ slot.posicion }}
+                  } @else {
+                    LIBRE
+                  }
                 </span>
               </div>
             }
@@ -85,17 +252,19 @@
             (click)="elegirEquipo('belgrano')"
             [disabled]="equipoDeshabilitado('belgrano')"
           >
-            @if (miEquipo === 'belgrano') { ✓ EN ESTE EQUIPO }
-            @else if (estadoEquipos?.countBelgrano === cupoPorEquipo) { COMPLETO }
-            @else { UNIRME }
+            @if (miEquipo === 'belgrano') {
+              ✓ EN ESTE EQUIPO
+            } @else if (estadoEquipos?.countBelgrano === cupoPorEquipo) {
+              COMPLETO
+            } @else {
+              UNIRME
+            }
           </button>
         </div>
-
       </div>
 
       <div class="menu-sep"></div>
 
-      <!-- Estado de listos -->
       @if (lobbyListos && lobbyListos.listos > 0) {
         <div class="listos-estado">
           {{ lobbyListos.listos }} / {{ lobbyListos.requeridos }} listos para jugar
@@ -106,7 +275,6 @@
         <p class="error-msg">{{ errorMsg }}</p>
       }
 
-      <!-- COMENZAR -->
       @if (estadoEquipos?.equiposListos && miEquipo) {
         <button
           class="boton-comenzar"
@@ -114,17 +282,23 @@
           (click)="comenzar()"
           [disabled]="miListo"
         >
-          @if (miListo) { ✓ LISTO — Esperando al resto... }
-          @else { COMENZAR PARTIDA }
+          @if (miListo) {
+            ✓ LISTO — Esperando al resto...
+          } @else {
+            COMENZAR PARTIDA
+          }
         </button>
       } @else {
         <div class="esperando-equipos">
-          @if (!miEquipo) { Elegí tu equipo para continuar }
-          @else { Esperando que todos elijan equipo... }
+          @if (!miEquipo) {
+            Elegí tu equipo para continuar
+          } @else {
+            Esperando que todos elijan equipo...
+          }
         </div>
       }
 
       <a class="boton-abandonar" (click)="abandonar()">Abandonar Sala</a>
     </div>
   </div>
-</main>
+}

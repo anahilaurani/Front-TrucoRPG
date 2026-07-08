@@ -11,14 +11,14 @@ import { AudioService } from '../../services/audio.service';
   standalone: true,
   imports: [CommonModule, FormsModule, Card, PageWrapper],
   templateUrl: './configuracion.html',
-  styleUrl: './configuracion.css'
+  styleUrl: './configuracion.css',
 })
 export class ConfiguracionComponent {
   volumen = Number(localStorage.getItem('cfg_volumen') ?? 70);
-  musica  = localStorage.getItem('cfg_musica') !== 'false';
+  musica = localStorage.getItem('cfg_musica') !== 'false';
   pantallaCompleta = localStorage.getItem('cfg_pantalla') === 'true';
-  // Delay (en segundos) que tarda la máquina en jugar/cantar en el modo solo.
-  delaySegundos = (Number(localStorage.getItem('cfg_delay') ?? 1200)) / 1000;
+  delaySegundos = Number(localStorage.getItem('cfg_delay') ?? 1200) / 1000;
+  velocidad = Number(localStorage.getItem('cfg_velocidad') ?? 250);
 
   private audio = inject(AudioService);
 
@@ -32,10 +32,13 @@ export class ConfiguracionComponent {
     this.audio.setMusica(this.musica);
   }
 
-  guardar() {
+  async guardar() {
     localStorage.setItem('cfg_pantalla', String(this.pantallaCompleta));
     localStorage.setItem('cfg_delay', String(Math.round(this.delaySegundos * 1000)));
-    this.aplicarPantallaCompleta(this.pantallaCompleta);
+    localStorage.setItem('cfg_velocidad', String(Math.round(this.velocidad)));
+
+    await this.aplicarPantallaCompleta(this.pantallaCompleta);
+
     this.router.navigate(['/home']);
   }
 
@@ -43,16 +46,31 @@ export class ConfiguracionComponent {
     this.router.navigate(['/home']);
   }
 
-  private aplicarPantallaCompleta(activar: boolean): void {
+  private aplicarPantallaCompleta(activar: boolean): Promise<void> {
+    const el = document.documentElement;
+
     if (activar) {
-      const el = document.documentElement;
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
+      if (document.fullscreenElement) {
+        return Promise.resolve();
+      }
+
+      if (el.requestFullscreen) {
+        return el.requestFullscreen().catch((err) => {
+          console.warn('El navegador bloqueó la pantalla completa o no está permitida:', err);
+        });
+      } else if ((el as any).webkitRequestFullscreen) {
+        return (el as any).webkitRequestFullscreen();
+      }
     } else {
       if (document.fullscreenElement) {
-        if (document.exitFullscreen) document.exitFullscreen();
-        else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
+        if (document.exitFullscreen) {
+          return document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          return (document as any).webkitExitFullscreen();
+        }
       }
     }
+
+    return Promise.resolve();
   }
 }

@@ -1,0 +1,257 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #6e6e6eb4 url('/assets/home.png') center center / cover no-repeat;
+  background-blend-mode: multiply;
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  row-gap: 2em;
+  box-sizing: border-box;
+  font-family: 'Jersey 20', sans-serif;
+}
+
+.carta-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  perspective: 1000px;
+}
+
+.carta {
+  width: min(680px, 92vw);
+  background-color: #e4d3ac;
+  background-image: url('https://www.transparenttextures.com/patterns/dark-dotted-2.png');
+  border: 4px solid #5a4020;
+  border-radius: 4px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.7),
+    inset 0 0 50px rgba(139, 69, 19, 0.3),
+    inset 0 0 10px rgba(0, 0, 0, 0.5);
+  padding: 3rem 3rem 2.5rem 3rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+  position: relative;
+}
+
+.carta::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 105%;
+  height: 30px;
+  background-color: #d2b48c;
+  background-image: url('https://www.transparenttextures.com/patterns/dark-dotted-2.png');
+  border: 4px solid #5a4020;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.carta::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 98%;
+  height: 20px;
+  background-color: #cdaa7d;
+  background-image: url('https://www.transparenttextures.com/patterns/dark-dotted-2.png');
+  border: 4px solid #5a4020;
+  box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.indicador-slides,
+.texto-prologo {
+  position: relative;
+  z-index: 2;
+}
+
+.indicador-slides {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.punto {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #5a4020;
+  background: rgba(90, 64, 32, 0.2);
+  transition: backgroundColor 0.3s, transform 0.2s;
+}
+
+.punto.activo {
+  background: #604f2f;
+  border-color: #2b1a00;
+  transform: scale(1.2);
+}
+
+.texto-prologo {
+  font-family: 'Jersey 20';
+  font-size: clamp(1.1rem, 2.6vw, 1.4rem);
+  color: #3e2700;
+  line-height: 1.7;
+  margin: 0;
+  text-align: justify;
+  hyphens: auto;
+  text-shadow: 0.5px 0.5px 1px rgba(0, 0, 0, 0.1);
+}
+
+.cursor {
+  display: inline-block;
+  color: #8b4513;
+  animation: parpadeo 0.8s step-end infinite;
+  font-weight: bold;
+  margin-left: 2px;
+}
+
+.cursor.oculto {
+  visibility: hidden;
+}
+
+@keyframes parpadeo {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.acciones-confirmar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 680px;
+  padding: 1rem 0;
+  box-sizing: border-box;
+}
+
+.acciones-confirmar button {
+  flex: 1;
+  min-width: 120px;
+  max-width: 280px;
+  height: 48px;
+  white-space: nowrap;
+  font-family: 'Jersey 10', monospace;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.boton-siguiente {
+  color: #c89030;
+  background: #1e1508;
+  border: 2px solid #5a4020;
+}
+
+.btn-saltar {
+  color: #a09070;
+  background: rgba(26, 18, 8, 0.8);
+  border: 2px solid #5a4020;
+  transition: all 0.2s ease;
+}
+
+.btn-saltar:hover {
+  background: #221810;
+  color: #dbd0b0;
+  border-color: #8a7050;
+}
+
+@media (max-width: 768px) {
+  main {
+    padding: 1.5rem 0.8rem;
+  }
+
+  .carta {
+    padding: 2.5rem 1.8rem 2rem 1.8rem;
+    width: 95vw;
+  }
+
+  .carta::before {
+    top: -12px;
+    height: 25px;
+  }
+
+  .carta::after {
+    bottom: -8px;
+    height: 16px;
+  }
+
+  .texto-prologo {
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+
+  .acciones-confirmar {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .acciones-confirmar button {
+    max-width: 100%;
+    width: 100%;
+    height: 50px;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-height: 600px) {
+  main {
+    padding: 0.5rem 1rem;
+    row-gap: 1em;
+  }
+
+  .carta {
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+  }
+
+  .carta::before,
+  .carta::after {
+    display: none;
+  }
+
+  .texto-prologo {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .acciones-confirmar {
+    padding: 0.3rem 0;
+  }
+
+  .acciones-confirmar button {
+    height: 42px;
+    font-size: 1rem;
+  }
+}

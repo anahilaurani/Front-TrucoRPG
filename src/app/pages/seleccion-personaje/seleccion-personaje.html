@@ -11,19 +11,28 @@
         >
           <div class="interior-tarjeta">
             <div class="cara frente">
-              <div class="indice superior">{{ heroe.id }}</div>
+              <div class="indice superior">{{ heroe.id + 1 }}</div>
               <div class="marco-personaje">
-                <img class="personaje" src="/Imagenes/ejemplo.png" [alt]="heroe.nombre" />
+                <img
+                  class="personaje"
+                  src="{{heroe.img}}"
+                  [alt]="heroe.nombre"
+                />
               </div>
               <div class="info-personaje">
                 <h2 class="nombre">{{ heroe.nombre }}</h2>
                 <span class="stats">{{ heroe.pasiva }}</span>
-                <div class="descripcion"><p>{{ heroe.activa }}</p></div>
-                <button class="btn-seleccionar" (click)="$event.stopPropagation(); seleccionarHeroe(heroe.id)">
+                <div class="descripcion">
+                  <p>{{ heroe.activa }}</p>
+                </div>
+                <button
+                  class="btn-seleccionar"
+                  (click)="$event.stopPropagation(); seleccionarHeroe(heroe.id)"
+                >
                   Seleccionar
                 </button>
               </div>
-              <div class="indice inferior">{{ heroe.id }}</div>
+              <div class="indice inferior">{{ heroe.id + 1 }}</div>
             </div>
             <div class="cara atras">
               @if (selectedHeroId !== null && selectedHeroId !== heroe.id) {
@@ -32,7 +41,10 @@
                 <div class="flip-content">
                   <div class="flip-nombre">{{ heroe.nombre }}</div>
                   <div class="flip-desc">{{ heroe.activa }}</div>
-                  <button class="btn-seleccionar" (click)="$event.stopPropagation(); seleccionarHeroe(heroe.id)">
+                  <button
+                    class="btn-seleccionar"
+                    (click)="$event.stopPropagation(); seleccionarHeroe(heroe.id)"
+                  >
                     Seleccionar
                   </button>
                 </div>
@@ -43,7 +55,6 @@
       }
     </section>
   } @else {
-    <!-- MOBILE: lista estilo menú, sin gaucho -->
     <div class="lista-heroes">
       @for (heroe of heroes; track heroe.id) {
         <div
@@ -65,15 +76,15 @@
   }
 
   <div class="acciones-confirmar">
-  <button class="btn-volver" (click)="volver()">← VOLVER</button>
-  @if (selectedHeroId !== null) {
-    <button class="btn-elegir-otro" (click)="elegirOtro()">↺ ELEGIR OTRO</button>
-  }
-  <button
-    class="confirmar-heroe"
-    [disabled]="selectedHeroId === null"
-    (click)="enviarConfirmacion()">
-    Confirmar Personaje y Jugar
-  </button>
-</div>
+    @if (selectedHeroId !== null) {
+      <button class="btn-elegir-otro" (click)="elegirOtro()">↺ ELEGIR OTRO</button>
+    }
+    <button
+      class="confirmar-heroe"
+      [disabled]="selectedHeroId === null"
+      (click)="enviarConfirmacion()"
+    >
+      Confirmar Personaje y Jugar
+    </button>
+  </div>
 </main>

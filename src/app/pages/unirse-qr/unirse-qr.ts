@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SalaService } from '../../services/sala.service';
+import { ToastService } from '../../services/toast/toast.service';
 
 /**
  * Destino del deep-link del QR (`/unirse?code=ABC123&mode=2v2`).
@@ -24,6 +25,7 @@ export class UnirseQrComponent implements OnInit {
     private sala: SalaService,
     private router: Router,
     private route: ActivatedRoute,
+    private toast: ToastService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -54,6 +56,7 @@ export class UnirseQrComponent implements OnInit {
   private fallar(msg: string): void {
     this.estado = 'error';
     this.mensaje = msg;
+    this.toast.error(msg);
   }
 
   irAlMenu(): void {

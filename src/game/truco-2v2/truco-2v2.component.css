@@ -4,12 +4,17 @@
    Compartido por truco-2v2 (multi) y truco-solo-2v2.
 ═══════════════════════════════════════════════════════════════════ */
 
+.root {
+  background-image: url('/assets/multijugador.png');
+}
+
 /* ── Arena principal ───────────────────────────────────────────── */
 .arena-2v2 {
   flex: 1;
   min-width: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;  /* compa | mesa | yo */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* compa | mesa | yo */
   grid-template-columns: 1fr;
   overflow: hidden;
   min-height: 0;
@@ -116,7 +121,8 @@
   align-self: center;
   position: relative;
   display: flex;
-  flex-direction: row-reverse;  /* cartas del lado de adentro (hacia la mesa) */
+  flex-direction: row-reverse;
+  /* cartas del lado de adentro (hacia la mesa) */
   align-items: center;
   justify-content: center;
   gap: 7px;
@@ -146,6 +152,7 @@
   image-rendering: pixelated;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
 }
+
 /* Rivales con su modelado propio (sin tinte) */
 .avatar-rival {
   width: auto;
@@ -199,12 +206,10 @@
   max-width: 600px;
   aspect-ratio: 5 / 4;
   max-height: 100%;
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 45%,
-    #1d8a1d 0%,
-    #116011 58%,
-    #0a3d0a 100%
-  );
+  background: radial-gradient(ellipse 80% 70% at 50% 45%,
+      #1d8a1d 0%,
+      #116011 58%,
+      #0a3d0a 100%);
   border: 4px solid #34883a;
   border-radius: 14px;
   box-shadow:
@@ -242,7 +247,8 @@
   justify-content: center;
 }
 
-.baza-top, .baza-bottom {
+.baza-top,
+.baza-bottom {
   width: 48px;
   height: 68px;
 }
@@ -253,7 +259,8 @@
   align-items: center;
 }
 
-.baza-left, .baza-right {
+.baza-left,
+.baza-right {
   width: 68px;
   height: 48px;
 }
@@ -284,9 +291,23 @@
   pointer-events: none;
 }
 
-.badge-nosotros { background: #1a4a22; color: #5adc7a; border: 1px solid #3a8a4a; }
-.badge-ellos    { background: #4a1a1a; color: #dc5a5a; border: 1px solid #8a3030; }
-.badge-parda    { background: #2a240e; color: #c8a030; border: 1px solid #5a4020; }
+.badge-nosotros {
+  background: #1a4a22;
+  color: #5adc7a;
+  border: 1px solid #3a8a4a;
+}
+
+.badge-ellos {
+  background: #4a1a1a;
+  color: #dc5a5a;
+  border: 1px solid #8a3030;
+}
+
+.badge-parda {
+  background: #2a240e;
+  color: #c8a030;
+  border: 1px solid #5a4020;
+}
 
 .turno-badge-2v2 {
   position: absolute;
@@ -351,14 +372,38 @@
   pointer-events: none;
 }
 
-.burbuja-top    { top: calc(100% + 10px); left: 50%; transform: translateX(-50%); }
-.burbuja-bottom { bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); }
-.burbuja-left   { left: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
-.burbuja-right  { right: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+.burbuja-top {
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.burbuja-bottom {
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.burbuja-left {
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.burbuja-right {
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 @keyframes burbujaPop {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .avatar-yo {
@@ -399,7 +444,9 @@
   z-index: 1;
 }
 
-.fan-card-2v2:nth-child(2) { z-index: 2; }
+.fan-card-2v2:nth-child(2) {
+  z-index: 2;
+}
 
 .fan-card-2v2:hover:not(.played) {
   transform: translateX(calc(-50% + var(--xoff))) rotate(var(--ang)) translateY(-22px);
@@ -463,8 +510,15 @@
   font-weight: bold;
 }
 
-.nosotros-label, .nosotros-pts { color: #c8a030; }
-.ellos-label,    .ellos-pts    { color: #d46010; }
+.nosotros-label,
+.nosotros-pts {
+  color: #c8a030;
+}
+
+.ellos-label,
+.ellos-pts {
+  color: #d46010;
+}
 
 .score-sep-2v2 {
   width: 100%;
@@ -499,8 +553,15 @@
   text-transform: uppercase;
 }
 
-.envido-title { color: #4488cc; border-color: #1a3a5a; }
-.truco-title  { color: #cc5533; border-color: #5a2a1a; }
+.envido-title {
+  color: #4488cc;
+  border-color: #1a3a5a;
+}
+
+.truco-title {
+  color: #cc5533;
+  border-color: #5a2a1a;
+}
 
 .state-text {
   font-family: var(--font-data);
@@ -562,7 +623,8 @@
 }
 
 /* ─── Overlays (confirm/game over) ───────────────────────────── */
-.confirm-overlay, .game-over-overlay {
+.confirm-overlay,
+.game-over-overlay {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.72);
@@ -598,7 +660,10 @@
   text-align: center;
 }
 
-.confirm-btn-row { display: flex; gap: 12px; }
+.confirm-btn-row {
+  display: flex;
+  gap: 12px;
+}
 
 .confirm-btn {
   font-family: var(--font-data);
@@ -610,10 +675,25 @@
   border: 2px solid;
 }
 
-.confirm-btn-si  { background: #3a1010; border-color: #aa3030; color: #ff8080; }
-.confirm-btn-no  { background: #101a10; border-color: #308830; color: #80cc80; }
-.confirm-btn-si:hover { background: #5a1818; }
-.confirm-btn-no:hover { background: #183018; }
+.confirm-btn-si {
+  background: #3a1010;
+  border-color: #aa3030;
+  color: #ff8080;
+}
+
+.confirm-btn-no {
+  background: #101a10;
+  border-color: #308830;
+  color: #80cc80;
+}
+
+.confirm-btn-si:hover {
+  background: #5a1818;
+}
+
+.confirm-btn-no:hover {
+  background: #183018;
+}
 
 /* ═══ MESA CENTRAL — jugadas por jugador (superpuestas) ═══ */
 .mesa-cruz {
@@ -631,7 +711,10 @@
   gap: 30px;
 }
 
-.pila-centro { width: 36px; height: 1px; }
+.pila-centro {
+  width: 36px;
+  height: 1px;
+}
 
 .pila {
   display: flex;
@@ -640,18 +723,40 @@
 }
 
 /* Pilas verticales (compañero arriba / vos abajo) */
-.pila-top    { flex-direction: column; }
-.pila-top .mesa-card:not(:first-child)    { margin-top: -52px; }
+.pila-top {
+  flex-direction: column;
+}
 
-.pila-bottom { flex-direction: column-reverse; }   /* crece hacia el centro (arriba) */
-.pila-bottom .mesa-card:not(:first-child) { margin-bottom: -52px; }
+.pila-top .mesa-card:not(:first-child) {
+  margin-top: -52px;
+}
+
+.pila-bottom {
+  flex-direction: column-reverse;
+}
+
+/* crece hacia el centro (arriba) */
+.pila-bottom .mesa-card:not(:first-child) {
+  margin-bottom: -52px;
+}
 
 /* Pilas horizontales (rivales a los costados) */
-.pila-left  { flex-direction: row; }
-.pila-left .mesa-card:not(:first-child)  { margin-left: -34px; }
+.pila-left {
+  flex-direction: row;
+}
 
-.pila-right { flex-direction: row-reverse; }        /* crece hacia el centro (izquierda) */
-.pila-right .mesa-card:not(:first-child) { margin-right: -34px; }
+.pila-left .mesa-card:not(:first-child) {
+  margin-left: -34px;
+}
+
+.pila-right {
+  flex-direction: row-reverse;
+}
+
+/* crece hacia el centro (izquierda) */
+.pila-right .mesa-card:not(:first-child) {
+  margin-right: -34px;
+}
 
 .mesa-card {
   width: 68px;
@@ -661,78 +766,466 @@
   box-shadow: 0 3px 9px rgba(0, 0, 0, 0.75);
   display: block;
   position: relative;
-  z-index: var(--i, 0);   /* la 1ra carta jugada (i=0) queda abajo; la última, arriba */
+  z-index: var(--i, 0);
+  /* la 1ra carta jugada (i=0) queda abajo; la última, arriba */
 }
 
 /* ═══ RESPONSIVE ═══ */
 /* Regla: las cartas de los rivales (.side-cards) y del compañero (.player-cards-top)
    NUNCA se ocultan; se achican progresivamente para que entren en cualquier pantalla. */
 @media (max-width: 1200px) {
-  .side-info   { width: 72px; }
-  .fan-img     { width: 84px; height: 122px; }
-  .fan-wrap-2v2 { width: 270px; height: 134px; }
-  .table-surface-2v2 { max-width: 520px; }
+  .side-info {
+    width: 72px;
+  }
+
+  .fan-img {
+    width: 84px;
+    height: 122px;
+  }
+
+  .fan-wrap-2v2 {
+    width: 270px;
+    height: 134px;
+  }
+
+  .table-surface-2v2 {
+    max-width: 520px;
+  }
 }
 
 @media (max-width: 980px) {
-  .side-info      { width: 60px; padding: 5px; }
-  .avatar-side    { width: 34px; height: 34px; }
-  .avatar-rival   { height: 50px; max-width: 60px; }
-  .rival-tag      { font-size: 11px; max-width: 60px; }
-  .side-cards     { gap: 2px; }
-  .card-back-side { width: 22px; height: 32px; }
-  .player-side    { gap: 5px; padding: 7px 5px; }
-  .fan-img        { width: 74px; height: 108px; }
-  .fan-wrap-2v2   { width: 234px; }
-  .table-surface-2v2 { max-width: 420px; }
+  .side-info {
+    width: 60px;
+    padding: 5px;
+  }
+
+  .avatar-side {
+    width: 34px;
+    height: 34px;
+  }
+
+  .avatar-rival {
+    height: 50px;
+    max-width: 60px;
+  }
+
+  .rival-tag {
+    font-size: 11px;
+    max-width: 60px;
+  }
+
+  .side-cards {
+    gap: 2px;
+  }
+
+  .card-back-side {
+    width: 22px;
+    height: 32px;
+  }
+
+  .player-side {
+    gap: 5px;
+    padding: 7px 5px;
+  }
+
+  .fan-img {
+    width: 74px;
+    height: 108px;
+  }
+
+  .fan-wrap-2v2 {
+    width: 234px;
+  }
+
+  .table-surface-2v2 {
+    max-width: 420px;
+  }
 }
 
 @media (max-width: 680px) {
-  .row-middle     { gap: 4px; padding: 4px; }
-  .player-side    { gap: 3px; padding: 4px 3px; }
-  .side-info      { width: 46px; padding: 3px; gap: 3px; }
-  .avatar-side    { width: 28px; height: 28px; }
-  .avatar-rival   { height: 40px; max-width: 46px; }
-  .rival-tag      { font-size: 9px; max-width: 46px; letter-spacing: 0; }
-  .card-back-side { width: 17px; height: 25px; }
-  .fan-img        { width: 58px; height: 86px; }
-  .fan-wrap-2v2   { width: 184px; height: 96px; }
-  .table-surface-2v2 { max-width: 320px; }
-  .mano-badge     { font-size: 8px; padding: 0 3px; }
+  .row-middle {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .player-side {
+    gap: 3px;
+    padding: 4px 3px;
+  }
+
+  .side-info {
+    width: 46px;
+    padding: 3px;
+    gap: 3px;
+  }
+
+  .avatar-side {
+    width: 28px;
+    height: 28px;
+  }
+
+  .avatar-rival {
+    height: 40px;
+    max-width: 46px;
+  }
+
+  .rival-tag {
+    font-size: 9px;
+    max-width: 46px;
+    letter-spacing: 0;
+  }
+
+  .card-back-side {
+    width: 17px;
+    height: 25px;
+  }
+
+  .fan-img {
+    width: 58px;
+    height: 86px;
+  }
+
+  .fan-wrap-2v2 {
+    width: 184px;
+    height: 96px;
+  }
+
+  .table-surface-2v2 {
+    max-width: 320px;
+  }
+
+  .mano-badge {
+    font-size: 8px;
+    padding: 0 3px;
+  }
 }
 
 @media (max-width: 480px) {
-  .side-info      { width: 38px; padding: 2px; }
-  .avatar-rival   { height: 32px; max-width: 38px; }
-  .rival-tag      { font-size: 8px; max-width: 38px; }
-  .card-back-side { width: 14px; height: 21px; }
-  .fan-img        { width: 50px; height: 74px; }
-  .fan-wrap-2v2   { width: 156px; height: 82px; }
-  .table-surface-2v2 { max-width: 240px; }
+  .side-info {
+    width: 38px;
+    padding: 2px;
+  }
+
+  .avatar-rival {
+    height: 32px;
+    max-width: 38px;
+  }
+
+  .rival-tag {
+    font-size: 8px;
+    max-width: 38px;
+  }
+
+  .card-back-side {
+    width: 14px;
+    height: 21px;
+  }
+
+  .fan-img {
+    width: 50px;
+    height: 74px;
+  }
+
+  .fan-wrap-2v2 {
+    width: 156px;
+    height: 82px;
+  }
+
+  .table-surface-2v2 {
+    max-width: 240px;
+  }
 }
 
 @media (max-height: 680px) {
-  .player-top    { padding: 5px 12px; }
-  .player-bottom { padding: 6px 16px; }
-  .fan-img       { width: 78px; height: 114px; }
-  .fan-wrap-2v2  { height: 124px; }
-  .card-back, .card-back-side { height: 40px; width: 28px; }
+  .player-top {
+    padding: 5px 12px;
+  }
+
+  .player-bottom {
+    padding: 6px 16px;
+  }
+
+  .fan-img {
+    width: 78px;
+    height: 114px;
+  }
+
+  .fan-wrap-2v2 {
+    height: 124px;
+  }
+
+  .card-back,
+  .card-back-side {
+    height: 40px;
+    width: 28px;
+  }
+
+  .avatar-gaucho {
+    height: 74px !important;
+    max-width: 96px;
+  }
+
+  /* cartas jugadas en mesa */
+  .mesa-card {
+    width: 58px;
+    height: 84px;
+  }
+
+  .mesa-cruz {
+    gap: 5px;
+  }
+
+  .pila-top .mesa-card:not(:first-child) {
+    margin-top: -44px;
+  }
+
+  .pila-bottom .mesa-card:not(:first-child) {
+    margin-bottom: -44px;
+  }
+
+  .pila-left .mesa-card:not(:first-child) {
+    margin-left: -28px;
+  }
+
+  .pila-right .mesa-card:not(:first-child) {
+    margin-right: -28px;
+  }
 }
 
 @media (max-height: 560px) {
-  .player-cards-top { gap: 2px; }
-  .fan-img       { width: 64px; height: 94px; }
-  .fan-wrap-2v2  { height: 100px; }
-  .card-back     { height: 34px; width: 24px; }
-  .card-back-side { height: 30px; width: 21px; }
+  .player-cards-top {
+    gap: 2px;
+  }
+
+  .fan-img {
+    width: 60px;
+    height: 88px;
+  }
+
+  .fan-wrap-2v2 {
+    height: 94px;
+  }
+
+  .card-back {
+    height: 34px;
+    width: 24px;
+  }
+
+  .card-back-side {
+    height: 30px;
+    width: 21px;
+  }
+
+  /* avatares compañero + compactar paneles para landscape mobile */
+  .avatar-gaucho {
+    height: 52px !important;
+    max-width: 66px;
+  }
+
+  .player-portrait-row {
+    padding: 3px 8px 3px 4px;
+  }
+
+  .player-top {
+    padding: 4px 10px;
+  }
+
+  /* paneles laterales más angostos → más espacio para la mesa */
+  .side-panel {
+    width: 120px !important;
+  }
+
+  .btn-list {
+    gap: 5px;
+  }
+
+  .action-btn {
+    font-size: 15px !important;
+    padding: 5px 4px !important;
+  }
+
+  /* rival panels más compactos */
+  .side-info {
+    width: 44px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .avatar-rival {
+    height: 36px !important;
+    max-width: 44px;
+  }
+
+  .rival-tag {
+    display: none;
+  }
+
+  .card-back-side {
+    width: 15px;
+    height: 22px;
+  }
+
+  .player-side {
+    gap: 2px;
+    padding: 3px 2px;
+  }
+
+  /* badge dentro de la mesa para no pisar la zona de cartas */
+  .turno-badge-2v2 {
+    top: auto;
+    bottom: 6px;
+    font-size: 13px;
+    padding: 3px 12px;
+  }
+
+  /* cartas jugadas en mesa */
+  .mesa-card {
+    width: 50px;
+    height: 72px;
+  }
+
+  .mesa-cruz {
+    gap: 4px;
+  }
+
+  .pila-medio {
+    gap: 18px;
+  }
+
+  .pila-top .mesa-card:not(:first-child) {
+    margin-top: -36px;
+  }
+
+  .pila-bottom .mesa-card:not(:first-child) {
+    margin-bottom: -36px;
+  }
+
+  .pila-left .mesa-card:not(:first-child) {
+    margin-left: -24px;
+  }
+
+  .pila-right .mesa-card:not(:first-child) {
+    margin-right: -24px;
+  }
 }
 
 @media (max-height: 440px) {
-  .player-top    { padding: 2px 8px; }
-  .player-bottom { padding: 2px 8px; }
-  .fan-img       { width: 54px; height: 80px; }
-  .fan-wrap-2v2  { height: 84px; }
-  .card-back     { height: 28px; width: 20px; }
-  .card-back-side { height: 26px; width: 18px; }
-  .avatar-rival  { height: 34px; }
+  .player-top {
+    padding: 2px 8px;
+  }
+
+  .player-bottom {
+    padding: 2px 8px;
+    gap: 10px;
+  }
+
+  .fan-img {
+    width: 48px;
+    height: 70px;
+  }
+
+  .fan-wrap-2v2 {
+    height: 74px;
+  }
+
+  .card-back {
+    height: 26px;
+    width: 18px;
+  }
+
+  .card-back-side {
+    height: 22px;
+    width: 16px;
+  }
+
+  .avatar-rival {
+    height: 30px !important;
+    max-width: 38px;
+  }
+
+  /* avatares aún más compactos */
+  .avatar-gaucho {
+    height: 40px !important;
+    max-width: 52px;
+  }
+
+  .player-portrait-row {
+    padding: 2px 6px 2px 3px;
+    gap: 4px;
+  }
+
+  .player-tag-role {
+    display: none;
+  }
+
+  .player-tag-name {
+    font-size: 12px;
+  }
+
+  .avatar-yo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .yo-nombre {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+
+  .yo-info {
+    padding: 3px 6px;
+    gap: 1px;
+  }
+
+  .player-bottom {
+    gap: 8px;
+  }
+
+  /* side panels más angostos */
+  .side-panel {
+    width: 106px !important;
+  }
+
+  .action-btn {
+    font-size: 13px !important;
+    padding: 4px 3px !important;
+  }
+
+  /* badge dentro de la mesa */
+  .turno-badge-2v2 {
+    top: auto;
+    bottom: 4px;
+    font-size: 12px;
+    padding: 2px 10px;
+  }
+
+  /* cartas jugadas en mesa */
+  .mesa-card {
+    width: 40px;
+    height: 58px;
+  }
+
+  .mesa-cruz {
+    gap: 2px;
+  }
+
+  .pila-medio {
+    gap: 12px;
+  }
+
+  .pila-top .mesa-card:not(:first-child) {
+    margin-top: -28px;
+  }
+
+  .pila-bottom .mesa-card:not(:first-child) {
+    margin-bottom: -28px;
+  }
+
+  .pila-left .mesa-card:not(:first-child) {
+    margin-left: -18px;
+  }
+
+  .pila-right .mesa-card:not(:first-child) {
+    margin-right: -18px;
+  }
 }

@@ -24,27 +24,38 @@ main {
   overflow-y: auto;
   font-family: 'Jersey 20';
   background: transparent;
-  row-gap: 1.5em;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* animaciones */
 .fade-in {
   animation: fadeInStyle 0.3s ease-in-out forwards;
 }
 
 @keyframes fadeInStyle {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes robarCartaAnim {
-  0% { transform: scale(0.85) rotate(-6deg) translateX(-40px); opacity: 0; }
-  100% { transform: scale(1) rotate(0deg) translateX(0); opacity: 1; }
+  0% {
+    transform: scale(0.85) rotate(-6deg) translateX(-40px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg) translateX(0);
+    opacity: 1;
+  }
 }
 
-/* contenedores principales*/
 .pantalla-seleccion {
   flex: 1;
   min-height: 0;
@@ -73,7 +84,6 @@ main {
   text-align: center;
 }
 
-/* seleccion de avatares */
 .carrusel-carta-container {
   display: flex;
   align-items: center;
@@ -101,7 +111,10 @@ main {
   border-color: #8a6030;
   transform: scale(1.1);
 }
-.btn-flecha:active { transform: scale(0.9); }
+
+.btn-flecha:active {
+  transform: scale(0.9);
+}
 
 .tarjeta-vista {
   width: 100%;
@@ -120,7 +133,7 @@ main {
   border-radius: 15px;
   background: #f4eedb;
   overflow: hidden;
-  box-shadow: inset 0 0 0 2px #000, 8px 8px 0 rgba(0,0,0,0.4);
+  box-shadow: inset 0 0 0 2px #000, 8px 8px 0 rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -135,8 +148,17 @@ main {
   font-weight: bold;
   color: #000;
 }
-.superior { top: 10px; left: 15px; }
-.inferior { bottom: 10px; right: 15px; transform: rotate(180deg); }
+
+.superior {
+  top: 10px;
+  left: 15px;
+}
+
+.inferior {
+  bottom: 10px;
+  right: 15px;
+  transform: rotate(180deg);
+}
 
 .marco-personaje {
   width: 90%;
@@ -177,12 +199,12 @@ main {
   transform: translateY(-2px);
   box-shadow: 4px 6px 0 #000;
 }
+
 .btn-continuar-paso:active {
   transform: translateY(2px);
   box-shadow: 2px 2px 0 #000;
 }
 
-/* todo lo de selección de habilidades*/
 .bloque-seleccion.mazo-habilidades-container.de-costado-a-costado {
   width: 100%;
   max-width: 600px;
@@ -231,9 +253,22 @@ main {
   border-radius: 12px;
   box-sizing: border-box;
 }
-.mazo-capa-3 { transform: translate(6px, 6px); background: #2e1f0e; }
-.mazo-capa-2 { transform: translate(4px, 4px); background: #5a4020; }
-.mazo-capa-1 { transform: translate(2px, 2px); background: #8a6030; }
+
+.mazo-capa-3 {
+  transform: translate(6px, 6px);
+  background: #2e1f0e;
+}
+
+.mazo-capa-2 {
+  transform: translate(4px, 4px);
+  background: #5a4020;
+}
+
+.mazo-capa-1 {
+  transform: translate(2px, 2px);
+  background: #8a6030;
+}
+
 .mazo-tope {
   transform: translate(0, 0);
   background: #f4eedb;
@@ -241,10 +276,19 @@ main {
   transition: transform 0.1s ease;
 }
 
-.mazo-deck:hover .mazo-tope { transform: translate(-3px, -3px); }
-.mazo-deck:active .mazo-tope { transform: translate(3px, 3px); }
+.mazo-deck:hover .mazo-tope {
+  transform: translate(-3px, -3px);
+}
 
-.dorso-mazo { width: 100%; height: 100%; object-fit: cover; }
+.mazo-deck:active .mazo-tope {
+  transform: translate(3px, 3px);
+}
+
+.dorso-mazo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 .slot-carta-revelada {
   width: 170px;
@@ -286,7 +330,7 @@ main {
   outline-offset: -8px;
   border-radius: 12px;
   background: #f4eedb;
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.3);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -297,16 +341,45 @@ main {
 .tarjeta-habilidad-carta.activa .cara-habilidad-frente {
   background: #f0fbf4;
   outline-color: #f0fbf4;
-  box-shadow: 0 0 10px rgba(182, 155, 80, 0.5), 6px 6px 0 rgba(0,0,0,0.3);
+  box-shadow: 0 0 10px rgba(182, 155, 80, 0.5), 6px 6px 0 rgba(0, 0, 0, 0.3);
 }
 
-.indice-hab { position: absolute; font-size: 1.2em; color: #000; }
-.indice-hab.superior { top: 8px; left: 12px; }
-.indice-hab.inferior { bottom: 8px; right: 12px; transform: rotate(180deg); }
+.indice-hab {
+  position: absolute;
+  font-size: 1.2em;
+  color: #000;
+}
 
-.info-habilidad-carta { text-align: center; flex: 1; margin-top: 0.8em; width: 100%; }
-.info-habilidad-carta h3 { margin: 0 0 5px 0; font-size: 1.2em; }
-.info-habilidad-carta p { margin: 4px 0; font-size: 0.75em; color: #444; font-family: sans-serif; line-height: 1.2; }
+.indice-hab.superior {
+  top: 8px;
+  left: 12px;
+}
+
+.indice-hab.inferior {
+  bottom: 8px;
+  right: 12px;
+  transform: rotate(180deg);
+}
+
+.info-habilidad-carta {
+  text-align: center;
+  flex: 1;
+  margin-top: 0.8em;
+  width: 100%;
+}
+
+.info-habilidad-carta h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.2em;
+}
+
+.info-habilidad-carta p {
+  margin: 4px 0;
+  font-size: 0.75em;
+  color: #444;
+  font-family: sans-serif;
+  line-height: 1.2;
+}
 
 .btn-equipar-habilidad {
   font-family: 'Jersey 20', monospace;
@@ -322,11 +395,13 @@ main {
   transition: all 0.1s;
   letter-spacing: 1px;
 }
+
 .btn-equipar-habilidad:hover {
   background: #957b4b;
   transform: translateY(-2px);
   box-shadow: 4px 6px 0 #000;
 }
+
 .btn-equipar-habilidad:active {
   transform: translateY(2px);
   box-shadow: 2px 2px 0 #000;
@@ -345,14 +420,18 @@ main {
   margin-bottom: 1rem;
 }
 
-.titulo-seccion-mobile { font-size: 1.2rem; color: #fff;
-  text-shadow: 3px 3px 0 #000; margin: 10px 0 5px 0; }
+.titulo-seccion-mobile {
+  font-size: 1.2rem;
+  color: #fff;
+  text-shadow: 3px 3px 0 #000;
+  margin: 10px 0 5px 0;
+}
 
-.carrusel-skins-mobile { 
-  display: flex; 
-  gap: 12px;       
-  padding: 8px 4px;   
-  min-height: 70px;    
+.carrusel-skins-mobile {
+  display: flex;
+  gap: 12px;
+  padding: 8px 4px;
+  min-height: 70px;
   align-items: center;
   align-self: center;
 }
@@ -361,31 +440,36 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;       
-  height: 56px;       
-  min-width: 56px;     
-  padding: 0;          
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  padding: 0;
   background: #1e1508;
   border: 3px solid #5a4020;
-  border-radius: 8px; 
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.1s ease;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4); 
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
 }
 
-.item-skin-mobile.seleccionado { 
-  background: #f4eedb;  
-  border-color: #c89030; 
-  transform: scale(1.08); 
+.item-skin-mobile.seleccionado {
+  background: #f4eedb;
+  border-color: #c89030;
+  transform: scale(1.08);
   box-shadow: 3px 3px 0 #000;
 }
 
 .item-skin-mobile img {
-  width: 85% !important;   
+  width: 85% !important;
   height: 85% !important;
   margin: 0;
 }
-.opciones-habilidad-mobile { display: flex; flex-direction: column; gap: 6px; }
+
+.opciones-habilidad-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 .item-habilidad-mobile {
   padding: 12px;
@@ -394,7 +478,11 @@ main {
   color: #fff;
   cursor: pointer;
 }
-.item-habilidad-mobile.seleccionado { border-color: #c89030; background: rgba(200, 144, 48, 0.4); }
+
+.item-habilidad-mobile.seleccionado {
+  border-color: #c89030;
+  background: rgba(200, 144, 48, 0.4);
+}
 
 /* botones de abajoo :P */
 .acciones-confirmar {
@@ -429,7 +517,11 @@ main {
   background: #1e1508;
   border: 2px solid #5a4020;
 }
-.confirmar-heroe:disabled { opacity: 0.5; cursor: default; }
+
+.confirmar-heroe:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 
 .btn-volver {
   color: #8a7050;
@@ -444,23 +536,81 @@ main {
 }
 
 @media (max-width: 768px) {
-  .tarjeta-vista { max-width: 230px; height: 340px; }
-  .titulo-flujo-pasos { font-size: 1.6em; }
-  .carrusel-carta-container { gap: 0.8em; }
-  .bloque-seleccion.mazo-habilidades-container.de-costado-a-costado { padding: 1em; }
-  .zona-mazo-interactiva { flex-direction: column; gap: 1.2em; }
-  .acciones-confirmar { flex-direction: column; width: 100%; }
-  .acciones-confirmar button { max-width: 100%; width: 100%; height: 55px; }
+  .tarjeta-vista {
+    max-width: 230px;
+    height: 340px;
+  }
+
+  .titulo-flujo-pasos {
+    font-size: 1.6em;
+  }
+
+  .carrusel-carta-container {
+    gap: 0.8em;
+  }
+
+  .bloque-seleccion.mazo-habilidades-container.de-costado-a-costado {
+    padding: 1em;
+  }
+
+  .zona-mazo-interactiva {
+    flex-direction: column;
+    gap: 1.2em;
+  }
+
+  .acciones-confirmar {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .acciones-confirmar button {
+    max-width: 100%;
+    width: 100%;
+    height: 55px;
+  }
 }
 
 @media (max-height: 600px) {
-  main { padding: 0.5rem 1rem; row-gap: 0.8em; }
-  .pantalla-seleccion { margin-top: 3em; }
-  .tarjeta-vista { max-width: 160px; height: 230px; }
-  .marco-personaje { height: 55%; }
-  .btn-continuar-paso { padding: 4px 12px; font-size: 0.9em; }
-  .mazo-deck { width: 90px; height: 130px; }
-  .slot-carta-revelada { width: 110px; height: 150px; }
-  .titulo-seccion { margin-bottom: 0.5em; font-size: 1.2em; }
-  .acciones-confirmar button { height: 45px; font-size: 0.9rem; }
+  main {
+    padding: 0.5rem 1rem;
+    row-gap: 0.8em;
+  }
+
+  .pantalla-seleccion {
+    margin-top: 3em;
+  }
+
+  .tarjeta-vista {
+    max-width: 160px;
+    height: 230px;
+  }
+
+  .marco-personaje {
+    height: 55%;
+  }
+
+  .btn-continuar-paso {
+    padding: 4px 12px;
+    font-size: 0.9em;
+  }
+
+  .mazo-deck {
+    width: 90px;
+    height: 130px;
+  }
+
+  .slot-carta-revelada {
+    width: 110px;
+    height: 150px;
+  }
+
+  .titulo-seccion {
+    margin-bottom: 0.5em;
+    font-size: 1.2em;
+  }
+
+  .acciones-confirmar button {
+    height: 45px;
+    font-size: 0.9rem;
+  }
 }

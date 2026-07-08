@@ -1,4 +1,4 @@
-<div class="root">
+<div class="root" [ngStyle]="fondoStyle">
 
   <!-- ── PANEL IZQUIERDO: botones de acción ──────────────────────────────── -->
   <aside class="side-panel left-panel">
@@ -8,12 +8,46 @@
     <div class="btn-list">
       @for (b of btns; track b.label) {
       <button class="action-btn" [class.disabled]="!b.enabled" [class.brilla-btn]="btnsBrillan[$index]"
-        [style.--btn-color]="b.color" [disabled]="!b.enabled"
-        (click)="b.action && b.action()">
+        [style.--btn-color]="b.color" [disabled]="!b.enabled" (click)="b.action && b.action()">
         {{ b.label }}
       </button>
       }
     </div>
+
+    @if (rival) {
+    <div class="rival-panel-left">
+      <div class="rival-nombre-panel">{{ rivalIconoPanel }} {{ rival.nombre }}</div>
+      <div class="heroe-desc">{{ rival.descripcionHabilidad }}</div>
+      @if (vistaRival?.ultimoMensajeHabilidad) {
+      <div class="heroe-desc rival-log-msg">{{ mensajeHabilidadLimpio(vistaRival?.ultimoMensajeHabilidad) }}</div>
+      }
+      @if (esMandinga) {
+      <div class="mandinga-fases">
+        @for (fase of mandingaFases; track fase.titulo; let i = $index) {
+        <div class="mandinga-fase-wrap" (mouseenter)="abrirMandingaFaseTip(i, $event)" (mouseleave)="cerrarMandingaFaseTip()">
+          <span class="mandinga-fase" [class.activa]="mandingaFaseDesbloqueada(i)">{{ mandingaFaseLabels[i] }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    @if (esMandinga && mandingaMaldicionActiva) {
+    <div class="mandinga-maldicion-activa">Maldición Activa</div>
+    }
+
+    <!-- SOLO PRUEBAS — Eliminar antes de producción -->
+    @if (mostrarBotonGanarAutomatico) {
+    <button class="debug-win-btn" (click)="ganarAutomaticoDebug()">
+      Ganar automáticamente
+    </button>
+    }
+    @if (mostrarBotonGanar10Puntos) {
+    <button class="debug-win-btn" (click)="ganar10PuntosDebug()">
+      Ganar 10puntos
+    </button>
+    }
   </aside>
 
   <!-- ── ÁREA DE JUEGO CENTRAL ───────────────────────────────────────────── -->
@@ -21,9 +55,9 @@
 
     <div class="rival-zone">
       <div class="rival-portrait">
-        <img src="assets/gaucho.png" alt="rival" class="rival-img" />
+        <img [src]="rivalImgSrc" alt="rival" class="rival-img" [ngClass]="rivalImgClase"
+          (error)="$any($event.target).src = 'assets/gaucho.png'" />
       </div>
-      <!-- <div class="rival-label">{{ rivalLabel }}</div> -->
       @if (bubbleText) {
       <div class="bubble">
         <span class="bubble-tail"></span>
@@ -37,7 +71,14 @@
 
         <div class="rival-hand">
           @for (c of opCards; track $index) {
+          @if (c.revelada && c.carta) {
+          <div class="rival-card-face-wrap" [class.hidden]="!c.visible">
+            <img class="rival-card-face-img" [src]="cardImg(c.carta)"
+              [alt]="c.carta.numero + ' de ' + c.carta.palo" />
+          </div>
+          } @else {
           <img class="card-back-img" [class.hidden]="!c.visible" src="assets/cards/back.PNG" alt="reverso" />
+          }
           }
         </div>
 
@@ -45,8 +86,11 @@
           @for (s of slots; track $index) {
           <div class="baza-col">
             <div class="baza-slot far-slot" [class.pending]="s.pending">
-              @if (s.maquina) {
-              <img class="baza-card-img far-card-img" [src]="cardImg(s.maquina)"
+              @if (s.espejismoOculto) {
+              <img class="baza-card-img far-card-img" src="assets/cards/back.PNG" alt="reverso" />
+              } @else if (s.maquina) {
+              <img class="baza-card-img far-card-img" [class.espejismo-parpadeo]="s.espejismoParpadeo"
+                [src]="cardImg(s.maquina)"
                 [alt]="s.maquina.numero + ' ' + s.maquina.palo" />
               }
             </div>
@@ -86,10 +130,14 @@
       @for (c of misCarts; track $index) {
       <div class="fan-card" [class.hidden]="!c.visible" [class.played-out]="!c.carta"
         [class.carta-seleccionada]="c.seleccionada" [class.brilla]="cartasBrillan[$index]"
-        [style.--angle]="fanAngles[$index] + 'deg'"
+        [class.carta-oculta]="c.oculta" [style.--angle]="fanAngles[$index] + 'deg'"
         [style.--xoff]="fanXOff[$index] + 'px'" (click)="jugarCarta($index)">
         @if (c.carta) {
+        @if (c.oculta) {
+        <img class="fan-card-img fan-card-back" src="assets/cards/back.PNG" alt="carta oculta" />
+        } @else {
         <img class="fan-card-img" [src]="cardImg(c.carta)" [alt]="c.carta.numero + ' ' + c.carta.palo" />
+        }
         }
       </div>
       }
@@ -155,8 +203,11 @@
       <!-- Nombre -->
       <div class="heroe-nombre" [style.color]="heroe.color">⚔ {{ heroe.nombre }}</div>
 
-      <!-- descripcion habilidad -->
-      <div class="heroe-desc">{{ heroe.descripcion }}</div>
+      <!-- descripcion habilidad como botón -> mini popup -->
+      <button class="info-btn" [style.border-color]="heroe.color + '66'"
+        (click)="abrirInfoPopup('⚔ ' + heroe.nombre, [heroe.descripcion])">
+        ℹ Mi habilidad
+      </button>
 
       <!-- usar habilidad -->
       <button class="habilidad-btn" [class.disponible]="habilidadDisponible && !manipuladorEsperandoCarta"
@@ -173,13 +224,11 @@
         }
       </button>
 
-      <!-- Log de eventos de habilidad -->
+      <!-- Eventos de habilidad como botón -> mini popup -->
       @if (eventosHabilidad.length > 0) {
-      <div class="heroe-log">
-        @for (linea of eventosHabilidad; track $index) {
-        <div class="heroe-log-linea">{{ linea }}</div>
-        }
-      </div>
+      <button class="info-btn info-btn-eventos" (click)="abrirInfoPopup('Eventos de la mano', eventosHabilidad)">
+        📜 Eventos ({{ eventosHabilidad.length }})
+      </button>
       }
 
     </div>
@@ -192,6 +241,19 @@
   <!-- ── GAME OVER OVERLAY ───────────────────────────────────────────────── -->
   @if (gameOver) {
   <div class="game-over-overlay" (click)="$event.stopPropagation()">
+    @if (esVictoriaFinalHistoria) {
+    @if (!derrotaFinalTerminada) {
+    <!-- Animación de derrota del Mandinga: se despide y se desvanece -->
+    <div class="derrota-final">
+      <img class="derrota-final-img" [src]="rivalImgSrc" alt="Mandinga derrotado"
+        (error)="$any($event.target).src = 'assets/gaucho.png'" />
+      <div class="derrota-final-texto">«Felicidades... me has derrotado.»</div>
+      <div class="derrota-final-sub">El Mandinga se desvanece entre las llamas...</div>
+    </div>
+    } @else {
+    <app-creditos (creditosTerminado)="finalizarCreditos()"></app-creditos>
+    }
+    } @else {
     <div class="game-over-box">
       <div class="go-title" [class.go-win]="gameOverWon" [class.go-lose]="!gameOverWon">
         {{ gameOverWon ? '¡GANASTE!' : '¡PERDISTE!' }}
@@ -206,6 +268,7 @@
         <button class="go-btn go-btn-exit" (click)="confirmarSalir()">Salir al mapa</button>
       </div>
     </div>
+    }
   </div>
   }
 
@@ -214,23 +277,126 @@
   <div class="nueva-mano-countdown">Nueva mano en {{ countdown }}</div>
   }
 
-  <!-- Toast -->
-  @if (toastMsg) {
-  <div class="toast" [class.toast-info]="toastTipo === 'info'">{{ toastMsg }}</div>
-  }
-
-  <!-- ── CONFIRMAR SALIR ────────────────────────────────────────────────────── -->
-  @if (mostrarConfirmSalir) {
-  <div class="confirm-overlay" (click)="cancelarSalir()">
-    <div class="confirm-box" (click)="$event.stopPropagation()">
-      <div class="confirm-title">¿Salir de la partida?</div>
-      <div class="confirm-sub">Perdés el progreso de la mano actual.</div>
-      <div class="confirm-btn-row">
-        <button class="confirm-btn confirm-btn-si" (click)="confirmarSalir()">Sí, salir</button>
-        <button class="confirm-btn confirm-btn-no" (click)="cancelarSalir()">Cancelar</button>
-      </div>
+  <!-- ── MINI POPUP DE INFO (habilidad / eventos) ─────────────────────────── -->
+  @if (infoPopupTitulo) {
+  <div class="info-popup-overlay" (click)="cerrarInfoPopup()">
+    <div class="info-popup" (click)="$event.stopPropagation()">
+      <div class="info-popup-titulo">{{ infoPopupTitulo }}</div>
+      @for (l of infoPopupLineas; track $index) {
+      <div class="info-popup-linea">{{ l }}</div>
+      }
+      <button class="info-popup-close" (click)="cerrarInfoPopup()">Cerrar</button>
     </div>
   </div>
   }
 
 </div>
+
+@if (salpicaduraRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box">
+    <div class="salpicadura-titulo">¡{{ rival?.nombre ?? 'Nahuelito' }} usa Salpicadura!</div>
+    <div class="salpicadura-sub">Mirá tus cartas originales... {{ salpicaduraSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (rasgunoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box">
+    <div class="salpicadura-titulo">¡{{ rival?.nombre ?? 'El Lobizón' }} usa Rasguño!</div>
+    <div class="salpicadura-sub">Te va a bajar el valor de 1 carta aleatoria... {{ rasgunoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (travesuraRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box">
+    <div class="salpicadura-titulo">¡{{ rival?.nombre ?? 'El Pomberito' }} usa Travesura!</div>
+    <div class="salpicadura-sub">¡Recordá las cartas antes que las oculte! {{ travesuraSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (aullidoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box">
+    <div class="salpicadura-titulo">¡{{ rival?.nombre ?? 'El Lobizón' }} usa Aullido!</div>
+    <div class="salpicadura-sub">Te asustás y te vas al mazo... {{ aullidoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (destelloRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box destello-box">
+    <div class="salpicadura-titulo destello-titulo">¡{{ rival?.nombre ?? 'La Luz Mala' }} usa Destello!</div>
+    <div class="salpicadura-sub destello-sub">Te confunde y vas a jugar una carta al azar... {{ destelloSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (espejismoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box destello-box">
+    <div class="salpicadura-titulo destello-titulo">¡{{ rival?.nombre ?? 'La Luz Mala' }} usa Espejismo!</div>
+    <div class="salpicadura-sub destello-sub">No confíes en lo que ves en la mesa... {{ espejismoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (mandingaEspejoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box mandinga-box">
+    <div class="salpicadura-titulo mandinga-titulo">¡{{ rival?.nombre ?? 'El Mandinga' }} usa El Espejo!</div>
+    <div class="salpicadura-sub mandinga-sub">Copia tu última carta más alta jugada... {{ mandingaEspejoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (mandingaEnganoRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box mandinga-box">
+    <div class="salpicadura-titulo mandinga-titulo">¡{{ rival?.nombre ?? 'El Mandinga' }} usa El Engaño!</div>
+    <div class="salpicadura-sub mandinga-sub">Memorizá tus cartas... {{ mandingaEnganoSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+@if (mandingaMaldicionRevelando) {
+<div class="salpicadura-overlay">
+  <div class="salpicadura-box mandinga-box">
+    <div class="salpicadura-titulo mandinga-titulo">¡{{ rival?.nombre ?? 'El Mandinga' }} usa El Pacto!</div>
+    <div class="salpicadura-sub mandinga-sub">La mesa está maldita... {{ mandingaMaldicionSegundos || 1 }}s</div>
+  </div>
+</div>
+}
+
+<!-- Toast -->
+@if (toastMsg) {
+<div class="toast" [class.toast-info]="toastTipo === 'info'">{{ toastMsg }}</div>
+}
+
+@if (mandingaFaseTipAbierta !== null && mandingaFases[mandingaFaseTipAbierta]; as fase) {
+<div class="mandinga-fase-tip-float" role="tooltip"
+  [style.top.px]="mandingaFaseTipY" [style.left.px]="mandingaFaseTipX">
+  <div class="mandinga-fase-tip-titulo">{{ fase.titulo }}</div>
+  <div class="mandinga-fase-tip-rango">{{ fase.rango }}</div>
+  <p class="mandinga-fase-tip-texto">{{ fase.texto }}</p>
+</div>
+}
+
+<!-- ── CONFIRMAR SALIR ────────────────────────────────────────────────────── -->
+@if (mostrarConfirmSalir) {
+<div class="confirm-overlay" (click)="cancelarSalir()">
+  <div class="confirm-box" (click)="$event.stopPropagation()">
+    <div class="confirm-title">¿Salir de la partida?</div>
+    <div class="confirm-sub">Perdés el progreso de la mano actual.</div>
+    <div class="confirm-btn-row">
+      <button class="confirm-btn confirm-btn-si" (click)="confirmarSalir()">Sí, salir</button>
+      <button class="confirm-btn confirm-btn-no" (click)="cancelarSalir()">Cancelar</button>
+    </div>
+  </div>
+</div>
+}

@@ -1,0 +1,21 @@
+<main>
+    <div class="carta-wrapper">
+        <div class="carta">
+            <div class="indicador-slides">
+                @for (slide of slides; track $index) {
+                <span class="punto" [class.activo]="$index === slideActual"></span>
+                }
+            </div>
+            <p class="texto-prologo">
+                {{ textoMostrado }}<span class="cursor" [class.oculto]="typewriterDone">|</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="acciones-confirmar">
+        <button class="boton-siguiente" (click)="siguiente()">
+            {{ !typewriterDone ? 'CONTINUAR ▶' : esUltimaSlide ? 'COMENZAR AVENTURA' : 'SIGUIENTE ▶' }}
+        </button>
+        <button class="btn-saltar" (click)="saltar()">SALTAR</button>
+    </div>
+</main>

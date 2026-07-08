@@ -23,6 +23,11 @@
     </div>
 
     <div class="fila">
+      <span class="label">Velocidad del personaje: {{ velocidad }}</span>
+      <input type="range" [(ngModel)]="velocidad" min="100" max="450" step="25" />
+    </div>
+
+    <div class="fila">
       <span class="label">Pantalla completa</span>
       <button class="toggle" (click)="pantallaCompleta = !pantallaCompleta">
         {{ pantallaCompleta ? 'SI' : 'NO' }}

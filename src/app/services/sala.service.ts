@@ -140,13 +140,28 @@ export class SalaService {
   }
 
   async conectar(): Promise<void> {
-    if (this.hub.state !== signalR.HubConnectionState.Disconnected) return;
-    await this.hub.start();
+    // Esperar a que termine cualquier transición en curso (Connecting / Reconnecting /
+    // Disconnecting). Si no esperamos, un invoke posterior dispara
+    // "Cannot send data if the connection is not in the 'Connected' State".
+    const enTransicion = () =>
+      this.hub.state === signalR.HubConnectionState.Connecting ||
+      this.hub.state === signalR.HubConnectionState.Reconnecting ||
+      this.hub.state === signalR.HubConnectionState.Disconnecting;
+
+    let intentos = 0;
+    while (enTransicion() && intentos++ < 50) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+
+    if (this.hub.state === signalR.HubConnectionState.Disconnected) {
+      await this.hub.start();
+    }
   }
 
   async crearSala(modo: '1v1' | '2v2' | '3v3' = '1v1', publica = false): Promise<string> {
     const codigo = await this.hub.invoke<string>('CrearSala', modo, publica);
     this.codigoSala$.next(codigo);
+    window.dispatchEvent(new CustomEvent('sala-lista-actualizada'));
     return codigo;
   }
 
@@ -177,8 +192,12 @@ export class SalaService {
   }
 
   async abandonar(): Promise<void> {
+    // Avisar al servidor explícitamente antes de desconectar
+    try { await this.hub.invoke('AbandonarSala'); } catch { /* ignore */ }
     this.reset();
     try { await this.hub.stop(); } catch { /* ignore */ }
+    // Disparar DESPUÉS de stop para que el servidor ya haya limpiado la sala
+    window.dispatchEvent(new CustomEvent('sala-lista-actualizada'));
   }
 
   reset(): void {

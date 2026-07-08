@@ -1,22 +1,37 @@
-<main>
-  <div class="connection-container">
-    <app-connection-status></app-connection-status>
-  </div>
+@if (!uiService.esMultijugadorPhaser) {
+  <main>
+    <div class="connection-container">
+      <app-connection-status></app-connection-status>
+    </div>
+    <div class="menu-wrapper">
+      <img src="/Logo.png" alt="Truco y Maña" class="menu-logo" />
+      <div class="contenedor-menu">
+        <div class="menu-sep"></div>
+
+        <a (click)="seleccionarModo('1v1')" style="cursor: pointer"><span>1 VS 1</span></a>
+
+        <a (click)="seleccionarModo('2v2')" style="cursor: pointer"><span>2 VS 2</span></a>
+
+        <a (click)="seleccionarModo('3v3')" style="cursor: pointer"><span>3 VS 3</span></a>
+
+        <div class="menu-sep"></div>
+        <a (click)="volver()" style="cursor: pointer"><span>VOLVER</span></a>
+      </div>
+    </div>
+  </main>
+} @else {
   <div class="menu-wrapper">
     <img src="/Logo.png" alt="Truco y Maña" class="menu-logo" />
     <div class="contenedor-menu">
       <div class="menu-sep"></div>
-      <a (click)="seleccionarModo('1v1')" style="cursor:pointer">
-        <span>1 VS 1</span>
-      </a>
-      <a (click)="seleccionarModo('2v2')" style="cursor:pointer">
-        <span>2 VS 2</span>
-      </a>
-      <a (click)="seleccionarModo('3v3')" style="cursor:pointer">
-        <span>3 VS 3</span>
-      </a>
+
+      <a (click)="seleccionarModo('1v1')" style="cursor: pointer"><span>1 VS 1</span></a>
+
+      <a (click)="seleccionarModo('2v2')" style="cursor: pointer"><span>2 VS 2</span></a>
+
+      <a (click)="seleccionarModo('3v3')" style="cursor: pointer"><span>3 VS 3</span></a>
+
       <div class="menu-sep"></div>
-      <a routerLink="/menu-multijugador"><span>VOLVER</span></a>
     </div>
   </div>
-</main>
+}

@@ -1,0 +1,6 @@
+/* Estilos específicos del componente solo 3v3 */
+
+/* Fondo de multijugador */
+.root {
+  background-image: url('/assets/multijugador.png');
+}

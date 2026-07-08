@@ -1,10 +1,18 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../auth.service';
+import { ToastService } from '../../services/toast/toast.service';
 import { Card } from '../../components/card/card';
 import { PageWrapper } from '../../components/page-wrapper/page-wrapper';
+
+function emailValido(control: AbstractControl): ValidationErrors | null {
+  const v: string = (control.value ?? '').trim();
+  if (!v) return null; // el required se encarga del vacío
+  const ok = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(v);
+  return ok ? null : { email: true };
+}
 
 @Component({
   selector: 'app-login',
@@ -21,11 +29,16 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toast: ToastService
   ) {
     this.form = this.fb.group({
-      email:    ['', [Validators.required, Validators.email]],
+      email:    ['', [Validators.required, emailValido]],
       password: ['', Validators.required]
+    });
+
+    this.form.valueChanges.subscribe(() => {
+      if (this.errorServidor) this.errorServidor = '';
     });
   }
 
@@ -44,7 +57,16 @@ export class LoginComponent {
         this.router.navigate(['/home']);
       },
       error: (err) => {
-        this.errorServidor = err.error?.error ?? 'Email o contraseña incorrectos.';
+        const body = err.error;
+        const mensaje = (typeof body === 'object' && body !== null)
+          ? (body as Record<string, unknown>)['detail']
+            ?? (body as Record<string, unknown>)['message']
+            ?? (body as Record<string, unknown>)['error']
+          : null;
+        this.errorServidor = typeof mensaje === 'string' && mensaje
+          ? mensaje
+          : 'Email o contraseña incorrectos.';
+        this.toast.error(this.errorServidor);
         this.cargando = false;
       }
     });

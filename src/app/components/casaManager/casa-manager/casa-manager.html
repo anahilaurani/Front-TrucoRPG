@@ -1,6 +1,8 @@
 @if (vistaActiva !== null) {
   <div class="contenedor-overlay-principal">
     <div class="contenedor-modal">
+      <button class="botonCerrar" (click)="cerrar()">X</button>
+
       @switch (vistaActiva) {
         @case ('inventario') {
           <app-inventario-overlay></app-inventario-overlay>
@@ -15,7 +17,6 @@
           <p>Error D:</p>
         }
       }
-      <div class="botonCerrar" (click)="cerrar()">VOLVER</div>
     </div>
   </div>
 }

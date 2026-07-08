@@ -1,15 +1,45 @@
-<main>
+@if (!uiService.esMultijugadorPhaser) {
+  <main>
     <div class="connection-container">
-        <app-connection-status></app-connection-status>
+      <app-connection-status></app-connection-status>
     </div>
+
     <div class="menu-wrapper">
       <img src="/Logo.png" alt="Truco y Maña" class="menu-logo" />
+
       <div class="contenedor-menu">
         <div class="menu-sep"></div>
-        <a class="inactivo"><span>PARTIDA ESPECIAL</span></a>
-        <a routerLink="/menu-multijugador-tipo"><span>PARTIDA TRADICIONAL</span></a>
+
+        <a class="inactivo">
+          <span>PARTIDA ESPECIAL</span>
+        </a>
+
+        <a (click)="irATradicional()" style="cursor: pointer">
+          <span>PARTIDA TRADICIONAL</span>
+        </a>
+
         <div class="menu-sep"></div>
-        <a routerLink="/home"><span>VOLVER</span></a>
+
+        <a (click)="volver()" style="cursor: pointer">
+          <span>VOLVER</span>
+        </a>
       </div>
     </div>
-</main>
+  </main>
+} @else {
+  <div class="menu-wrapper">
+    <img src="/Logo.png" alt="Truco y Maña" class="menu-logo" />
+
+    <div class="contenedor-menu">
+      <div class="menu-sep"></div>
+
+      <a class="inactivo">
+        <span>PARTIDA ESPECIAL</span>
+      </a>
+
+      <a (click)="irATradicional()" style="cursor: pointer">
+        <span>PARTIDA TRADICIONAL</span>
+      </a>
+    </div>
+  </div>
+}

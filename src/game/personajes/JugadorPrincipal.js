@@ -14,46 +14,82 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
       volume: 0.5,
     });
 
-    if (!escena.anims.exists(`${this.nombre}-quieto`)) {
+    const detenerPasos = () => {
+      if (this.sonidoPasos && (this.sonidoPasos.isPlaying || this.sonidoPasos.isPaused)) {
+        this.sonidoPasos.stop();
+      }
+    };
+    escena.events.on('pause', detenerPasos);
+    escena.events.on('sleep', detenerPasos);
+    escena.events.on('shutdown', detenerPasos);
+    escena.events.once('destroy', () => {
+      escena.events.off('pause', detenerPasos);
+      escena.events.off('sleep', detenerPasos);
+      escena.events.off('shutdown', detenerPasos);
+      if (this.sonidoPasos) {
+        this.sonidoPasos.stop();
+        this.sonidoPasos.destroy();
+      }
+    });
+
+    this.verificarYCrearAnimaciones(escena, this.nombre);
+  }
+
+  verificarYCrearAnimaciones(escena, spriteKey) {
+    if (escena.anims.exists(`${spriteKey}-quieto`)) {
+      const anim = escena.anims.get(`${spriteKey}-quieto`);
+      if (anim && anim.frames && anim.frames.length > 0) {
+        return; 
+      }
+    }
+
+    if (!escena.textures.exists(spriteKey)) {
+      return;
+    }
+
+    try {
       escena.anims.create({
-        key: `${this.nombre}-quieto`,
-        frames: escena.anims.generateFrameNumbers(this.nombre, { start: 0, end: 3 }),
+        key: `${spriteKey}-quieto`,
+        frames: escena.anims.generateFrameNumbers(spriteKey, { start: 0, end: 3 }),
         frameRate: 4,
         repeat: -1,
       });
 
       escena.anims.create({
-        key: `${this.nombre}-caminando-arriba`,
-        frames: escena.anims.generateFrameNumbers(this.nombre, { start: 8, end: 11 }),
+        key: `${spriteKey}-caminando-arriba`,
+        frames: escena.anims.generateFrameNumbers(spriteKey, { start: 8, end: 11 }),
         frameRate: 8,
         repeat: -1,
       });
 
       escena.anims.create({
-        key: `${this.nombre}-caminando-abajo`,
-        frames: escena.anims.generateFrameNumbers(this.nombre, { start: 4, end: 7 }),
+        key: `${spriteKey}-caminando-abajo`,
+        frames: escena.anims.generateFrameNumbers(spriteKey, { start: 4, end: 7 }),
         frameRate: 8,
         repeat: -1,
       });
 
       escena.anims.create({
-        key: `${this.nombre}-caminando-izquierda`,
-        frames: escena.anims.generateFrameNumbers(this.nombre, { start: 16, end: 19 }),
+        key: `${spriteKey}-caminando-izquierda`,
+        frames: escena.anims.generateFrameNumbers(spriteKey, { start: 16, end: 19 }),
         frameRate: 8,
         repeat: -1,
       });
 
       escena.anims.create({
-        key: `${this.nombre}-caminando-derecha`,
-        frames: escena.anims.generateFrameNumbers(this.nombre, { start: 12, end: 15 }),
+        key: `${spriteKey}-caminando-derecha`,
+        frames: escena.anims.generateFrameNumbers(spriteKey, { start: 12, end: 15 }),
         frameRate: 8,
         repeat: -1,
       });
+    } catch (e) {
+      console.warn(`No se pudieron inicializar las animaciones para ${spriteKey} aún:`, e);
     }
   }
 
   update(keys) {
-    const velocidad = 250;
+    const guardada = Number(localStorage.getItem('cfg_velocidad'));
+    const velocidad = Number.isFinite(guardada) && guardada > 0 ? guardada : 250;
 
     this.setVelocity(0);
 
@@ -85,16 +121,28 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
       }
     }
 
+    const currentSkin = this.texture.key;
+    
+    this.verificarYCrearAnimaciones(this.scene, currentSkin);
+
+    if (!this.scene.anims.exists(`${currentSkin}-quieto`)) {
+      return;
+    }
+    const animCheck = this.scene.anims.get(`${currentSkin}-quieto`);
+    if (!animCheck || !animCheck.frames || animCheck.frames.length === 0) {
+      return;
+    }
+
     if (moverIzquierda) {
-      this.anims.play(`${this.nombre}-caminando-izquierda`, true);
+      this.anims.play(`${currentSkin}-caminando-izquierda`, true);
     } else if (moverDerecha) {
-      this.anims.play(`${this.nombre}-caminando-derecha`, true);
+      this.anims.play(`${currentSkin}-caminando-derecha`, true);
     } else if (moverArriba) {
-      this.anims.play(`${this.nombre}-caminando-arriba`, true);
+      this.anims.play(`${currentSkin}-caminando-arriba`, true);
     } else if (moverAbajo) {
-      this.anims.play(`${this.nombre}-caminando-abajo`, true);
+      this.anims.play(`${currentSkin}-caminando-abajo`, true);
     } else {
-      this.anims.play(`${this.nombre}-quieto`, true);
+      this.anims.play(`${currentSkin}-quieto`, true);
     }
   }
 }

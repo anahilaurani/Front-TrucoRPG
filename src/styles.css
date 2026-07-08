@@ -127,3 +127,11 @@ body {
     background: none !important;
   }
 }
+
+/* Ocultar header y footer durante los combates del modo historia (todas las resoluciones) */
+body.combate-historia app-header,
+body.combate-historia header,
+body.combate-historia app-footer,
+body.combate-historia footer {
+  display: none !important;
+}

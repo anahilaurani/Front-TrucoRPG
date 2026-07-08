@@ -1,111 +1,260 @@
-
-<main>
-  <div class="connection-container">
-    <app-connection-status></app-connection-status>
-  </div>
-  <div class="menu-wrapper">
-    <div class="contenedor-menu">
-
-      <!-- QR + Código de sala (solo si es creador) -->
-      @if (mode === 'crear') {
-        <div class="codigo-sala-box">
-          @if (codigoSala) {
-            <div class="qr-wrapper">
-              <img class="qr-img" [src]="qrUrl" alt="QR para unirse a la sala" />
-              <p class="qr-hint">Escaneá para unirte</p>
+@if (!uiService.esMultijugadorPhaser) {
+  <main>
+    <div class="connection-container">
+      <app-connection-status></app-connection-status>
+    </div>
+    <div class="menu-wrapper">
+      <div class="contenedor-menu">
+        <!-- ══ IZQUIERDA: QR + Código de sala (solo creador) ══ -->
+        <div class="sala-col sala-col-izq">
+          @if (mode === 'crear') {
+            <div class="codigo-sala-box">
+              @if (codigoSala) {
+                <div class="qr-wrapper">
+                  <img class="qr-img" [src]="qrUrl" alt="QR para unirse a la sala" />
+                  <p class="qr-hint">Escaneá para unirte</p>
+                </div>
+              } @else {
+                <div class="qr-placeholder">
+                  <span class="qr-loading">Generando QR...</span>
+                </div>
+              }
+              <h1 class="codigo-sala-title">Código de sala</h1>
+              <div class="codigo-sala-value">{{ codigoSala || 'Generando...' }}</div>
+              <button
+                type="button"
+                class="boton-copiar"
+                (click)="copiarCodigo()"
+                [disabled]="!codigoSala"
+              >
+                {{ copiado ? '¡Copiado!' : 'Copiar código' }}
+              </button>
             </div>
-          } @else {
-            <div class="qr-placeholder">
-              <span class="qr-loading">Generando QR...</span>
-            </div>
+            <div class="menu-sep"></div>
           }
-          <h1 class="codigo-sala-title">Código de sala</h1>
-          <div class="codigo-sala-value">{{ codigoSala || 'Generando...' }}</div>
-          <button type="button" class="boton-copiar" (click)="copiarCodigo()" [disabled]="!codigoSala">
-            {{ copiado ? '¡Copiado!' : 'Copiar código' }}
-          </button>
         </div>
-        <div class="menu-sep"></div>
-      }
 
-      <!-- Badge modo -->
-      <div class="modo-badge">
-        <span class="modo-label">MODO:</span>
-        <span class="modo-valor">{{ gameMode === '3v3' ? '3 VS 3' : gameMode === '2v2' ? '2 VS 2' : '1 VS 1' }}</span>
-      </div>
+        <!-- ══ CENTRO: Modo + participantes ══ -->
+        <div class="sala-col sala-col-centro">
+          <!-- Badge modo -->
+          <div class="modo-badge">
+            <span class="modo-label">MODO:</span>
+            <span class="modo-valor">{{
+              gameMode === '3v3' ? '3 VS 3' : gameMode === '2v2' ? '2 VS 2' : '1 VS 1'
+            }}</span>
+          </div>
 
-      <!-- ══ LOBBY POR EQUIPOS (2v2 / 3v3) ══ -->
-      @if (esPorEquipos) {
-        <div class="lobby-2v2">
-          <p class="lobby-titulo">ESPERANDO JUGADORES</p>
-          <div class="lobby-slots">
-            @for (slot of slotsLobby; track $index) {
-              <div class="lobby-slot" [class.lleno]="slot.lleno">
-                <span class="slot-avatar" [class.dim]="!slot.lleno"></span>
-                @if (slot.lleno) {
-                  <span class="slot-label">
-                    @if ($index === 0 && mode === 'crear') { VOS }
-                    @else if ($index === 0 && mode === 'unirse') { JUGADOR 1 }
-                    @else { JUGADOR {{ $index + 1 }} }
-                  </span>
-                  <span class="slot-check">✓</span>
-                } @else {
-                  <span class="slot-label dim-txt">Esperando...</span>
+          <!-- ══ LOBBY POR EQUIPOS (2v2 / 3v3) ══ -->
+          @if (esPorEquipos) {
+            <div class="lobby-2v2">
+              <p class="lobby-titulo">ESPERANDO JUGADORES</p>
+              <div class="lobby-slots">
+                @for (slot of slotsLobby; track $index) {
+                  <div class="lobby-slot" [class.lleno]="slot.lleno">
+                    <span class="slot-avatar" [class.dim]="!slot.lleno"></span>
+                    @if (slot.lleno) {
+                      <span class="slot-label">
+                        @if ($index === 0 && mode === 'crear') {
+                          VOS
+                        } @else if ($index === 0 && mode === 'unirse') {
+                          JUGADOR 1
+                        } @else {
+                          JUGADOR {{ $index + 1 }}
+                        }
+                      </span>
+                      <span class="slot-check">✓</span>
+                    } @else {
+                      <span class="slot-label dim-txt">Esperando...</span>
+                    }
+                  </div>
                 }
               </div>
-            }
-          </div>
-          <div class="lobby-contador">
-            {{ jugadoresEnSala }} / {{ maxJugadores }} jugadores
-          </div>
-          @if (jugadoresEnSala === maxJugadores) {
-            <div class="lobby-completo">¡Todos listos! Cargando equipos...</div>
+              <div class="lobby-contador">{{ jugadoresEnSala }} / {{ maxJugadores }} jugadores</div>
+              @if (jugadoresEnSala === maxJugadores) {
+                <div class="lobby-completo">¡Todos listos! Cargando equipos...</div>
+              }
+            </div>
+          }
+
+          <!-- ══ SALA 1v1 ══ -->
+          @if (gameMode === '1v1') {
+            <div class="sala-grid-2">
+              <div class="sala-slot" [class.listo]="miListo">
+                <span class="sala-avatar"></span>
+                <span class="sala-label">Vos</span>
+                @if (miListo) {
+                  <span class="check-listo">✓</span>
+                }
+              </div>
+              <div class="sala-slot" [class.esperando]="!salaLista">
+                <span class="sala-avatar" [class.avatar-dim]="!salaLista"></span>
+                @if (salaLista) {
+                  <span class="sala-label">Oponente</span>
+                } @else {
+                  <span class="sala-label esperando-txt">Esperando...</span>
+                }
+              </div>
+            </div>
+          }
+
+          @if (errorMsg) {
+            <p class="error-msg">{{ errorMsg }}</p>
           }
         </div>
-      }
 
-      <!-- ══ SALA 1v1 ══ -->
-      @if (gameMode === '1v1') {
-        <div class="sala-grid-2">
-          <div class="sala-slot" [class.listo]="miListo">
-            <span class="sala-avatar"></span>
-            <span class="sala-label">Vos</span>
-            @if (miListo) { <span class="check-listo">✓</span> }
-          </div>
-          <div class="sala-slot" [class.esperando]="!salaLista">
-            <span class="sala-avatar" [class.avatar-dim]="!salaLista"></span>
+        <!-- ══ DERECHA: Comenzar + Abandonar ══ -->
+        <div class="sala-col sala-col-der">
+          <!-- Botón Comenzar solo para 1v1 -->
+          @if (gameMode === '1v1') {
+            <div class="menu-sep"></div>
             @if (salaLista) {
-              <span class="sala-label">Oponente</span>
+              <button
+                class="boton-comenzar"
+                [class.listo]="miListo"
+                (click)="comenzar()"
+                [disabled]="miListo"
+              >
+                @if (miListo) {
+                  ✓ LISTO — Esperando oponente...
+                } @else {
+                  COMENZAR
+                }
+              </button>
             } @else {
-              <span class="sala-label esperando-txt">Esperando...</span>
+              <div class="esperando-sala">Esperando que se una un jugador...</div>
+            }
+          }
+
+          <a class="boton-abandonar" (click)="abandonar()">Abandonar Sala</a>
+        </div>
+      </div>
+    </div>
+  </main>
+} @else {
+  <div class="menu-wrapper">
+    <div class="contenedor-menu">
+      <!-- ══ IZQUIERDA: QR + Código de sala (solo creador) ══ -->
+      <div class="sala-col sala-col-izq">
+        @if (mode === 'crear') {
+          <div class="codigo-sala-box">
+            @if (codigoSala) {
+              <div class="qr-wrapper">
+                <img class="qr-img" [src]="qrUrl" alt="QR para unirse a la sala" />
+                <p class="qr-hint">Escaneá para unirte</p>
+              </div>
+            } @else {
+              <div class="qr-placeholder">
+                <span class="qr-loading">Generando QR...</span>
+              </div>
+            }
+            <h1 class="codigo-sala-title">Código de sala</h1>
+            <div class="codigo-sala-value">{{ codigoSala || 'Generando...' }}</div>
+            <button
+              type="button"
+              class="boton-copiar"
+              (click)="copiarCodigo()"
+              [disabled]="!codigoSala"
+            >
+              {{ copiado ? '¡Copiado!' : 'Copiar código' }}
+            </button>
+          </div>
+          <div class="menu-sep"></div>
+        }
+      </div>
+
+      <!-- ══ CENTRO: Modo + participantes ══ -->
+      <div class="sala-col sala-col-centro">
+        <!-- Badge modo -->
+        <div class="modo-badge">
+          <span class="modo-label">MODO:</span>
+          <span class="modo-valor">{{
+            gameMode === '3v3' ? '3 VS 3' : gameMode === '2v2' ? '2 VS 2' : '1 VS 1'
+          }}</span>
+        </div>
+
+        <!-- ══ LOBBY POR EQUIPOS (2v2 / 3v3) ══ -->
+        @if (esPorEquipos) {
+          <div class="lobby-2v2">
+            <p class="lobby-titulo">ESPERANDO JUGADORES</p>
+            <div class="lobby-slots">
+              @for (slot of slotsLobby; track $index) {
+                <div class="lobby-slot" [class.lleno]="slot.lleno">
+                  <span class="slot-avatar" [class.dim]="!slot.lleno"></span>
+                  @if (slot.lleno) {
+                    <span class="slot-label">
+                      @if ($index === 0 && mode === 'crear') {
+                        VOS
+                      } @else if ($index === 0 && mode === 'unirse') {
+                        JUGADOR 1
+                      } @else {
+                        JUGADOR {{ $index + 1 }}
+                      }
+                    </span>
+                    <span class="slot-check">✓</span>
+                  } @else {
+                    <span class="slot-label dim-txt">Esperando...</span>
+                  }
+                </div>
+              }
+            </div>
+            <div class="lobby-contador">{{ jugadoresEnSala }} / {{ maxJugadores }} jugadores</div>
+            @if (jugadoresEnSala === maxJugadores) {
+              <div class="lobby-completo">¡Todos listos! Cargando equipos...</div>
             }
           </div>
-        </div>
-      }
-
-      @if (errorMsg) {
-        <p class="error-msg">{{ errorMsg }}</p>
-      }
-
-      <!-- Botón Comenzar solo para 1v1 -->
-      @if (gameMode === '1v1') {
-        <div class="menu-sep"></div>
-        @if (salaLista) {
-          <button
-            class="boton-comenzar"
-            [class.listo]="miListo"
-            (click)="comenzar()"
-            [disabled]="miListo"
-          >
-            @if (miListo) { ✓ LISTO — Esperando oponente... }
-            @else { COMENZAR }
-          </button>
-        } @else {
-          <div class="esperando-sala">Esperando que se una un jugador...</div>
         }
-      }
 
-      <a class="boton-abandonar" (click)="abandonar()">Abandonar Sala</a>
+        <!-- ══ SALA 1v1 ══ -->
+        @if (gameMode === '1v1') {
+          <div class="sala-grid-2">
+            <div class="sala-slot" [class.listo]="miListo">
+              <span class="sala-avatar"></span>
+              <span class="sala-label">Vos</span>
+              @if (miListo) {
+                <span class="check-listo">✓</span>
+              }
+            </div>
+            <div class="sala-slot" [class.esperando]="!salaLista">
+              <span class="sala-avatar" [class.avatar-dim]="!salaLista"></span>
+              @if (salaLista) {
+                <span class="sala-label">Oponente</span>
+              } @else {
+                <span class="sala-label esperando-txt">Esperando...</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (errorMsg) {
+          <p class="error-msg">{{ errorMsg }}</p>
+        }
+      </div>
+
+      <!-- ══ DERECHA: Comenzar + Abandonar ══ -->
+      <div class="sala-col sala-col-der">
+        <!-- Botón Comenzar solo para 1v1 -->
+        @if (gameMode === '1v1') {
+          <div class="menu-sep"></div>
+          @if (salaLista) {
+            <button
+              class="boton-comenzar"
+              [class.listo]="miListo"
+              (click)="comenzar()"
+              [disabled]="miListo"
+            >
+              @if (miListo) {
+                ✓ LISTO — Esperando oponente...
+              } @else {
+                COMENZAR
+              }
+            </button>
+          } @else {
+            <div class="esperando-sala">Esperando que se una un jugador...</div>
+          }
+        }
+
+        <a class="boton-abandonar" (click)="abandonar()">Abandonar Sala</a>
+      </div>
     </div>
   </div>
-</main>
+}

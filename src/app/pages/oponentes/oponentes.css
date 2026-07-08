@@ -1,0 +1,909 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
+
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* <main> intermedio: mantiene viva la cadena flex hasta la escena */
+main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
+  width: 100%;
+}
+
+.grimorio-escena {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  align-self: stretch; /* ocupa toda la altura del wrapper */
+  padding: 0.5rem 0.8rem;
+  gap: 0.55rem;
+  min-height: 0;
+}
+
+/* ══════════════════════════════════════════════
+   TÍTULO
+══════════════════════════════════════════════ */
+.grimorio-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.4rem 1.8rem;
+  background: linear-gradient(to right,
+      transparent,
+      rgba(10, 7, 2, 0.82) 15%,
+      rgba(10, 7, 2, 0.92) 50%,
+      rgba(10, 7, 2, 0.82) 85%,
+      transparent);
+  border-top: 1px solid rgba(90, 58, 16, 0.5);
+  border-bottom: 1px solid rgba(90, 58, 16, 0.5);
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(200, 140, 50, 0.08);
+}
+
+.grimorio-titulo {
+  font-family: 'Jersey 10', monospace;
+  font-size: clamp(1.1rem, 3vw, 2rem);
+  color: #e8c060;
+  letter-spacing: 6px;
+  text-align: center;
+  text-shadow:
+    0 0 18px rgba(232, 192, 96, 0.55),
+    0 0 40px rgba(200, 140, 40, 0.25),
+    0 2px 0 #000;
+  margin: 0;
+}
+
+.grimorio-deco {
+  color: #8a6028;
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  text-shadow: 0 0 10px rgba(200, 140, 50, 0.4);
+}
+
+/* ══════════════════════════════════════════════
+   EL LIBRO — OBJETO FÍSICO
+══════════════════════════════════════════════ */
+.libro {
+  position: relative;
+  width: min(970px, 97vw);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Canto superior: simula el grosor de las hojas apiladas */
+.libro-canto-top {
+  height: 5px;
+  background: linear-gradient(to bottom,
+      #d4b87a 0%,
+      #b89a5e 30%,
+      #9a7c42 70%,
+      #7a5c22 100%);
+  margin: 0 24px;
+  border-radius: 1px 1px 0 0;
+  box-shadow: 0 -1px 0 #5a3c10;
+}
+
+/* Canto inferior: lomo del libro */
+.libro-canto-bottom {
+  height: 8px;
+  background: linear-gradient(to bottom,
+      #3a2008,
+      #200e02);
+  box-shadow:
+    0 4px 0 #120702,
+    0 5px 20px rgba(0, 0, 0, 0.9);
+  margin: 0 8px;
+  border-radius: 0 0 3px 3px;
+}
+
+/* ══════════════════════════════════════════════
+   PÁGINAS INTERNAS
+══════════════════════════════════════════════ */
+.libro-paginas {
+  display: flex;
+  flex-direction: row;
+  height: min(510px, 70vh);
+  height: min(510px, 70dvh);
+  /* Tapa de cuero como fondo + borde */
+  background: linear-gradient(160deg, #5a3010 0%, #3d1e06 45%, #4a2808 100%);
+  border-left: 10px solid #3a1e06;
+  border-right: 10px solid #3a1e06;
+  border-top: 4px solid #3a1e06;
+  box-shadow:
+    /* Relieve interior de la tapa */
+    inset 0 0 0 2px rgba(200, 140, 60, 0.12),
+    inset 2px 2px 8px rgba(0, 0, 0, 0.5),
+    /* Sombra lateral */
+    -4px 0 12px rgba(0, 0, 0, 0.6),
+    4px 0 12px rgba(0, 0, 0, 0.6);
+}
+
+/* ══════════════════════════════════════════════
+   PÁGINAS
+══════════════════════════════════════════════ */
+.pagina {
+  position: relative;
+  padding: 1rem 1rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Pergamino envejecido con líneas de renglón */
+  background:
+    repeating-linear-gradient(0deg,
+      transparent 0px,
+      transparent 23px,
+      rgba(100, 70, 20, 0.07) 23px,
+      rgba(100, 70, 20, 0.07) 24px),
+    linear-gradient(175deg, #221b0c 0%, #1c1509 60%, #211a0b 100%);
+  /* Borde interior (sombra de doblez de página) */
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.pagina-izq {
+  flex: 0 0 31%;
+}
+
+.pagina-der {
+  flex: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  transform-origin: left center;
+}
+
+.pagina-der.volteando {
+  opacity: 0;
+  transform: perspective(600px) rotateY(-12deg) translateX(10px);
+}
+
+/* ── Línea de margen vertical (como un cuaderno real) ── */
+.margen-vert {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  width: 1px;
+  height: 100%;
+  background: rgba(180, 120, 40, 0.12);
+  pointer-events: none;
+}
+
+.margen-der {
+  left: 10px;
+  right: auto;
+}
+
+/* ══════════════════════════════════════════════
+   CLASPS (refuerzos metálicos de esquina)
+══════════════════════════════════════════════ */
+.clasp {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #7a5520;
+  background: linear-gradient(135deg, #a07030, #5a3810);
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.clasp-tl {
+  top: 6px;
+  left: 6px;
+  border-radius: 0 0 2px 0;
+}
+
+.clasp-tr {
+  top: 6px;
+  right: 6px;
+  border-radius: 0 0 0 2px;
+}
+
+.clasp-bl {
+  bottom: 16px;
+  left: 6px;
+  border-radius: 0 2px 0 0;
+}
+
+.clasp-br {
+  bottom: 16px;
+  right: 6px;
+  border-radius: 2px 0 0 0;
+}
+
+/* ══════════════════════════════════════════════
+   LOMO (costura del libro)
+══════════════════════════════════════════════ */
+.lomo {
+  flex: 0 0 20px;
+  background: linear-gradient(to right,
+      #0e0804,
+      #1e1208,
+      #150e06,
+      #1e1208,
+      #0e0804);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-left: 1px solid #3a2208;
+  border-right: 1px solid #3a2208;
+}
+
+/* Líneas de costura */
+.lomo-stitch {
+  flex: 1;
+  width: 2px;
+  background: repeating-linear-gradient(to bottom,
+      #5a3a10 0px,
+      #5a3a10 5px,
+      transparent 5px,
+      transparent 9px);
+  margin: 4px 0;
+}
+
+.lomo-gema {
+  color: #7a5020;
+  font-size: 0.9rem;
+  text-shadow: 0 0 6px rgba(200, 140, 50, 0.4);
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════
+   SEPARADOR DE SECCIÓN
+══════════════════════════════════════════════ */
+.sep-libro {
+  width: 100%;
+  height: 1px;
+  margin: 0.45rem 0;
+  flex-shrink: 0;
+  background: linear-gradient(to right,
+      transparent,
+      #5a3a10,
+      #9a6a28,
+      #5a3a10,
+      transparent);
+}
+
+/* ══════════════════════════════════════════════
+   PÁGINA IZQ — ÍNDICE
+══════════════════════════════════════════════ */
+.pagina-sec-titulo {
+  font-family: 'Jersey 10', monospace;
+  font-size: clamp(0.65rem, 1.4vw, 0.85rem);
+  color: #8a6030;
+  letter-spacing: 4px;
+  text-align: center;
+  margin: 0.25rem 0 0;
+}
+
+.num-pagina {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'VT323', monospace;
+  font-size: 0.72rem;
+  color: #4a3010;
+  letter-spacing: 1px;
+}
+
+.num-pagina-der {
+  /* por si se superpone con el curl */
+  right: 22px;
+  left: auto;
+  transform: none;
+}
+
+/* Botones del índice */
+.capitulos-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 0;
+}
+
+.capitulos-nav::-webkit-scrollbar {
+  width: 3px;
+}
+
+.capitulos-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.capitulos-nav::-webkit-scrollbar-thumb {
+  background: #3a2208;
+  border-radius: 2px;
+}
+
+.cap-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+  width: 100%;
+}
+
+.cap-btn:hover {
+  background: rgba(100, 65, 15, 0.2);
+  border-color: rgba(90, 55, 15, 0.4);
+}
+
+.cap-btn.activo {
+  background: rgba(100, 65, 15, 0.35);
+  border-color: #5a3a10;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.cap-icono {
+  font-size: 1rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.cap-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cap-titulo {
+  font-family: 'Jersey 10', monospace;
+  font-size: clamp(0.58rem, 1.2vw, 0.78rem);
+  color: #b88030;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.12s;
+}
+
+.cap-btn.activo .cap-titulo {
+  color: #e8b040;
+}
+
+.cap-desc {
+  font-family: 'VT323', monospace;
+  font-size: 0.68rem;
+  color: #5a3a18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cap-pag {
+  font-family: 'VT323', monospace;
+  font-size: 0.62rem;
+  color: #4a2a10;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════
+   PÁGINA DER — CONTENIDO
+══════════════════════════════════════════════ */
+.cap-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.15rem;
+  flex-shrink: 0;
+}
+
+.retrato-marco {
+  width: clamp(68px, 11vw, 100px);
+  height: clamp(68px, 11vw, 100px);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #2a1c08 0%, #150d04 70%);
+  border: 2px solid #5a3a10;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.7),
+    0 0 14px rgba(200, 140, 40, 0.18),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.retrato-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.6));
+}
+
+.cap-nombre {
+  font-family: 'Jersey 10', monospace;
+  font-size: clamp(0.9rem, 2.3vw, 1.45rem);
+  color: #e0a840;
+  letter-spacing: 3px;
+  margin: 0 0 2px;
+  line-height: 1.1;
+  text-shadow: 0 0 12px rgba(220, 160, 50, 0.3);
+}
+
+.cap-sub {
+  font-family: 'VT323', monospace;
+  font-size: clamp(0.78rem, 1.7vw, 0.98rem);
+  color: #6a4a20;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* ── Scroll de entradas ── */
+.entradas-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.entradas-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.entradas-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.entradas-scroll::-webkit-scrollbar-thumb {
+  background: #3a2208;
+  border-radius: 2px;
+}
+
+/* ── Cada entrada de contenido ── */
+.entrada {
+  padding-left: 10px;
+  border-left: 2px solid #3a2208;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color 0.12s;
+}
+
+.entrada:hover {
+  border-left-color: #6a4a18;
+}
+
+/* Tags de tipo */
+.entrada-tag {
+  font-family: 'Jersey 10', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 1.5px;
+  padding: 1px 6px 2px;
+  border-radius: 2px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.tag-habilidad {
+  background: #1a0404;
+  color: #dd4444;
+  border: 1px solid #882222;
+}
+
+.tag-pasiva {
+  background: #0a1a2a;
+  color: #66aadd;
+  border: 1px solid #224466;
+}
+
+.entrada-titulo {
+  font-family: 'Jersey 10', monospace;
+  font-size: clamp(0.68rem, 1.5vw, 0.9rem);
+  color: #c89030;
+  letter-spacing: 1.2px;
+  margin: 0;
+}
+
+.entrada-texto {
+  font-family: 'VT323', monospace;
+  font-size: clamp(0.85rem, 1.7vw, 1.05rem);
+  color: #9a8258;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.entrada-nota {
+  margin-top: 3px;
+  font-family: 'VT323', monospace;
+  font-size: clamp(0.75rem, 1.4vw, 0.88rem);
+  color: #7a6040;
+  font-style: italic;
+  padding: 3px 8px;
+  border: 1px solid #2a1a08;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* ══════════════════════════════════════════════
+   TEXTO INTRODUCTORIO DEL OPONENTE
+══════════════════════════════════════════════ */
+.oponente-intro {
+  font-family: 'VT323', monospace;
+  font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+  color: #8a7048;
+  line-height: 1.6;
+  font-style: italic;
+  margin: 0 0 0.2rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed rgba(90, 58, 16, 0.35);
+}
+
+/* ══════════════════════════════════════════════
+   PROGRESIÓN DE FASES (El Mandinga)
+══════════════════════════════════════════════ */
+.fases-progresion {
+  display: flex;
+  flex-direction: column;
+}
+
+.fase-item {
+  display: flex;
+  gap: 12px;
+}
+
+.fase-marcador {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 26px;
+}
+
+.fase-num {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8a1818, #4a0808);
+  border: 2px solid #cc4444;
+  color: #ffd0a0;
+  font-family: 'Jersey 10', monospace;
+  font-size: 0.8rem;
+  box-shadow: 0 0 10px rgba(204, 68, 68, 0.4), inset 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.fase-linea {
+  flex: 1;
+  width: 2px;
+  min-height: 28px;
+  margin: 2px 0;
+  background: repeating-linear-gradient(to bottom,
+      #6a2020 0px, #6a2020 4px,
+      transparent 4px, transparent 8px);
+}
+
+.fase-contenido {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 1.1rem;
+}
+
+.fase-rango {
+  font-family: 'Jersey 10', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  color: #cc5050;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+/* ── Navegación inferior ── */
+.pagina-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.45rem;
+  margin-top: auto;
+  border-top: 1px solid rgba(90, 58, 16, 0.35);
+  flex-shrink: 0;
+}
+
+.nav-btn {
+  font-family: 'Jersey 10', monospace;
+  font-size: clamp(0.58rem, 1.2vw, 0.7rem);
+  color: #7a5a28;
+  background: linear-gradient(to bottom, #2a1e08, #1e1404);
+  border: 1px solid #3a2808;
+  border-radius: 2px;
+  padding: 4px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  box-shadow: 0 2px 0 #0e0902, 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.nav-btn:hover:not(:disabled) {
+  color: #e0b040;
+  border-color: #5a3a10;
+  background: linear-gradient(to bottom, #3a2a10, #2a1e08);
+}
+
+.nav-btn:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(2px);
+}
+
+.nav-btn:disabled {
+  opacity: 0.22;
+  cursor: default;
+}
+
+.nav-indicador {
+  font-family: 'VT323', monospace;
+  font-size: 0.8rem;
+  color: #4a3010;
+  letter-spacing: 2px;
+}
+
+/* ── Doblez de esquina inferior derecha ── */
+.page-curl {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 18px 18px;
+  border-color: transparent transparent #3a2208 transparent;
+  filter: drop-shadow(-2px -2px 2px rgba(0, 0, 0, 0.4));
+}
+
+/* ══════════════════════════════════════════════
+   BOTÓN VOLVER
+══════════════════════════════════════════════ */
+.volver-btn {
+  font-family: 'Jersey 10', monospace;
+  font-size: clamp(0.58rem, 1.4vw, 0.75rem);
+  color: #7a5a28;
+  text-decoration: none;
+  letter-spacing: 2px;
+  padding: 7px 22px;
+  background: linear-gradient(to bottom, #1c1408, #141008);
+  border: 1px solid #2a1a08;
+  border-radius: 2px;
+  box-shadow: 0 2px 0 #0a0604, 0 3px 10px rgba(0, 0, 0, 0.5);
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.volver-btn:hover {
+  color: #c89030;
+  border-color: #4a3010;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — MOBILE
+══════════════════════════════════════════════ */
+@media (max-width: 680px) {
+  .grimorio-escena {
+    padding: 0.3rem 0.4rem;
+    gap: 0.35rem;
+    justify-content: flex-start;
+  }
+
+  .grimorio-header {
+    padding: 0.25rem 1rem;
+    gap: 0.6rem;
+  }
+
+  .grimorio-titulo {
+    letter-spacing: 3px;
+  }
+
+  /* El libro llena la altura disponible en vez de usar vh fijos */
+  .libro {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .libro-paginas {
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    border-left-width: 6px;
+    border-right-width: 6px;
+  }
+
+  .libro-canto-top {
+    margin: 0 16px;
+  }
+
+  .libro-canto-bottom {
+    margin: 0 4px;
+  }
+
+  .pagina {
+    padding: 0.7rem 0.8rem 1rem;
+  }
+
+  .pagina-izq {
+    flex: 0 0 auto;
+    max-height: 30vh;
+    max-height: 30dvh;
+  }
+
+  .retrato-marco {
+    width: 60px;
+    height: 60px;
+  }
+
+  .lomo {
+    flex: 0 0 10px;
+    flex-direction: row;
+    padding: 0 12px;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid #3a2208;
+    border-bottom: 1px solid #3a2208;
+  }
+
+  .lomo-stitch {
+    flex: 1;
+    height: 2px;
+    width: auto;
+    background: repeating-linear-gradient(to right,
+        #5a3a10 0px, #5a3a10 5px,
+        transparent 5px, transparent 9px);
+    margin: 0 4px;
+  }
+
+  .lomo-gema {
+    font-size: 0.7rem;
+  }
+
+  .capitulos-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    gap: 3px;
+  }
+
+  .cap-btn {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    gap: 4px;
+  }
+
+  .cap-desc,
+  .cap-pag {
+    display: none;
+  }
+
+  .cap-titulo {
+    font-size: 0.65rem;
+  }
+
+  /* La página derecha flexea y el scroll queda en .entradas-scroll,
+     así la navegación Ant./Sig. queda siempre visible */
+  .pagina-der {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .page-curl {
+    display: none;
+  }
+
+  .clasp {
+    display: none;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — PANTALLA BAJA (ej: celular apaisado)
+══════════════════════════════════════════════ */
+@media (max-height: 560px) {
+  .grimorio-escena {
+    padding: 0.25rem 0.5rem;
+    gap: 0.3rem;
+  }
+
+  .grimorio-header {
+    padding: 0.1rem 1rem;
+  }
+
+  .grimorio-titulo {
+    font-size: clamp(0.9rem, 2.4vw, 1.3rem);
+    letter-spacing: 3px;
+  }
+
+  .libro {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .libro-paginas {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
+
+  .pagina {
+    padding: 0.55rem 0.7rem 1rem;
+  }
+
+  .entradas-scroll {
+    gap: 0.55rem;
+  }
+
+  .entrada {
+    gap: 2px;
+  }
+
+  .cap-header {
+    gap: 8px;
+  }
+
+  .retrato-marco {
+    width: 52px;
+    height: 52px;
+  }
+
+  .clasp {
+    display: none;
+  }
+
+  .volver-btn {
+    padding: 4px 14px;
+  }
+
+  .fase-contenido {
+    padding-bottom: 0.7rem;
+  }
+
+  .fase-linea {
+    min-height: 18px;
+  }
+}
+
+/* Pantallas muy angostas */
+@media (max-width: 400px) {
+  .grimorio-titulo {
+    letter-spacing: 2px;
+  }
+
+  .grimorio-header {
+    padding: 0.2rem 0.6rem;
+  }
+
+  .pagina {
+    padding: 0.6rem 0.6rem 0.9rem;
+  }
+
+  .cap-nombre {
+    letter-spacing: 1.5px;
+  }
+}

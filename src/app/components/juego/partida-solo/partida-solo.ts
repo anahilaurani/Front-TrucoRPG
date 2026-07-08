@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { SeleccionPersonaje } from '../../../pages/seleccion-personaje/seleccion-personaje';
@@ -15,13 +15,28 @@ export class PartidaSoloComponent {
   private router = inject(Router);
   private uiService = inject(PulperiaUiService);
 
+  @Input() esOverlay: boolean = false;
+
   vistaActual: 'menu-principal' | 'seleccion-heroe' | 'seleccion-modo-tradicional' =
     'menu-principal';
 
   jugarTradicional(modo: '1v1' | '2v2' | '3v3'): void {
     localStorage.removeItem('heroeId');
 
-    this.uiService.cerrarOverlay();
+    if (this.esOverlay) {
+      // Desde la pulpería: cerrar el overlay y mostrar el juego como overlay
+      // dentro de la historia (sin navegar a otra ruta).
+      this.uiService.cerrarOverlay();
+      localStorage.setItem('origenPulperia', '1');
+      if (modo === '2v2') {
+        window.dispatchEvent(new CustomEvent('truco-2v2:start'));
+      } else if (modo === '3v3') {
+        window.dispatchEvent(new CustomEvent('truco-3v3:start'));
+      } else {
+        window.dispatchEvent(new CustomEvent('truco-solo:start'));
+      }
+      return;
+    }
 
     if (modo === '2v2') {
       this.router.navigate(['/jugar/solitario-2v2']);
@@ -35,7 +50,12 @@ export class PartidaSoloComponent {
   alConfirmarHeroe(idHeroe: number): void {
     localStorage.setItem('heroeId', idHeroe.toString());
 
-    this.uiService.cerrarOverlay();
+    if (this.esOverlay) {
+      this.uiService.cerrarOverlay();
+      localStorage.setItem('origenPulperia', '1');
+      window.dispatchEvent(new CustomEvent('truco-solo:start'));
+      return;
+    }
 
     this.router.navigate(['/jugar/solitario']);
   }

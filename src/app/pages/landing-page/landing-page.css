@@ -18,12 +18,13 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 3rem;
     font-family: 'Jersey 20';
 
-    background: linear-gradient(to bottom,
+    /* background: linear-gradient(to bottom,
             #441310,
-            #000000);
+            #000000); */
+
+    background: #441310;
 }
 
 p {
@@ -35,19 +36,19 @@ p {
 ========================================================= */
 
 .contenedor-landing {
-    width: min(1000px, 90%);
-    height: auto;
+    width: 100%;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     gap: 2rem;
 
-    background: rgba(119, 66, 31, 0.45);
+    /* background: rgba(119, 66, 31, 0.45);
     border: 2px solid #5a4020;
     outline: 1px solid rgba(200, 144, 48, 0.18);
     outline-offset: 4px;
     box-shadow:
         0 0 40px rgba(0, 0, 0, 0.8),
-        inset 0 0 24px rgba(0, 0, 0, 0.4);
+        inset 0 0 24px rgba(0, 0, 0, 0.4);*/
 }
 
 /* =========================================================
@@ -56,22 +57,21 @@ p {
 
 .seccion-1 {
     width: 100%;
+    min-height: 100vh;
     height: auto;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-
     padding: 2rem;
-    box-sizing: border-box;
 
-    text-align: center;
+    background-image:
+        url('/assets/imagen-hero-landing.png');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .seccion-2 {
     width: 100%;
+    min-height: 100vh;
     height: auto;
 
     display: flex;
@@ -84,10 +84,18 @@ p {
     box-sizing: border-box;
 
     text-align: center;
+
+    background-image:
+        url('/assets/multijugador2.png');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .seccion-3 {
     width: 100%;
+    min-height: 100vh;
     height: auto;
 
     display: flex;
@@ -100,17 +108,56 @@ p {
     box-sizing: border-box;
 
     text-align: center;
+
+    background-image:
+        url('/assets/home.png');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.seccion-fade {
+    opacity: 0;
+    transform: translateY(50px);
+    transition:
+        opacity 0.8s ease,
+        transform 0.8s ease;
+}
+
+.seccion-fade.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* =========================================================
    BOTÓN PRINCIPAL
 ========================================================= */
 
-.seccion-1 a {
-    width: 40%;
-    height: 4rem;
-
+.contenido-seccion-1{
+    width: 500px;
     display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0.5rem;
+
+    padding: 2rem;
+    box-sizing: border-box;
+
+    text-align: center;
+}
+
+
+.seccion-1 a {
+    /*width: 40%;*/
+    width: 100%;
+    height: 4rem;
+    box-sizing: border-box;
+    padding: 1rem 4rem;
+    white-space: nowrap; /* evita salto de línea */
+
+    display: inline-flex;
     justify-content: center;
     align-items: center;
 
@@ -167,6 +214,7 @@ p {
     font-family: 'Jersey 20';
     font-size: 1.5rem;
     color: #c89030;
+    padding: 0.5rem;
 }
 
 .seccion-2 .texto-landing {
@@ -180,6 +228,7 @@ p {
 
 .imagen-hero-landing {
     width: min(30rem, 90vw);
+    max-width: 100%;
     height: auto;
     animation: flotar 2.5s infinite ease-in-out;
 }
@@ -208,22 +257,26 @@ p {
 }
 
 .circulo-icono {
-    width: 9rem;
-    height: 9rem;
+    width: 8rem;
+    aspect-ratio: 1;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
+    object-fit: cover;
     border-radius: 50%;
     border: 2px solid #000;
+
+    box-shadow: 4px 4px 0 #000;
 }
+
 
 .imagen-modo {
     width: 8rem;
     height: 8rem;
     object-fit: contain;
-    margin-bottom: 0.75rem;
+    margin: 0;
 }
 
 /* =========================================================
@@ -242,18 +295,43 @@ p {
 
 /* Primera fila */
 
-.desarrollador:nth-child(1) { grid-column: 1 / span 2; }
-.desarrollador:nth-child(2) { grid-column: 3 / span 2; }
-.desarrollador:nth-child(3) { grid-column: 5 / span 2; }
-.desarrollador:nth-child(4) { grid-column: 7 / span 2; }
-.desarrollador:nth-child(5) { grid-column: 9 / span 2; }
+.desarrollador:nth-child(1) {
+    grid-column: 1 / span 2;
+}
+
+.desarrollador:nth-child(2) {
+    grid-column: 3 / span 2;
+}
+
+.desarrollador:nth-child(3) {
+    grid-column: 5 / span 2;
+}
+
+.desarrollador:nth-child(4) {
+    grid-column: 7 / span 2;
+}
+
+.desarrollador:nth-child(5) {
+    grid-column: 9 / span 2;
+}
 
 /* Segunda fila centrada */
 
-.desarrollador:nth-child(6) { grid-column: 2 / span 2; }
-.desarrollador:nth-child(7) { grid-column: 4 / span 2; }
-.desarrollador:nth-child(8) { grid-column: 6 / span 2; }
-.desarrollador:nth-child(9) { grid-column: 8 / span 2; }
+.desarrollador:nth-child(6) {
+    grid-column: 2 / span 2;
+}
+
+.desarrollador:nth-child(7) {
+    grid-column: 4 / span 2;
+}
+
+.desarrollador:nth-child(8) {
+    grid-column: 6 / span 2;
+}
+
+.desarrollador:nth-child(9) {
+    grid-column: 8 / span 2;
+}
 
 .desarrollador {
     width: 100%;
@@ -271,6 +349,20 @@ p {
     border: 2px solid #000;
 
     box-shadow: 4px 4px 0 #000;
+}
+
+.desarrollador .texto-landing {
+    text-shadow:
+        1px 1px 0 #000,
+        2px 2px 0 #000,
+        3px 3px 0 #000,
+        4px 4px 0 #000,
+        5px 5px 0 #000,
+        6px 6px 0 #000;
+}
+
+.titulo-desarrolladores {
+    padding: 4rem;
 }
 
 /* =========================================================
@@ -453,99 +545,49 @@ p {
 }
 
 /* =========================================================
-   TABLET Y NOTEBOOK PEQUEÑA
+   TABLET
 ========================================================= */
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
 
-    main {
-        padding: 2rem;
+    .seccion-1,
+    .seccion-2,
+    .seccion-3 {
+        padding: 2rem 1rem;
     }
 
-    .contenedor-landing {
-        width: 95%;
+    .seccion-2 {
+        height: auto;
+        min-height: 100vh;
     }
 
     .titulo-landing {
         font-size: 2.5rem;
     }
 
-    .texto-landing {
-        font-size: 1.3rem;
+    .imagen-hero-landing {
+        width: min(24rem, 80vw);
     }
 
     .seccion-1 a {
-        width: 60%;
+        width: 50%;
+        height: 2.5rem;
+
+        font-size: 1rem;
+        letter-spacing: 1px;
+
+        box-shadow: 4px 4px 0 #000;
     }
 
+    .modos-juego,
     .habilidades {
         gap: 1.5rem;
     }
 
-    .tarjeta {
-        width: 11rem;
-        height: 15rem;
-    }
-}
-
-/* =========================================================
-   CELULAR HORIZONTAL / TABLET CHICA
-========================================================= */
-
-@media (max-width: 768px) {
-
-    main {
-        padding: 1rem;
-    }
-
-    .contenedor-landing {
-        width: 100%;
-    }
-
-    .seccion-1,
-    .seccion-2,
-    .seccion-3 {
-        padding: 3rem 1rem;
-    }
-
-    .titulo-landing {
-        font-size: 2rem;
-    }
-
-    .texto-landing {
-        font-size: 1.2rem;
-    }
-
-    .imagen-hero-landing {
-        width: min(22rem, 70vw);
-    }
-
-    .seccion-1 a {
-        width: 70%;
-        height: 3.5rem;
-        font-size: 1.6rem;
-    }
-
-    .modos-juego {
-        gap: 1rem;
-    }
-
-    .modo-juego {
-        max-width: 9rem;
-    }
-
-    .circulo-icono {
-        width: 7rem;
-        height: 7rem;
-    }
-
+    .circulo-icono,
     .imagen-modo {
-        width: 6rem;
-        height: 6rem;
-    }
-
-    .habilidades {
-        gap: 1rem;
+        width: 6.5rem;
+        height: 6.5rem;
     }
 
     .tarjeta {
@@ -561,54 +603,100 @@ p {
         font-size: 1rem;
     }
 
+    /* Desarrolladores */
+
+    .desarrolladores {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+
+    .desarrollador:nth-child(n) {
+        grid-column: auto;
+    }
+
     .foto-desarrollador {
-        width: 6rem;
-        height: 6rem;
+        width: 7rem;
+        height: 7rem;
+    }
+
+    .titulo-desarrolladores {
+        padding: 2rem;
     }
 }
 
 /* =========================================================
-   CELULARES HORIZONTALES BAJOS
+   CELULAR
 ========================================================= */
 
-@media (max-height: 620px) {
+@media (max-width: 850px) {
 
     .seccion-1,
     .seccion-2,
     .seccion-3 {
-        padding: 2rem 1rem;
+        padding: 1rem;
     }
 
     .titulo-landing {
-        font-size: 1.8rem;
+        font-size: 2rem;
+        text-shadow:
+            1px 1px 0 #000,
+            2px 2px 0 #000,
+            3px 3px 0 #000;
     }
 
     .texto-landing {
-        font-size: 1rem;
+        font-size: 1.2rem;
     }
 
     .imagen-hero-landing {
-        width: 16rem;
+        width: min(14rem, 45vw);
+    }
+
+    .seccion-1 {
+        justify-content: center;
+        align-items: center;
+    }
+
+    .contenido-seccion-1 {
+        width: 300px;
+        padding: 1rem;
+        gap: 0px;
     }
 
     .seccion-1 a {
-        height: 3rem;
-        font-size: 1.4rem;
+        width: 15rem;
+        padding: 0 1rem;
+        height: 2rem;
+        font-size: 0.8rem;
+        margin-left: 2rem;
+
+        letter-spacing: 0.5px;
+
+        box-shadow: 3px 3px 0 #000;
     }
+
+    /* Modos */
 
     .modos-juego {
-        justify-content: center;
-        gap: 1.5rem;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
     }
 
-    .circulo-icono {
-        width: 6rem;
-        height: 6rem;
+    .modo-juego {
+        max-width: 100%;
     }
 
+    .circulo-icono,
     .imagen-modo {
         width: 5rem;
         height: 5rem;
+    }
+
+    /* Cartas */
+
+    .habilidades {
+        gap: 1.5rem;
     }
 
     .tarjeta {
@@ -621,55 +709,139 @@ p {
     }
 
     .texto-carta-atras {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+    }
+
+    .indice {
+        font-size: 1rem;
+    }
+
+    .superior {
+        top: 1rem;
+        left: 1rem;
+    }
+
+    .inferior {
+        bottom: 1rem;
+        right: 1rem;
+    }
+
+    /* Desarrolladores */
+
+    .desarrolladores {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .desarrollador:nth-child(n) {
+        grid-column: auto;
+    }
+
+    .foto-desarrollador {
+        width: 5.5rem;
+        height: 5.5rem;
+    }
+
+    .titulo-desarrolladores {
+        padding: 1rem;
+    }
+}
+
+/* =========================================================
+   PANTALLAS BAJAS (hasta 620px de alto)
+========================================================= */
+
+@media (max-height: 620px) {
+
+    .seccion-1,
+    .seccion-2,
+    .seccion-3 {
+        min-height: auto;
+        padding: 1.5rem;
+    }
+
+    .titulo-landing {
+        font-size: 2.2rem;
+    }
+
+    .imagen-hero-landing {
+        width: min(22rem, 60vw);
+    }
+
+    .seccion-1 a {
+        width: 15rem;
+        height: 3rem;
+        font-size: 1.5rem;
+    }
+
+    .foto-desarrollador {
+        width: 6rem;
+        height: 6rem;
+    }
+
+    .circulo-icono,
+    .imagen-modo {
+        width: 6rem;
+        height: 6rem;
+    }
+
+    .tarjeta {
+        width: 10rem;
+        height: 14rem;
+    }
+
+    .texto-carta {
+        font-size: 1.5rem;
+    }
+
+    .texto-carta-atras {
+        font-size: 1rem;
+    }
+}
+
+/* =========================================================
+   PANTALLAS MUY BAJAS (hasta 500px de alto)
+========================================================= */
+
+@media (max-height: 500px) {
+
+    .seccion-1,
+    .seccion-2,
+    .seccion-3 {
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .titulo-landing {
+        font-size: 1.8rem;
+    }
+
+    .imagen-hero-landing {
+        width: min(18rem, 50vw);
+    }
+
+    .seccion-1 a {
+        width: 15rem;
+        height: 1.8rem;
+
+        font-size: 0.75rem;
+        margin-left: 2rem;
+    }
+
+    .modos-juego,
+    .habilidades {
+        gap: 1rem;
+    }
+
+    .circulo-icono,
+    .imagen-modo {
+        width: 5rem;
+        height: 5rem;
     }
 
     .foto-desarrollador {
         width: 5rem;
         height: 5rem;
-    }
-}
-
-/* =========================================================
-   CELULARES MUY BAJOS (LANDSCAPE)
-========================================================= */
-
-@media (max-height: 500px) {
-
-    main {
-        padding: 0.5rem;
-    }
-
-    .contenedor-landing {
-        gap: 0;
-    }
-
-    .seccion-1,
-    .seccion-2,
-    .seccion-3 {
-        padding: 1.5rem 0.8rem;
-    }
-
-    .imagen-hero-landing {
-        width: 12rem;
-    }
-
-    .titulo-landing {
-        font-size: 1.5rem;
-    }
-
-    .texto-landing {
-        font-size: 0.9rem;
-    }
-
-    .seccion-1 a {
-        width: 60%;
-        height: 2.5rem;
-        font-size: 1.1rem;
-    }
-
-    .habilidades {
-        gap: 0.75rem;
     }
 
     .tarjeta {
@@ -678,58 +850,14 @@ p {
     }
 
     .texto-carta {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
 
     .texto-carta-atras {
-        font-size: 0.75rem;
+        font-size: 0.85rem;
     }
-}
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-
-/* Tipografía y espaciados fluidos (aplican en todas las resoluciones) */
-main { padding: clamp(1rem, 4vmin, 3rem); }
-
-.contenedor-landing { gap: clamp(1.5rem, 5vmin, 4rem); }
-
-.seccion-1,
-.seccion-2,
-.seccion-3 { padding: clamp(1.5rem, 5vmin, 4rem) clamp(1rem, 3vmin, 2rem); }
-
-.titulo-landing { font-size: clamp(1.7rem, 5vw, 3rem); }
-.texto-landing  { font-size: clamp(1.15rem, 3.2vw, 2rem); }
-
-.seccion-1 a {
-    width: min(28rem, 92%);
-    height: auto;
-    min-height: 3.2rem;
-    padding: 0.6rem 1rem;
-    font-size: clamp(1.2rem, 3.5vw, 2rem);
-    text-align: center;
-}
-
-.imagen-seccion-2 { width: clamp(5.5rem, 14vw, 10rem); }
-
-.personajes { flex-wrap: wrap; row-gap: 1.5rem; }
-.personajes img { width: clamp(5.5rem, 19vw, 10rem); }
-
-/* Pantallas angostas: la sección 2 pasa a columna */
-@media (max-width: 700px) {
-    .seccion-2 {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-    .seccion-2 .texto-landing { text-align: center; }
-    .contenedor-landing { width: min(1000px, 96%); }
-}
-
-/* Muy angosto: personajes en grilla 2x2 */
-@media (max-width: 460px) {
-    .personajes {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        justify-items: center;
-        gap: 1.2rem;
+    .indice {
+        font-size: 1rem;
     }
 }

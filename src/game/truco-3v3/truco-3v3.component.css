@@ -1,4 +1,9 @@
 /* ── Arena 3v3: 1 enfrente, 2 izquierda, 2 derecha, yo abajo ───────────── */
+
+.root {
+  background-image: url('/assets/multijugador.png');
+}
+
 .arena-3v3 {
   flex: 1;
   display: flex;
@@ -28,7 +33,10 @@
   gap: clamp(10px, 2.5vh, 28px);
   min-width: clamp(76px, 9vw, 130px);
 }
-.columna-der { align-items: flex-end; }
+
+.columna-der {
+  align-items: flex-end;
+}
 
 /* ── Asientos ───────────────────────────────────────────────────────────── */
 .seat {
@@ -38,7 +46,11 @@
   align-items: center;
   gap: 4px;
 }
-.seat-top    { margin-top: 4px; }
+
+.seat-top {
+  margin-top: 4px;
+}
+
 /* seat-bottom: cartas a la IZQUIERDA del avatar (row-reverse invierte el orden DOM) */
 .seat-bottom {
   margin-bottom: 4px;
@@ -49,7 +61,11 @@
 
 /* Asientos laterales en fila: izquierda → cartas a la derecha (DOM: info, cartas);
    derecha → cartas a la izquierda (DOM: cartas, info). */
-.seat-side { flex-direction: row; align-items: center; gap: clamp(6px, 1vw, 12px); }
+.seat-side {
+  flex-direction: row;
+  align-items: center;
+  gap: clamp(6px, 1vw, 12px);
+}
 
 .seat-info {
   display: flex;
@@ -60,8 +76,14 @@
   background: rgba(0, 0, 0, 0.4);
   border: 2px solid transparent;
 }
-.seat-info.equipo-nosotros { border-color: #c8a030; }
-.seat-info.equipo-ellos    { border-color: #d46010; }
+
+.seat-info.equipo-nosotros {
+  border-color: #c8a030;
+}
+
+.seat-info.equipo-ellos {
+  border-color: #d46010;
+}
 
 .avatar-seat {
   width: clamp(34px, 3.8vw, 56px);
@@ -69,12 +91,14 @@
   object-fit: contain;
   image-rendering: pixelated;
 }
+
 .seat-name {
   font-weight: 700;
   font-size: clamp(0.78rem, 1.2vw, 0.98rem);
   color: #f4e4c1;
   letter-spacing: 0.5px;
 }
+
 .seat-rol {
   font-size: clamp(0.62rem, 0.9vw, 0.78rem);
   color: #b9a988;
@@ -88,8 +112,14 @@
   text-transform: uppercase;
   margin-top: 1px;
 }
-.seat-tag.tag-compa { color: #e8c860; }
-.seat-tag.tag-rival { color: #e0853c; }
+
+.seat-tag.tag-compa {
+  color: #e8c860;
+}
+
+.seat-tag.tag-rival {
+  color: #e0853c;
+}
 
 /* ── Cartas en mano (reversos) ──────────────────────────────────────────── */
 .player-cards-row,
@@ -98,7 +128,10 @@
   justify-content: center;
   gap: 3px;
 }
-.side-cards { flex-direction: row; }
+
+.side-cards {
+  flex-direction: row;
+}
 
 .card-back {
   width: clamp(30px, 3.2vw, 46px);
@@ -106,7 +139,10 @@
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
-.card-back-side { width: clamp(28px, 3vw, 42px); }
+
+.card-back-side {
+  width: clamp(28px, 3vw, 42px);
+}
 
 /* ── Mesa rectangular ───────────────────────────────────────────────────── */
 .table-wrap-3v3 {
@@ -116,6 +152,7 @@
   justify-content: center;
   min-width: 0;
 }
+
 .table-surface-3v3 {
   position: relative;
   width: clamp(300px, 42vw, 640px);
@@ -125,6 +162,7 @@
   border: clamp(8px, 1vw, 14px) solid #6b4423;
   box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5), 0 8px 26px rgba(0, 0, 0, 0.55);
 }
+
 .mesa-centro-3v3 {
   position: absolute;
   inset: 12%;
@@ -140,29 +178,75 @@
   align-items: center;
   justify-content: center;
 }
-.zona-top      { top: 6%;  left: 50%; transform: translateX(-50%); }
-.zona-bottom   { bottom: 6%; left: 50%; transform: translateX(-50%); }
-.zona-lsuperior { top: 22%;   left: 7%; }
-.zona-linferior { bottom: 22%; left: 7%; }
-.zona-rsuperior { top: 22%;   right: 7%; }
-.zona-rinferior { bottom: 22%; right: 7%; }
+
+.zona-top {
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.zona-bottom {
+  bottom: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.zona-lsuperior {
+  top: 22%;
+  left: 7%;
+}
+
+.zona-linferior {
+  bottom: 22%;
+  left: 7%;
+}
+
+.zona-rsuperior {
+  top: 22%;
+  right: 7%;
+}
+
+.zona-rinferior {
+  bottom: 22%;
+  right: 7%;
+}
 
 /* ── Pilas apiladas (igual que 2v2, escaladas al tamaño 3v3) ──────────────── */
 /* Arriba (J4/frente): crece hacia abajo, la última carta queda encima */
-.pila-top    { flex-direction: column; }
-.pila-top    .mesa-card:not(:first-child) { margin-top: -38px; }
+.pila-top {
+  flex-direction: column;
+}
+
+.pila-top .mesa-card:not(:first-child) {
+  margin-top: -38px;
+}
 
 /* Abajo (J1/yo): crece hacia arriba (column-reverse), la última carta queda encima */
-.pila-bottom { flex-direction: column-reverse; }
-.pila-bottom .mesa-card:not(:first-child) { margin-bottom: -38px; }
+.pila-bottom {
+  flex-direction: column-reverse;
+}
+
+.pila-bottom .mesa-card:not(:first-child) {
+  margin-bottom: -38px;
+}
 
 /* Izquierda: crece hacia la derecha (al centro de la mesa) */
-.pila-left  { flex-direction: row; }
-.pila-left  .mesa-card:not(:first-child) { margin-left: -24px; }
+.pila-left {
+  flex-direction: row;
+}
+
+.pila-left .mesa-card:not(:first-child) {
+  margin-left: -24px;
+}
 
 /* Derecha: crece hacia la izquierda (al centro de la mesa) */
-.pila-right { flex-direction: row-reverse; }
-.pila-right .mesa-card:not(:first-child) { margin-right: -24px; }
+.pila-right {
+  flex-direction: row-reverse;
+}
+
+.pila-right .mesa-card:not(:first-child) {
+  margin-right: -24px;
+}
 
 .mesa-card {
   width: clamp(36px, 3.8vw, 58px);
@@ -197,16 +281,19 @@
   padding-right: clamp(20px, 2.5vw, 36px);
   position: relative;
 }
+
 .fan-card-3v3 {
   cursor: pointer;
   transform: translateX(var(--xoff, 0)) rotate(var(--ang, 0));
   transition: transform 0.15s ease;
   margin: 0 -4px;
 }
+
 .fan-card-3v3:hover {
   transform: translateX(var(--xoff, 0)) rotate(var(--ang, 0)) translateY(-16px) scale(1.07);
   z-index: 5;
 }
+
 .fan-img {
   width: clamp(58px, 6.2vw, 86px);
   height: auto;
@@ -215,14 +302,18 @@
 }
 
 .yo-info {
-  position: relative; /* ancla de la burbuja de diálogo propia */
+  position: relative;
+  /* ancla de la burbuja de diálogo propia */
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 /* Asiento que no participa del duelo Pica-Pica (mira desde afuera) */
-.seat-inactivo { opacity: 0.45; filter: grayscale(0.5); }
+.seat-inactivo {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
 
 /* Banner Pica-Pica sobre la mesa */
 .pica-banner {
@@ -241,12 +332,14 @@
   white-space: nowrap;
   z-index: 5;
 }
+
 .avatar-yo {
   width: clamp(48px, 5.5vw, 74px);
   height: clamp(48px, 5.5vw, 74px);
   object-fit: contain;
   image-rendering: pixelated;
 }
+
 .yo-nombre {
   font-weight: 700;
   font-size: clamp(0.82rem, 1.2vw, 1rem);
@@ -268,10 +361,34 @@
   white-space: nowrap;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
 }
-.burbuja-top    { top: 100%;    left: 50%; transform: translateX(-50%); margin-top: 6px; }
-.burbuja-bottom { bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 6px; }
-.burbuja-left   { left: 100%;   top: 50%;  transform: translateY(-50%); margin-left: 8px; }
-.burbuja-right  { right: 100%;  top: 50%;  transform: translateY(-50%); margin-right: 8px; }
+
+.burbuja-top {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+}
+
+.burbuja-bottom {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+}
+
+.burbuja-left {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+}
+
+.burbuja-right {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 8px;
+}
 
 /* ── Otros ──────────────────────────────────────────────────────────────── */
 .esperando-ia {
@@ -281,6 +398,7 @@
   padding: 12px 8px;
   font-style: italic;
 }
+
 .sin-cartas {
   color: #b9a988;
   font-style: italic;
@@ -344,11 +462,15 @@
   transition: background 0.12s, border-color 0.12s, transform 0.08s;
   width: 100%;
 }
+
 .acciones-btn:hover {
   background: #2a1e0c;
   border-color: #c8a030;
 }
-.acciones-btn:active { transform: scale(0.97); }
+
+.acciones-btn:active {
+  transform: scale(0.97);
+}
 
 /* ── Modal overlay ───────────────────────────────────────────────────────── */
 .acciones-overlay {
@@ -377,8 +499,15 @@
 }
 
 @keyframes accionesIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .acciones-title {
@@ -426,7 +555,11 @@
   transition: background 0.1s, transform 0.08s;
   border: 1px solid;
 }
-.accion-item:active { transform: scale(0.96); }
+
+.accion-item:active {
+  transform: scale(0.96);
+}
+
 .accion-item:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -437,14 +570,20 @@
   border-color: #4a8a28;
   color: #88dd44;
 }
-.accion-jugar:not(:disabled):hover { background: #223614; }
+
+.accion-jugar:not(:disabled):hover {
+  background: #223614;
+}
 
 .accion-consulta {
   background: #12202a;
   border-color: #2a6a9a;
   color: #55aadd;
 }
-.accion-consulta:hover { background: #162838; }
+
+.accion-consulta:hover {
+  background: #162838;
+}
 
 .acciones-cerrar {
   font-family: var(--font-data, 'VT323', monospace);
@@ -459,18 +598,41 @@
   align-self: center;
   transition: color 0.1s, border-color 0.1s;
 }
-.acciones-cerrar:hover { color: #c89030; border-color: #5a4020; }
+
+.acciones-cerrar:hover {
+  color: #c89030;
+  border-color: #5a4020;
+}
 
 /* ── Responsive width ───────────────────────────────────────────────────── */
 @media (max-width: 1000px) {
-  .row-middle-3v3 { gap: 6px; }
-  .seat-side { gap: 5px; }
-  .table-surface-3v3 { aspect-ratio: 1.25 / 1; }
+  .row-middle-3v3 {
+    gap: 6px;
+  }
+
+  .seat-side {
+    gap: 5px;
+  }
+
+  .table-surface-3v3 {
+    aspect-ratio: 1.25 / 1;
+  }
 }
+
 @media (max-width: 640px) {
-  .columna { min-width: 70px; gap: 12px; }
-  .table-surface-3v3 { aspect-ratio: 1.1 / 1; border-radius: 10px; }
-  .seat-tag { font-size: 0.56rem; }
+  .columna {
+    min-width: 70px;
+    gap: 12px;
+  }
+
+  .table-surface-3v3 {
+    aspect-ratio: 1.1 / 1;
+    border-radius: 10px;
+  }
+
+  .seat-tag {
+    font-size: 0.56rem;
+  }
 }
 
 /* ── Responsive height — mobile landscape (≤ 520px alto) ───────────────── */
@@ -479,69 +641,183 @@
     padding: 3px clamp(3px, 0.6vw, 8px);
     gap: clamp(3px, 0.7vh, 8px);
   }
-  .row-middle-3v3 { gap: clamp(4px, 0.8vw, 10px); }
-  .seat-top    { margin-top: 0; }
-  .seat-bottom { margin-bottom: 0; gap: clamp(8px, 1.2vw, 16px); }
+
+  .row-middle-3v3 {
+    gap: clamp(4px, 0.8vw, 10px);
+  }
+
+  .seat-top {
+    margin-top: 0;
+  }
+
+  .seat-bottom {
+    margin-bottom: 0;
+    gap: clamp(8px, 1.2vw, 16px);
+  }
+
   .seat-info {
     padding: 3px 5px;
     border-radius: 7px;
     border-width: 1px;
   }
+
   .avatar-seat {
     width: clamp(26px, 3vw, 40px);
     height: clamp(26px, 3vw, 40px);
   }
+
   .avatar-yo {
     width: clamp(32px, 4vw, 50px);
     height: clamp(32px, 4vw, 50px);
   }
-  .seat-name { font-size: clamp(0.62rem, 0.9vw, 0.78rem); }
-  .seat-tag  { font-size: clamp(0.5rem, 0.72vw, 0.62rem); }
-  .yo-nombre { font-size: clamp(0.68rem, 1vw, 0.84rem); }
-  .card-back      { width: clamp(20px, 2.2vw, 30px); }
-  .card-back-side { width: clamp(18px, 2vw, 27px); }
-  .mesa-card      { width: clamp(26px, 2.8vw, 40px); }
+
+  .seat-name {
+    font-size: clamp(0.62rem, 0.9vw, 0.78rem);
+  }
+
+  .seat-tag {
+    font-size: clamp(0.5rem, 0.72vw, 0.62rem);
+  }
+
+  .yo-nombre {
+    font-size: clamp(0.68rem, 1vw, 0.84rem);
+  }
+
+  .card-back {
+    width: clamp(20px, 2.2vw, 30px);
+  }
+
+  .card-back-side {
+    width: clamp(18px, 2vw, 27px);
+  }
+
+  .mesa-card {
+    width: clamp(26px, 2.8vw, 40px);
+  }
+
   .table-surface-3v3 {
     width: clamp(200px, 38vw, 520px);
     border-width: clamp(4px, 0.7vw, 8px);
   }
-  .columna { min-width: clamp(60px, 7vw, 90px); gap: clamp(6px, 1vh, 12px); }
+
+  .columna {
+    min-width: clamp(60px, 7vw, 90px);
+    gap: clamp(6px, 1vh, 12px);
+  }
+
   .fan-wrap-3v3 {
     height: clamp(58px, 9vh, 84px);
     padding-right: clamp(12px, 1.6vw, 20px);
   }
-  .fan-img { width: clamp(42px, 4.6vw, 62px); }
-  .pila-top    .mesa-card:not(:first-child) { margin-top:    -26px; }
-  .pila-bottom .mesa-card:not(:first-child) { margin-bottom: -26px; }
-  .pila-left   .mesa-card:not(:first-child) { margin-left:   -18px; }
-  .pila-right  .mesa-card:not(:first-child) { margin-right:  -18px; }
-  .turno-badge-panel { font-size: 0.72rem; padding: 4px 7px; }
+
+  .fan-img {
+    width: clamp(42px, 4.6vw, 62px);
+  }
+
+  .pila-top .mesa-card:not(:first-child) {
+    margin-top: -26px;
+  }
+
+  .pila-bottom .mesa-card:not(:first-child) {
+    margin-bottom: -26px;
+  }
+
+  .pila-left .mesa-card:not(:first-child) {
+    margin-left: -18px;
+  }
+
+  .pila-right .mesa-card:not(:first-child) {
+    margin-right: -18px;
+  }
+
+  .turno-badge-panel {
+    font-size: 0.72rem;
+    padding: 4px 7px;
+  }
 }
 
 /* ── Responsive height — muy bajo (≤ 410px) ────────────────────────────── */
 @media (max-height: 410px) {
-  .arena-3v3 { padding: 2px 3px; gap: 2px; }
-  .row-middle-3v3 { gap: 3px; }
-  .seat-info { padding: 2px 4px; border-radius: 5px; }
-  .avatar-seat { width: 22px; height: 22px; }
-  .avatar-yo   { width: 28px; height: 28px; }
-  .seat-tag    { display: none; }
-  .seat-name   { font-size: 0.58rem; }
-  .card-back      { width: 18px; }
-  .card-back-side { width: 16px; }
-  .mesa-card      { width: 22px; }
+  .arena-3v3 {
+    padding: 2px 3px;
+    gap: 2px;
+  }
+
+  .row-middle-3v3 {
+    gap: 3px;
+  }
+
+  .seat-info {
+    padding: 2px 4px;
+    border-radius: 5px;
+  }
+
+  .avatar-seat {
+    width: 22px;
+    height: 22px;
+  }
+
+  .avatar-yo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .seat-tag {
+    display: none;
+  }
+
+  .seat-name {
+    font-size: 0.58rem;
+  }
+
+  .card-back {
+    width: 18px;
+  }
+
+  .card-back-side {
+    width: 16px;
+  }
+
+  .mesa-card {
+    width: 22px;
+  }
+
   .table-surface-3v3 {
     width: clamp(180px, 34vw, 420px);
     border-width: 4px;
   }
-  .columna { min-width: 52px; gap: 4px; }
-  .fan-wrap-3v3 { height: 52px; padding-right: 10px; }
-  .fan-img { width: 36px; }
+
+  .columna {
+    min-width: 52px;
+    gap: 4px;
+  }
+
+  .fan-wrap-3v3 {
+    height: 52px;
+    padding-right: 10px;
+  }
+
+  .fan-img {
+    width: 36px;
+  }
+
   .fan-card-3v3:hover {
     transform: translateX(var(--xoff, 0)) rotate(var(--ang, 0)) translateY(-8px) scale(1.05);
   }
-  .pila-top    .mesa-card:not(:first-child) { margin-top:    -20px; }
-  .pila-bottom .mesa-card:not(:first-child) { margin-bottom: -20px; }
-  .pila-left   .mesa-card:not(:first-child) { margin-left:   -14px; }
-  .pila-right  .mesa-card:not(:first-child) { margin-right:  -14px; }
+
+  .pila-top .mesa-card:not(:first-child) {
+    margin-top: -20px;
+  }
+
+  .pila-bottom .mesa-card:not(:first-child) {
+    margin-bottom: -20px;
+  }
+
+  .pila-left .mesa-card:not(:first-child) {
+    margin-left: -14px;
+  }
+
+  .pila-right .mesa-card:not(:first-child) {
+    margin-right: -14px;
+  }
 }

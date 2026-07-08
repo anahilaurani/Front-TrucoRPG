@@ -386,17 +386,69 @@ main {
     100% { transform: translateY(0px); }
 }
 
-@media (max-width: 560px) {
-    main { padding: 0.8rem; }
-    .menu-wrapper { width: 98vw; animation: none; }
-    .contenedor-menu { padding: 24px 12px 24px; gap: 10px; }
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT MOBILE — selección de equipos
+   Mismo criterio que la sala: a todo el ancho, compacto y sin scroll.
+   Los dos equipos quedan lado a lado y los botones abajo; la X la
+   reposiciona el contenedor (pulperia-manager) al lado derecho.
+   Cubre portrait (max-width) y landscape (max-height).
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px),
+       (orientation: landscape) and (max-height: 540px) {
+    main {
+        padding: 0.4rem;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .menu-wrapper {
+        width: 100%;
+        max-width: 100%;
+        animation: none;
+        padding: 0;
+    }
+
+    .contenedor-menu {
+        width: 100%;
+        padding: 12px 12px 10px;
+        gap: 8px;
+    }
+
+    .titulo-equipos { font-size: 1rem; letter-spacing: 2px; }
+    .menu-sep { margin: 0; }
+
+    /* Arena: dos equipos lado a lado aprovechando el ancho */
+    .equipos-arena { gap: 4px; }
+    .equipo-panel { padding: 8px 8px 10px; gap: 6px; }
+    .equipo-escudo { font-size: 1rem; }
+    .equipo-nombre { font-size: 0.6rem; letter-spacing: 1px; }
+    .equipo-apellido { font-size: 0.78rem !important; }
+    .equipo-badge-lleno { font-size: 0.55rem; padding: 1px 4px; }
+
+    .equipo-slots { gap: 4px; }
+    .slot { height: 34px; padding: 0 5px; gap: 5px; }
+    .slot-av { width: 22px; height: 22px; min-width: 22px; }
+    .slot-txt { font-size: 0.68rem; letter-spacing: 1px; }
+
+    .btn-unirse { height: 36px; font-size: 0.78rem; letter-spacing: 1px; }
+
+    .vs-divider { padding: 0 4px; min-width: 22px; }
     .vs-texto { font-size: 1rem; }
-    .equipo-apellido { font-size: 0.8rem !important; }
+
+    .listos-estado { font-size: 0.72rem; letter-spacing: 1px; }
+    .boton-comenzar { height: 44px; font-size: 0.85rem; }
+    .esperando-equipos { height: 40px; font-size: 0.72rem; }
+    .boton-abandonar { font-size: 0.74rem; padding: 5px 16px; margin-top: 2px; }
+    .error-msg { font-size: 0.72rem; }
 }
 
-@media (max-height: 640px) {
-    .menu-wrapper { animation: none; }
-    .contenedor-menu { padding: 18px 16px 18px; gap: 8px; }
-    .slot { height: 38px; }
-    .boton-comenzar { height: 46px; }
+/* Portrait muy angosto: achicar un poco más */
+@media (max-width: 420px) {
+    .contenedor-menu { padding: 10px 8px 8px; gap: 6px; }
+    .equipo-panel { padding: 6px 5px 8px; }
+    .equipo-apellido { font-size: 0.7rem !important; }
+    .slot { height: 30px; }
+    .slot-txt { font-size: 0.62rem; }
+    .btn-unirse { height: 32px; font-size: 0.72rem; }
+    .boton-comenzar { height: 42px; font-size: 0.8rem; }
 }

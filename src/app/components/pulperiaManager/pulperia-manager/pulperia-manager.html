@@ -1,21 +1,41 @@
-@if (vistaActiva !== null) {
+@if (vistaActiva) {
   <div class="contenedor-overlay-principal">
-    <div class="contenedor-modal" [class.modal-ancho]="vistaActiva === 'partida-solo'">
-      @switch (vistaActiva) {
-        @case ('multijugador') {
-          <app-menu-multijugador></app-menu-multijugador>
-        }
-        @case ('partida-solo') {
-          <app-partida-solo></app-partida-solo>
-        }
-        @case ('tienda') {
-          <app-tienda-overlay></app-tienda-overlay>
-        }
-        @default {
-          <p>Error D:</p>
+    <div
+      class="contenedor-modal"
+      [class.modal-ancho]="vistaActiva === 'multijugador'"
+      [class.modal-sala]="
+        vistaActiva === 'multijugador' &&
+        (subVistaActiva === 'sala' || subVistaActiva === 'equipos')
+      "
+    >
+      @if (vistaActiva === 'tienda') {
+        <app-tienda-overlay></app-tienda-overlay>
+      }
+
+      @if (vistaActiva === 'partida-solo') {
+        <app-partida-solo [esOverlay]="true"></app-partida-solo>
+      }
+
+      @if (vistaActiva === 'multijugador') {
+        @switch (subVistaActiva) {
+          @case ('menu') {
+            <app-menu-multijugador></app-menu-multijugador>
+          }
+          @case ('tipo') {
+            <app-menu-multijugador-tipo></app-menu-multijugador-tipo>
+          }
+          @case ('tradicional') {
+            <app-menu-multijugador-tradicional></app-menu-multijugador-tradicional>
+          }
+          @case ('sala') {
+            <app-menu-multijugador-tradicional-sala></app-menu-multijugador-tradicional-sala>
+          }
+          @case ('equipos') {
+            <app-menu-2v2-equipos></app-menu-2v2-equipos>
+          }
         }
       }
-      <div class="botonCerrar" (click)="cerrar()">VOLVER</div>
+      <button class="botonCerrar" (click)="cerrar()">X</button>
     </div>
   </div>
 }

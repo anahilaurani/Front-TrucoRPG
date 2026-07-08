@@ -10,20 +10,20 @@ export default class PuntoInteraccion {
    * @param {number|null|undefined} scaleTextura
    * @param {Object|undefined} datosExtra
    */
-
   constructor(escena, x, y, tipoVista, texturaSprite, scaleTextura = 1, datosExtra = {}) {
     this.escena = escena;
     this.tipoVista = tipoVista;
     this.scaleTextura = scaleTextura;
     this.datosExtra = datosExtra;
     this.cercaDelObjeto = false;
+    this.interactuando = false;
 
     if (
       typeof texturaSprite === 'string' &&
       texturaSprite.trim() !== '' &&
       texturaSprite !== 'false'
     ) {
-      this.sprite = this.escena.add.image(x, y, texturaSprite).setScale(scaleTextura).setDepth(0);
+      this.sprite = this.escena.add.sprite(x, y, texturaSprite).setScale(scaleTextura).setDepth(0);
     }
 
     this.zone = this.escena.add.zone(x, y, 24, 24);
@@ -51,6 +51,17 @@ export default class PuntoInteraccion {
       if (this.escena && this.escena.physics.world) {
         this.escena.physics.world.resume();
       }
+
+      if (this.interactuando) {
+        if (this.sprite && this.datosExtra && this.datosExtra.animCerrar) {
+          this.sprite.play(this.datosExtra.animCerrar);
+          this.sprite.once('animationcomplete', () => {
+            this.interactuando = false;
+          });
+        } else {
+          this.interactuando = false;
+        }
+      }
     });
   }
 
@@ -58,6 +69,11 @@ export default class PuntoInteraccion {
     if (!jugador || !jugador.body) return;
 
     const enZona = this.escena.physics.overlap(jugador, this.zone);
+
+    if (this.interactuando) {
+      this.textoE.setVisible(false);
+      return;
+    }
 
     if (enZona && !this.cercaDelObjeto) {
       this.cercaDelObjeto = true;
@@ -71,16 +87,18 @@ export default class PuntoInteraccion {
       const quiereInteractuar = Phaser.Input.Keyboard.JustDown(teclaE) || interactuoMobile;
 
       if (quiereInteractuar) {
+        this.interactuando = true;
         jugador.setVelocity(0);
-        this.escena.physics.world.pause();
 
-        const eventoUi = new CustomEvent('game-interact', {
-          detail: {
-            vista: this.tipoVista,
-            datos: this.datosExtra,
-          },
-        });
-        window.dispatchEvent(eventoUi);
+        if (this.sprite && this.datosExtra && this.datosExtra.animAbrir) {
+          this.sprite.play(this.datosExtra.animAbrir);
+
+          this.sprite.once('animationcomplete', () => {
+            this.enviarEventoInteraccion();
+          });
+        } else {
+          this.enviarEventoInteraccion();
+        }
       }
     } else {
       if (this.cercaDelObjeto) {
@@ -88,5 +106,17 @@ export default class PuntoInteraccion {
         this.textoE.setVisible(false);
       }
     }
+  }
+
+  enviarEventoInteraccion() {
+    this.escena.physics.world.pause();
+
+    const eventoUi = new CustomEvent('game-interact', {
+      detail: {
+        vista: this.tipoVista,
+        datos: this.datosExtra,
+      },
+    });
+    window.dispatchEvent(eventoUi);
   }
 }

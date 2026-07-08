@@ -5,73 +5,73 @@
 }
 
 .contenedor-overlay-principal {
-    position: absolute;
+    position: fixed; 
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     z-index: 99999 !important;
     display: flex;
     justify-content: center;
     align-items: center;
     pointer-events: auto;
-    overflow: hidden;
-    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.5); 
+    padding: 12px;
 }
 
 .contenedor-modal {
+    position: relative;
     color: #ffffff;
-    padding: 25px;
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    background-color: #362711;
+    padding: 50px 16px 20px 16px; 
+    width: 100%;             
+    max-width: 940px;       
+    height: auto;
+    max-height: 95vh;      
     text-align: center;
     font-family: 'Jersey 20', sans-serif;
     display: flex;
+    align-items: center;
     flex-direction: column;
-    row-gap: 1.2rem;
-
-    border: #6a4a20 solid 4px;
-    overflow-y: auto;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;       
+    transition: all 0.3s ease;
+    background: transparent; 
 }
 
 .botonCerrar {
+    position: absolute;
+    top: 2px;        
+    right: 12px;     
     display: inline-flex;
     justify-content: center;
     align-items: center;
     font-family: 'Jersey 20', monospace;
-    font-size: 1.2rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    text-decoration: none;
+    font-size: 1.3rem;
     color: #e8aa40;
     background: #2e1e08;
-    border: 2px solid #6a4a20;
-    padding: 12px 24px;
+    border: 4px solid #6a4a20;
+    box-shadow: inset -2px -2px 0px #000, 2px 2px 0px rgba(0,0,0,0.4);
+    width: 36px;
+    height: 36px;
     cursor: pointer;
-    transition: background-color 0.1s, color 0.1s, border-color 0.1s;
-    white-space: nowrap;
-
-
-    width: auto;
-    align-self: center;
+    transition: all 0.1s ease;
+    z-index: 100;  
 }
 
 .botonCerrar:hover {
-    background: #2e1f0e;
+    background: #412b0c;
     color: #f0b050;
     border-color: #8a6030;
-    box-shadow: 0 0 10px rgba(200, 144, 48, 0.25);
+}
+
+.botonCerrar:active {
+    transform: scale(0.95);
+    box-shadow: inset 2px 2px 0px #000;
 }
 
 @media screen and (max-width: 768px) {
     .contenedor-modal {
-        padding: 18px;
-        row-gap: 0.8rem;
+        padding: 55px 12px 15px 12px;
     }
-
 
     .contenedor-modal h1,
     .contenedor-modal h2 {
@@ -81,12 +81,12 @@
 
 @media screen and (max-width: 480px) {
     .contenedor-overlay-principal {
-        padding: 8px;
+        padding: 6px;
     }
 
     .contenedor-modal {
-        padding: 12px;
-        row-gap: 0.5rem;
+        padding: 50px 8px 10px 8px;
+        max-height: 98vh; 
     }
 
     .contenedor-modal h1,
@@ -95,24 +95,24 @@
     }
 
     .botonCerrar {
-        font-size: 0.9rem;
-        padding: 8px 16px;
+        font-size: 1.1rem;
+        width: 32px;
+        height: 32px;
+        top: 8px;
+        right: 8px;
     }
 }
-
 @media screen and (max-height: 500px) and (orientation: landscape) {
     .contenedor-modal {
-        padding: 10px;
-        row-gap: 0.4rem;
-        max-height: 95vh;
-    }
-
-    .contenedor-modal h2 {
-        font-size: 1.2rem;
+        padding: 45px 12px 10px 12px;
+        max-height: 98vh;
     }
 
     .botonCerrar {
-        font-size: 0.85rem;
-        padding: 6px 12px;
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+        top: 6px;
+        right: 6px;
     }
 }

@@ -1,6 +1,9 @@
 import BaseScene from './BaseScene.js';
 import JugadorPrincipal from '../personajes/JugadorPrincipal.js';
 import Portal from '../objetos/Portal.js';
+import Npc from '../personajes/Npc.js';
+import Tutorial from '../objetos/Tutorial.js';
+import { TUTORIALES } from '../data/tutoriales.js';
 
 export default class MapaPrincipalScene extends BaseScene {
   constructor() {
@@ -101,9 +104,28 @@ export default class MapaPrincipalScene extends BaseScene {
       x: 35,
       y: 552,
     });
+
+    this.npc = new Npc(this, 333, 438, 'Nuri').setDepth(1);
+    this.npc.setScale(1.3);
+
+    const pasosCargados = TUTORIALES.mapaPrincipal.map((paso) => {
+      if (paso.enfoque === 'npc') {
+        return { ...paso, enfoqueNpc: this.npc };
+      }
+      return paso;
+    });
+
+    this.tutorial = new Tutorial(this, 'tutorialLobby', pasosCargados,true);
+
+    this.tutorial.iniciar();
   }
 
   update() {
+    if (this.tutorial && this.tutorial.activo) {
+      this.tutorial.update();
+      return;
+    }
+
     this.JugadorPrincipal.update(this.keys, this.teclaE);
 
     const seMueve =

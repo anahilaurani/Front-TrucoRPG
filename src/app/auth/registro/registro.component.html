@@ -8,22 +8,20 @@
 
       <div class="campo">
         <label for="userName">Nombre de usuario:</label>
-        <input id="userName" type="text" formControlName="userName" placeholder="Tu nombre" />
-        <span class="error" *ngIf="userName.touched && userName.errors?.['required']">Campo obligatorio</span>
-        <span class="error" *ngIf="userName.touched && userName.errors?.['minlength']">Mínimo 3 caracteres</span>
+        <input id="userName" type="text" formControlName="userName" placeholder="Tu nombre"
+          [class.invalido]="userName.touched && userName.invalid" />
       </div>
 
       <div class="campo">
         <label for="email">Ingresar Email:</label>
-        <input id="email" type="email" formControlName="email" placeholder="tu@email.com" />
-        <span class="error" *ngIf="email.touched && email.errors?.['required']">Campo obligatorio</span>
-        <span class="error" *ngIf="email.touched && email.errors?.['email']">Email inválido</span>
+        <input id="email" type="email" formControlName="email" placeholder="tu@email.com"
+          [class.invalido]="email.touched && email.invalid" />
       </div>
 
       <div class="campo">
         <label for="password">Ingresar Contraseña:</label>
-        <input id="password" type="password" formControlName="password" placeholder="Mínimo 6 caracteres" />
-        <span class="error" *ngIf="password.touched && password.errors?.['required']">Campo obligatorio</span>
+        <input id="password" type="password" formControlName="password" placeholder="Mínimo 6 caracteres"
+          [class.invalido]="password.touched && password.invalid" />
         <ul class="requisitos">
           <li [class.ok]="tieneLongitud">
             <span class="check">{{ tieneLongitud ? '✔' : '○' }}</span> Mínimo 6 caracteres
@@ -42,14 +40,11 @@
 
       <div class="campo">
         <label for="confirmarPassword">Confirmar Contraseña:</label>
-        <input id="confirmarPassword" type="password" formControlName="confirmarPassword" placeholder="Repetí tu contraseña" />
-        <span class="error" *ngIf="confirmarPassword.touched && confirmarPassword.errors?.['required']">Campo obligatorio</span>
-        <span class="error" *ngIf="confirmarPassword.touched && confirmarPassword.errors?.['noCoinciden']">No coinciden</span>
+        <input id="confirmarPassword" type="password" formControlName="confirmarPassword" placeholder="Repetí tu contraseña"
+          [class.invalido]="confirmarPassword.touched && confirmarPassword.invalid" />
       </div>
 
-      <span class="error error-servidor" *ngIf="errorServidor">{{ errorServidor }}</span>
-
-      <button type="submit" class="btn-submit" [disabled]="cargando">
+      <button type="submit" class="btn-submit" [disabled]="form.invalid || cargando">
         {{ cargando ? 'Registrando...' : 'Registrarse' }}
       </button>
 
@@ -59,5 +54,45 @@
       ¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a>
     </p>
   </app-card>
-</app-page-wrapper>
 
+  <!-- Carteles de error: fuera del modal, a la derecha (no generan scroll) -->
+  <aside class="carteles-laterales">
+    <div class="cartel cartel-error" *ngIf="userName.touched && userName.errors?.['required']">
+      <span class="cartel-icono">!</span> Nombre de usuario: campo obligatorio.
+    </div>
+    <div class="cartel cartel-error" *ngIf="userName.touched && userName.errors?.['minlength']">
+      <span class="cartel-icono">!</span> El nombre de usuario debe tener al menos 3 caracteres.
+    </div>
+
+    <div class="cartel cartel-error" *ngIf="email.touched && email.errors?.['required']">
+      <span class="cartel-icono">!</span> Email: campo obligatorio.
+    </div>
+    <div class="cartel cartel-error" *ngIf="email.touched && email.errors?.['email']">
+      <span class="cartel-icono">!</span> Ingresá un email válido (ej: tu@email.com).
+    </div>
+
+    <div class="cartel cartel-error" *ngIf="password.touched && password.errors?.['required']">
+      <span class="cartel-icono">!</span> Contraseña: campo obligatorio.
+    </div>
+
+    <div class="cartel cartel-error" *ngIf="confirmarPassword.touched && confirmarPassword.errors?.['required']">
+      <span class="cartel-icono">!</span> Confirmá tu contraseña.
+    </div>
+    <div class="cartel cartel-error" *ngIf="confirmarPassword.touched && confirmarPassword.errors?.['noCoinciden']">
+      <span class="cartel-icono">!</span> Las contraseñas deben coincidir entre sí.
+    </div>
+
+    <div class="cartel cartel-error" *ngIf="errorServidor">
+      <span class="cartel-icono">!</span> {{ errorServidor }}
+    </div>
+  </aside>
+
+  <!-- Cartel verde de registro exitoso -->
+  <div class="cartel-overlay" *ngIf="registroExitoso">
+    <div class="cartel-exito">
+      <span class="cartel-exito-icono">✔</span>
+      <p class="cartel-exito-titulo">¡Registro exitoso!</p>
+      <p class="cartel-exito-texto">Te llevamos al inicio para ingresar con tu usuario y contraseña...</p>
+    </div>
+  </div>
+</app-page-wrapper>

@@ -1,1 +1,58 @@
-<h1>INVENTARIO</h1>
+<div class="contenedor-baul">
+  <div class="titulo-baul">INVENTARIO</div>
+  <div class="monedas-tienda">
+      <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
+      <span class="cantidad-monedas">{{ monedas }}</span>
+    </div>
+  <div class="categoria-baul">
+    <button
+      class="categoria"
+      [class.activa]="categoriaActiva === 'TODO'"
+      (click)="seleccionarCategoria('TODO')"
+    >
+      TODO
+    </button>
+    <button
+      class="categoria"
+      [class.activa]="categoriaActiva === 'HABILIDADES'"
+      (click)="seleccionarCategoria('HABILIDADES')"
+    >
+      HABILIDADES
+    </button>
+    <button
+      class="categoria"
+      [class.activa]="categoriaActiva === 'ARMARIO'"
+      (click)="seleccionarCategoria('ARMARIO')"
+    >
+      ARMARIO
+    </button>
+  </div>
+
+  <div class="cuadricula-inventario">
+    @for (item of itemsFiltrados; track item.itemTiendaId) {
+      <div class="slot-item" (click)="seleccionarItem(item)" style="cursor: pointer">
+        <img [src]="item.itemTienda.img" [alt]="item.itemTienda.nombre" class="item-icono" />
+
+        @if (item.cantidad > 1) {
+          <span class="cantidad-item">{{ item.cantidad }}</span>
+        }
+      </div>
+    }
+
+    @for (vacio of slotsVacios; track $index) {
+      <div class="slot-item vacio"></div>
+    }
+  </div>
+
+  @if (itemPorEquipar) {
+    <div class="overlay-confirmacion">
+      <div class="cartel-confirmacion">
+        <p class="texto-confirmacion">¿Querés equipar la habilidad {{ itemPorEquipar.nombre }}?</p>
+        <div class="botones-confirmacion">
+          <button class="btn-cartel confirmar" (click)="confirmarEquipacion()">SÍ</button>
+          <button class="btn-cartel cancelar" (click)="cancelarEquipacion()">NO</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

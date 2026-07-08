@@ -9,19 +9,27 @@
       <div class="campo">
         <label for="email">Ingresar Email:</label>
         <input id="email" type="email" formControlName="email" placeholder="tu@email.com" />
-        <span class="error" *ngIf="email.touched && email.errors?.['required']">Campo obligatorio</span>
-        <span class="error" *ngIf="email.touched && email.errors?.['email']">Email inválido</span>
+        <div class="cartel cartel-error" *ngIf="email.touched && email.errors?.['required']">
+          <span class="cartel-icono">!</span> Campo obligatorio.
+        </div>
+        <div class="cartel cartel-error" *ngIf="email.touched && email.errors?.['email']">
+          <span class="cartel-icono">!</span> Ingresá un email válido (ej: tu@email.com).
+        </div>
       </div>
 
       <div class="campo">
         <label for="password">Ingresar Contraseña:</label>
         <input id="password" type="password" formControlName="password" placeholder="Tu contraseña" />
-        <span class="error" *ngIf="password.touched && password.errors?.['required']">Campo obligatorio</span>
+        <div class="cartel cartel-error" *ngIf="password.touched && password.errors?.['required']">
+          <span class="cartel-icono">!</span> Campo obligatorio.
+        </div>
       </div>
 
-      <span class="error error-servidor" *ngIf="errorServidor">{{ errorServidor }}</span>
+      <div class="cartel cartel-error error-servidor" *ngIf="errorServidor">
+        <span class="cartel-icono">!</span> {{ errorServidor }}
+      </div>
 
-      <button type="submit" class="btn-submit" [disabled]="cargando">
+      <button type="submit" class="btn-submit" [disabled]="form.invalid || cargando">
         {{ cargando ? 'Ingresando...' : 'Ingresar' }}
       </button>
 
@@ -29,6 +37,9 @@
 
     <p class="registro-link">
       ¿No tenés cuenta? <a routerLink="/registro">Registrate</a>
+    </p>
+    <p class="registro-link">
+      <a routerLink="/forgot-password">¿Olvidaste tu contraseña?</a>
     </p>
   </app-card>
 </app-page-wrapper>
