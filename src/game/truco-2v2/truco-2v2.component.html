@@ -37,7 +37,16 @@
             </div>
           </div>
           @if (dialogos['compa']) {
-            <div class="dialogo-burbuja burbuja-top">{{ dialogos['compa']!.texto }}</div>
+            <div class="dialogo-burbuja burbuja-top">
+              @if (dialogos['compa']!.imagen) {
+                <img
+                  class="dialogo-senia-img"
+                  [src]="dialogos['compa']!.imagen"
+                  [alt]="dialogos['compa']!.texto ?? 'Seña'" />
+              } @else {
+                {{ dialogos['compa']!.texto }}
+              }
+            </div>
           }
         </div>
       }
@@ -112,9 +121,6 @@
               <img class="card-back card-back-side" src="assets/cards/back.PNG" alt="reverso" />
             }
           </div>
-          @if (dialogos['der']) {
-            <div class="dialogo-burbuja burbuja-right">{{ dialogos['der']!.texto }}</div>
-          }
         </div>
       }
 
@@ -132,7 +138,13 @@
           </button>
           @if (esMano('yo')) { <span class="mano-badge">MANO</span> }
           @if (dialogos['yo']) {
-            <div class="dialogo-burbuja burbuja-bottom">{{ dialogos['yo']!.texto }}</div>
+            <div class="dialogo-burbuja burbuja-bottom">
+              @if (dialogos['yo']!.imagen) {
+                <img class="dialogo-senia-img" [src]="dialogos['yo']!.imagen" [alt]="dialogos['yo']!.texto ?? 'Seña'" />
+              } @else {
+                {{ dialogos['yo']!.texto }}
+              }
+            </div>
           }
           @if (mostrarMenuSenias) {
           <div class="sena-overlay">
@@ -152,6 +164,15 @@
               </button>
               <button (click)="enviarSenia('ninguna')">
                 Nada importante
+              </button>
+              <button (click)="enviarSenia('cualquierTres')">
+                Cualquier Tres
+              </button>
+              <button (click)="enviarSenia('cualquierDos')">
+                Cualquier Dos
+              </button>
+              <button (click)="enviarSenia('falsoUno')">
+                Falso Uno
               </button>
             </div>
           </div>

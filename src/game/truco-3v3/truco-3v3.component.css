@@ -362,6 +362,13 @@
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
 }
 
+.dialogo-senia-img {
+  display: block;
+  max-height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
 .burbuja-top {
   top: 100%;
   left: 50%;

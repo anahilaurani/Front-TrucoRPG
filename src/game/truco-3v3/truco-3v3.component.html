@@ -41,7 +41,13 @@
         }
       </div>
       @if (dialogos[frente.rol]) {
-        <div class="dialogo-burbuja burbuja-top">{{ dialogos[frente.rol]!.texto }}</div>
+        <div class="dialogo-burbuja burbuja-top">
+          @if (dialogos[frente.rol]!.imagen) {
+            <img class="dialogo-senia-img" [src]="dialogos[frente.rol]!.imagen" [alt]="dialogos[frente.rol]!.texto ?? 'Seña'" />
+          } @else {
+            {{ dialogos[frente.rol]!.texto }}
+          }
+        </div>
       }
     </div>
 
@@ -67,7 +73,13 @@
               }
             </div>
             @if (dialogos[j.rol]) {
-              <div class="dialogo-burbuja burbuja-left">{{ dialogos[j.rol]!.texto }}</div>
+              <div class="dialogo-burbuja burbuja-left">
+                @if (dialogos[j.rol]!.imagen) {
+                  <img class="dialogo-senia-img" [src]="dialogos[j.rol]!.imagen" [alt]="dialogos[j.rol]!.texto ?? 'Seña'" />
+                } @else {
+                  {{ dialogos[j.rol]!.texto }}
+                }
+              </div>
             }
           </div>
         }
@@ -150,7 +162,13 @@
               @if (esMano(j.rol)) { <span class="mano-badge">MANO</span> }
             </div>
             @if (dialogos[j.rol]) {
-              <div class="dialogo-burbuja burbuja-right">{{ dialogos[j.rol]!.texto }}</div>
+              <div class="dialogo-burbuja burbuja-right">
+                @if (dialogos[j.rol]!.imagen) {
+                  <img class="dialogo-senia-img" [src]="dialogos[j.rol]!.imagen" [alt]="dialogos[j.rol]!.texto ?? 'Seña'" />
+                } @else {
+                  {{ dialogos[j.rol]!.texto }}
+                }
+              </div>
             }
           </div>
         }
@@ -169,7 +187,13 @@
         </button>
         @if (esMano(miRol)) { <span class="mano-badge">MANO</span> }
         @if (dialogos[miRol]) {
-          <div class="dialogo-burbuja burbuja-bottom">{{ dialogos[miRol]!.texto }}</div>
+          <div class="dialogo-burbuja burbuja-bottom">
+            @if (dialogos[miRol]!.imagen) {
+              <img class="dialogo-senia-img" [src]="dialogos[miRol]!.imagen" [alt]="dialogos[miRol]!.texto ?? 'Seña'" />
+            } @else {
+              {{ dialogos[miRol]!.texto }}
+            }
+          </div>
         }
         @if (mostrarMenuSenias) {
         <div class="sena-overlay">
@@ -186,6 +210,15 @@
             </button>
             <button (click)="enviarSenia('sieteOro')">
               7 de Oro
+            </button>
+            <button (click)="enviarSenia('cualquierTres')">
+              Cualquier Tres
+            </button>
+            <button (click)="enviarSenia('cualquierDos')">
+              Cualquier Dos
+            </button>
+            <button (click)="enviarSenia('falsoUno')">
+              Falso Uno
             </button>
             <button (click)="enviarSenia('ninguna')">
               Nada importante

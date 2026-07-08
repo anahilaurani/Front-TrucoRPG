@@ -141,7 +141,7 @@ export class Truco3v3Component implements OnInit, OnDestroy {
   private prevGanadorMano: string | null = null;
 
   // Burbujas de diálogo por rol ('J1'..'J6')
-  dialogos: Record<string, { texto: string } | null> = {};
+  dialogos: Record<string, { texto?: string; imagen?: string | null } | null> = {};
   private dialogoTimers: Record<string, ReturnType<typeof setTimeout> | null> = {};
   private prevEstadoEnvido = '';
   private prevEstadoTruco  = '';
@@ -166,16 +166,13 @@ export class Truco3v3Component implements OnInit, OnDestroy {
 
       this.sala.senia3v3Recibida$.subscribe(({ tipo, deRol }) => {
         if (!tipo) return;
-        this.mostrarDialogo(deRol, `👁 ${tipo}`);
+        this.mostrarDialogo(deRol, this.getSeniaLabel(tipo), tipo);
       }),
     );
 
     this.sala.seniaRecibida$.subscribe(tipo => {
         if (!tipo) return;
-        this.mostrarDialogo(
-          'compa',
-          `👁 ${tipo}`
-        );
+        this.mostrarDialogo('compa', this.getSeniaLabel(tipo), tipo);
       })
   }
 
@@ -514,9 +511,11 @@ export class Truco3v3Component implements OnInit, OnDestroy {
     }
   }
 
-  private mostrarDialogo(rol: string, texto: string): void {
-    if (!texto) return;
-    this.dialogos[rol] = { texto };
+  private mostrarDialogo(rol: string, texto: string, tipoSenia?: string): void {
+    const imagen = this.seniaImg(tipoSenia);
+
+    if (!texto && !imagen) return;
+    this.dialogos[rol] = { texto: texto || this.getSeniaLabel(tipoSenia ?? ''), imagen };
     this.cdr.markForCheck();
     const prev = this.dialogoTimers[rol];
     if (prev) clearTimeout(prev);
@@ -524,6 +523,26 @@ export class Truco3v3Component implements OnInit, OnDestroy {
       this.dialogos[rol] = null;
       this.cdr.markForCheck();
     }, 2400);
+  }
+
+  private getSeniaLabel(tipo: string): string {
+    switch (tipo) {
+      case 'anchoEspada': return 'Ancho de Espada';
+      case 'anchoBasto': return 'Ancho de Basto';
+      case 'sieteEspada': return '7 de Espada';
+      case 'sieteOro': return '7 de Oro';
+      case 'cualquierTres': return 'Cualquier Tres';
+      case 'cualquierDos': return 'Cualquier Dos';
+      case 'falsoUno': return 'Falso Uno';
+      case 'ninguna': return 'Nada importante';
+      default: return tipo;
+    }
+  }
+
+  private seniaImg(tipo?: string | null): string | null {
+    if (!tipo) return null;
+    const tiposValidos = ['anchoEspada', 'anchoBasto', 'sieteEspada', 'sieteOro', 'cualquierTres', 'cualquierDos', 'falsoUno', 'ninguna'];
+    return tiposValidos.includes(tipo) ? `assets/señas/${tipo}.png` : null;
   }
 
   // ── Cuenta regresiva nueva mano ───────────────────────────────
@@ -584,6 +603,7 @@ export class Truco3v3Component implements OnInit, OnDestroy {
   }
 
   enviarSenia(tipo: string): void {
+    this.mostrarDialogo(this.miRol, this.getSeniaLabel(tipo), tipo);
     this.hub('EnviarSenia3v3', tipo);
     this.mostrarMenuSenias = false;
   }

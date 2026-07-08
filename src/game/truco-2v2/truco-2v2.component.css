@@ -372,6 +372,13 @@
   pointer-events: none;
 }
 
+.dialogo-senia-img {
+  display: block;
+  max-height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
 .burbuja-top {
   top: calc(100% + 10px);
   left: 50%;
