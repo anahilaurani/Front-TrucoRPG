@@ -10,6 +10,6 @@
   align-items: safe center;
   padding: clamp(0.6rem, 3vmin, 2rem);
   overflow: auto;
-  background: url('/assets/home.png') center center / cover no-repeat;
+  background: url('/assets/home-nuevo.png') center center / cover no-repeat;
   font-family: 'Jersey 10', monospace;
 }

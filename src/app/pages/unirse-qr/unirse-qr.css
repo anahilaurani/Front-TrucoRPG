@@ -13,7 +13,7 @@ main {
   align-items: center;
   padding: 2rem;
   font-family: 'Jersey 10', monospace;
-  background: url('/assets/home.png') center center / cover no-repeat;
+  background: url('/assets/home-nuevo.png') center center / cover no-repeat;
 }
 
 .panel {
