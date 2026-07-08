@@ -14,6 +14,10 @@
         <div class="esperando-ia">Esperando a los otros jugadores...</div>
       }
     </div>
+    <button class="senia-btn"
+      (click)="abrirMenuSenias()">
+      Enviar Seña
+    </button>
   </aside>
 
   <!-- ── ARENA ──────────────────────────────────────────────────── -->
@@ -132,10 +136,6 @@
         <div class="yo-info">
           <img src="assets/gaucho.png" class="avatar-yo" alt="yo" />
           <span class="yo-nombre">VOS ({{ miRol }})</span>
-          <button class="senia-btn"
-            (click)="abrirMenuSenias()">
-            Enviar Seña
-          </button>
           @if (esMano('yo')) { <span class="mano-badge">MANO</span> }
           @if (dialogos['yo']) {
             <div class="dialogo-burbuja burbuja-bottom">
@@ -146,10 +146,27 @@
               }
             </div>
           }
-          @if (mostrarMenuSenias) {
-          <div class="sena-overlay">
-            <div class="sena-box">
-              <h3>Elegí una seña</h3>
+        </div>
+        <div class="fan-wrap-2v2">
+          @for (carta of misCartas; track $index) {
+            <div class="fan-card-2v2"
+                 [style.--ang]="fanAngles[$index] + 'deg'"
+                 [style.--xoff]="fanXOff[$index] + 'px'"
+                 (click)="jugarCarta(carta)">
+              <img class="fan-img" [src]="cardImg(carta)" [alt]="carta.numero + ' ' + carta.palo" />
+            </div>
+          }
+          @if (misCartas.length === 0 && !estado.manoTerminada) {
+            <div class="sin-cartas">Sin cartas</div>
+          }
+        </div>
+      }
+    </div>
+      @if (mostrarMenuSenias) {
+        <div class="sena-overlay">
+          <div class="sena-box">
+            <h3>Elegí una seña</h3>
+            <div class="sena-list">
               <button (click)="enviarSenia('anchoEspada')">
                 Ancho de Espada
               </button>
@@ -176,24 +193,8 @@
               </button>
             </div>
           </div>
-          }
-        </div>
-        <div class="fan-wrap-2v2">
-          @for (carta of misCartas; track $index) {
-            <div class="fan-card-2v2"
-                 [style.--ang]="fanAngles[$index] + 'deg'"
-                 [style.--xoff]="fanXOff[$index] + 'px'"
-                 (click)="jugarCarta(carta)">
-              <img class="fan-img" [src]="cardImg(carta)" [alt]="carta.numero + ' ' + carta.palo" />
-            </div>
-          }
-          @if (misCartas.length === 0 && !estado.manoTerminada) {
-            <div class="sin-cartas">Sin cartas</div>
-          }
         </div>
       }
-    </div>
-
   </main>
 
   <!-- ── PANEL DER — tanteador ──────────────────────────────────── -->

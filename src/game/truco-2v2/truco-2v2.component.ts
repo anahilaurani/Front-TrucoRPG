@@ -579,7 +579,8 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
   }
 
   abrirMenuSenias() {
-    this.mostrarMenuSenias = true;
+    this.mostrarMenuSenias = !this.mostrarMenuSenias;
+    this.cdr.markForCheck();
   }
 
   enviarSenia(tipo: string): void {

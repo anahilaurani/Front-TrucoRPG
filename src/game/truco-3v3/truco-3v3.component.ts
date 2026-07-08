@@ -599,7 +599,8 @@ export class Truco3v3Component implements OnInit, OnDestroy {
 
   // ── Señas ─────────────────────────────────────────────────────
   abrirMenuSenias(): void {
-    this.mostrarMenuSenias = true;
+    this.mostrarMenuSenias = !this.mostrarMenuSenias;
+    this.cdr.markForCheck();
   }
 
   enviarSenia(tipo: string): void {
