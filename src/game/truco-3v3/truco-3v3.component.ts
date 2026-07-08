@@ -163,6 +163,11 @@ export class Truco3v3Component implements OnInit, OnDestroy {
       this.sala.jugadorDesconectado$.subscribe(v => {
         if (v) this.showToast('Un jugador se desconectó de la partida.');
       }),
+
+      this.sala.senia3v3Recibida$.subscribe(({ tipo, deRol }) => {
+        if (!tipo) return;
+        this.mostrarDialogo(deRol, `👁 ${tipo}`);
+      }),
     );
 
     this.sala.seniaRecibida$.subscribe(tipo => {
@@ -565,12 +570,13 @@ export class Truco3v3Component implements OnInit, OnDestroy {
     this.toastTimer = setTimeout(() => { this.toastMsg = ''; this.cdr.markForCheck(); }, tipo === 'info' ? 2600 : 4000);
   }
 
-  abrirMenuSenias() {
+  // ── Señas ─────────────────────────────────────────────────────
+  abrirMenuSenias(): void {
     this.mostrarMenuSenias = true;
   }
 
   enviarSenia(tipo: string): void {
-    this.hub('EnviarSenia2v2', tipo);
+    this.hub('EnviarSenia3v3', tipo);
     this.mostrarMenuSenias = false;
   }
 }
