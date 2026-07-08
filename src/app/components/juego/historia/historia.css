@@ -28,7 +28,7 @@ main {
     padding: clamp(0.6rem, 3vmin, 2rem);
     overflow:hidden;
     font-family: 'Jersey 20';
-    background: url('/assets/home.png') center center / cover no-repeat;
+    background: url('/assets/home-nuevo.png') center center / cover no-repeat;
     color:#ffffff;
 }
 

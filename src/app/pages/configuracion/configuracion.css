@@ -163,3 +163,29 @@ input[type="range"] { width: clamp(120px, 40%, 180px); }
 @media (max-width: 380px) {
   .acciones { flex-direction: column; }
 }
+
+/* ── Mobile: todo en pantalla sin scroll ────────────────────────── */
+@media (max-width: 768px) {
+  .titulo { font-size: 1.4rem; letter-spacing: 2px; margin-bottom: 4px; }
+  .sep    { margin-bottom: 8px; }
+  .fila   { padding: 8px 12px; margin-bottom: 6px; }
+  .label  { font-size: 0.9rem; }
+  .acciones { margin-top: 10px; gap: 8px; }
+  .btn-guardar, .btn-cancelar { padding: 9px; font-size: 0.9rem; letter-spacing: 1px; }
+  select  { font-size: 0.9rem; padding: 6px 10px; }
+  .toggle { padding: 6px 14px; font-size: 0.9rem; }
+}
+
+/* ── Landscape mobile: reducción máxima para que quepa todo ─────── */
+@media (max-height: 480px) {
+  .titulo { font-size: 1.1rem; letter-spacing: 1px; margin-bottom: 0; }
+  .sep    { margin-bottom: 4px; }
+  .fila   { padding: 5px 10px; margin-bottom: 4px; }
+  .label  { font-size: 0.82rem; }
+  .acciones { margin-top: 6px; gap: 6px; }
+  .btn-guardar, .btn-cancelar { padding: 6px; font-size: 0.82rem; letter-spacing: 1px; }
+  select  { font-size: 0.82rem; padding: 4px 8px; }
+  .toggle { padding: 4px 10px; font-size: 0.82rem; }
+  input[type="range"]::-webkit-slider-thumb { width: 16px; height: 16px; }
+  input[type="range"]::-moz-range-thumb     { width: 16px; height: 16px; }
+}

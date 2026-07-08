@@ -31,3 +31,9 @@ footer {
     color: #d8b060;
     background: rgba(106, 74, 32, 0.25);
 }
+
+@media (max-width: 768px) {
+    footer {
+        display: none;
+    }
+}
