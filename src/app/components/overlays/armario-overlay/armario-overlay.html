@@ -1,1 +1,77 @@
-<h1>ARMARIO</h1>
+<div class="armario-container">
+  <div class="armario-body">
+    <div class="items-section">
+      <p class="sub">Seleccioná un color:</p>
+
+      @if (itemsArmario.length > 0) {
+        <div class="armario-grid">
+          <div
+            class="grid-item"
+            (mouseenter)="hoverDefault()"
+            (mouseleave)="unhoverItem()"
+            (click)="fijarDefault()"
+            [class.active]="itemFijado?.isDefault"
+          >
+            <div class="item-icon">
+              <img style="background-position: cover" src="/UI/percha.png" alt="Ropa Original" />
+            </div>
+          </div>
+
+          @for (linea of itemsArmario; track linea.id || $index) {
+            <div
+              class="grid-item"
+              (mouseenter)="hoverItem(linea)"
+              (mouseleave)="unhoverItem()"
+              (click)="fijarItem(linea)"
+              [class.active]="itemFijado?.id === linea.itemTienda?.id"
+            >
+              <div class="item-icon">
+                <img
+                  [src]="
+                    linea.itemTienda?.img ? linea.itemTienda.img : 'assets/objetos/GotaAzul.png'
+                  "
+                  [alt]="linea.itemTienda?.nombre || 'Ítem del armario'"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <p>No tenés ropa ni tintes comprados.<br />¡Visitá la tienda!</p>
+        </div>
+      }
+    </div>
+
+    <div class="preview-section">
+      <div class="espejo-marco">
+        <div class="espejo-reflejo"></div>
+        <div class="avatar-display">
+          <img
+            [src]="obtenerRutaPreviewGrande()"
+            alt="Previa del Personaje"
+            class="avatar-grande"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-wrapper">
+    @if (assetPreview !== assetActual && itemFijado) {
+      <div class="actions-panel">
+        <p class="info-text">¿Equipar color?</p>
+        <div class="buttons-row">
+          <button class="btn-cancelar" (click)="cancelarCambios()" [disabled]="cargando">
+            Cancelar
+          </button>
+          <button class="btn-confirmar" (click)="confirmarEquipacion()" [disabled]="cargando">
+            {{ cargando ? 'Guardando...' : 'Confirmar' }}
+          </button>
+        </div>
+      </div>
+    } @else {
+      <p class="placeholder-text">Pasa el cursor para probar, click para fijar.</p>
+    }
+  </div>
+</div>

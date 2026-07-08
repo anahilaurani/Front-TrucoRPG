@@ -1,9 +1,5 @@
 <div class="interfaz-tienda">
   <div class="contenedor-tienda">
-    <div class="monedas-tienda">
-      <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
-      <span class="cantidad-monedas">{{ monedas }}</span>
-    </div>
     @for (estante of datos; track estante.categoria) {
       <div class="estante">
         <div class="cartel-estante">{{ estante.categoria }}</div>
@@ -41,7 +37,10 @@
           ACEPTAR
         </button>
       </div>
-
+      <div class="monedas-tienda">
+        <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
+        <span class="cantidad-monedas">{{ monedas }}</span>
+      </div>
     } @else if (objetoActivo) {
       @if (objetoFijado && !confirmandoCompra) {
         <button class="btn-cerrar-inspector" (click)="liberarSeleccion()">X</button>
@@ -75,8 +74,11 @@
               SELECCIONA PARA COMPRAR
             }
           </button>
+          <div class="monedas-tienda">
+            <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
+            <span class="cantidad-monedas">{{ monedas }}</span>
+          </div>
         </div>
-
       } @else {
         <div class="cartel-confirmacion animate-pixel">
           <h4 class="titulo-alerta">¿ESTÁS SEGURO?</h4>
@@ -92,10 +94,18 @@
             <button class="btn-pixel no" (click)="cancelarCompra()">NO</button>
           </div>
         </div>
+        <div class="monedas-tienda">
+          <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
+          <span class="cantidad-monedas">{{ monedas }}</span>
+        </div>
       }
     } @else {
       <div class="detalles-vacio">
         <p>Pasa el cursor sobre un objeto para inspeccionarlo...</p>
+      </div>
+      <div class="monedas-tienda">
+        <img src="UI/moneda.gif" alt="Moneda" class="icono-moneda" />
+        <span class="cantidad-monedas">{{ monedas }}</span>
       </div>
     }
   </div>

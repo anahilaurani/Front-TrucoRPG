@@ -16,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { OPONENTES } from '../data/oponente';
 import { FaseOponente } from '../../app/interfaces/faseOponente';
+import { Creditos } from '../../app/pages/creditos/creditos';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -204,7 +205,7 @@ const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
 @Component({
   selector: 'app-truco-solo',
   standalone: true,
-  imports: [CommonModule, NgStyle],
+  imports: [CommonModule, NgStyle, Creditos],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './truco-solo.component.html',
   styleUrl: './truco-solo.component.css',
@@ -601,6 +602,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.bubbleTimer) clearTimeout(this.bubbleTimer);
     if (this.bubbleHumanoTimer) clearTimeout(this.bubbleHumanoTimer);
     if (this.gameOverTimer) clearTimeout(this.gameOverTimer);
+    if (this.derrotaFinalTimer) clearTimeout(this.derrotaFinalTimer);
     this.limpiarEnvidoSeq();
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.cancelarCountdown();
@@ -929,6 +931,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   nuevaPartida(): void {
     this.gameOver = false;
+    this.derrotaFinalMostrando = false;
+    this.derrotaFinalTerminada = false;
+    if (this.derrotaFinalTimer) { clearTimeout(this.derrotaFinalTimer); this.derrotaFinalTimer = null; }
     this.victoriaHistoriaRegistrada = false;
     this.eventosHabilidad = [];
     this.habilidadCartaIdx = null;
@@ -972,6 +977,36 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cancelarSalir(): void {
     this.mostrarConfirmSalir = false;
+  }
+
+  /** victoria mandinga */
+  get esVictoriaFinalHistoria(): boolean {
+    return this.gameOverWon && this.esMandinga && this.rivalNivel !== null;
+  }
+
+  // ── Animación de derrota final del Mandinga (antes de los créditos) ────────
+  derrotaFinalMostrando = false;
+  derrotaFinalTerminada = false;
+  private derrotaFinalTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Muestra al Mandinga despidiéndose y recién después arranca los créditos. */
+  private iniciarDerrotaFinal(): void {
+    if (this.derrotaFinalMostrando || this.derrotaFinalTerminada) return;
+    this.derrotaFinalMostrando = true;
+    this.derrotaFinalTimer = setTimeout(() => {
+      this.derrotaFinalMostrando = false;
+      this.derrotaFinalTerminada = true;
+      this.cdr.markForCheck();
+    }, 5200);
+  }
+
+  /** Se ejecuta cuando el jugador termina de ver los créditos finales. */
+  finalizarCreditos(): void {
+    localStorage.removeItem('historiaPartida');
+    localStorage.removeItem('rivalNivel');
+    localStorage.removeItem('origenPulperia');
+    window.dispatchEvent(new CustomEvent('truco-solo:end'));
+    this.router.navigate(['/home']);
   }
 
   // SOLO PRUEBAS — Forzar victoria a 30 puntos en historia. Eliminar antes de producción.
@@ -1029,6 +1064,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
           if (this.gameOverWon && this.rivalNivel !== null) {
             this.registrarVictoriaHistoria(m);
           }
+          if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
           this.cdr.markForCheck();
         }, this.duracionSecuenciaEnvido(m) + 800);
         this.cdr.markForCheck();
@@ -1039,6 +1075,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.gameOverWon && this.rivalNivel !== null) {
         this.registrarVictoriaHistoria(m);
       }
+      if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
       this.cdr.markForCheck();
       return;
     }

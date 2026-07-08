@@ -5,56 +5,55 @@
 }
 
 .contenedor-overlay-principal {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     z-index: 99999 !important;
     display: flex;
     justify-content: center;
     align-items: center;
     pointer-events: auto;
-    overlay: hidden;
-    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 12px;
 }
 
 .contenedor-modal {
     position: relative;
     color: #ffffff;
-    padding: 50px 25px 60px 25px;
-    width: -webkit-fit-content;
-    width: -moz-fit-content;
-    width: fit-content;
-    max-width: 150vw;
-    max-height: 90vh;
+    padding: 50px 16px 20px 16px;
+    width: 100%;
+    max-width: 940px;
+    height: auto;
+    max-height: 95vh;
     text-align: center;
     font-family: 'Jersey 20', sans-serif;
     display: flex;
+    align-items: center;
     flex-direction: column;
-    row-gap: 1.2rem;
     overflow-y: auto;
     transition: all 0.3s ease;
+    background: transparent;
 }
 
 .botonCerrar {
     position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 12px;
+    right: 12px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     font-family: 'Jersey 20', monospace;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: #e8aa40;
     background: #2e1e08;
-    border: 2px solid #6a4a20;
+    border: 3px solid #6a4a20;
     width: 32px;
     height: 32px;
     cursor: pointer;
     transition: all 0.1s ease;
-    z-index: 10;
+    z-index: 100;
 }
 
 .botonCerrar:hover {
@@ -66,74 +65,25 @@
 
 @media screen and (max-width: 768px) {
     .contenedor-modal {
-        padding: 30px 18px 18px 18px;
-        row-gap: 0.8rem;
-    }
-
-    .contenedor-modal h1,
-    .contenedor-modal h2 {
-        font-size: 1.8rem;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .contenedor-overlay-principal {
-        padding: 8px;
-    }
-
-    .contenedor-modal {
-        padding: 25px 12px 12px 12px;
-        row-gap: 0.5rem;
-    }
-
-    .contenedor-modal h1,
-    .contenedor-modal h2 {
-        font-size: 1.4rem;
-    }
-
-    .botonCerrar {
-        font-size: 0.9rem;
-        width: 28px;
-        height: 28px;
-        top: 5px;
-        right: 5px;
-    }
-}
-
-@media screen and (max-height: 500px) and (orientation: landscape) {
-    .contenedor-modal {
-        padding: 25px 15px 10px 15px;
-        row-gap: 0.4rem;
+        padding: 45px 12px 20px 12px;
+        width: 100%;
         max-height: 95vh;
     }
-
-    .contenedor-modal h2 {
-        font-size: 1.2rem;
-    }
 }
 
-/* ── Sala / equipos en mobile ──────────────────────────────────────
-   Solo la sala y la selección de equipos usan el layout horizontal a
-   todo el ancho con la X al lado derecho. El resto de las sub-vistas
-   (menú tipo, crear, unirse, buscar) siguen centradas con ancho propio. */
 @media screen and (max-width: 768px),
-       screen and (orientation: landscape) and (max-height: 540px) {
+screen and (orientation: landscape) and (max-height: 540px) {
     .contenedor-modal.modal-sala {
         width: 100%;
         max-width: 100%;
-        padding: 14px 12px 44px 12px;
-        row-gap: 0;
+        padding: 45px 12px 20px 12px;
     }
 
-    /* X reposicionada al lado derecho (esquina inferior derecha) */
     .modal-sala .botonCerrar {
-        top: auto;
-        bottom: 8px;
+        top: 12px;
+        right: 12px;
+        bottom: auto;
         left: auto;
-        right: 10px;
         transform: none;
-        width: 30px;
-        height: 30px;
-        font-size: 1rem;
     }
 }

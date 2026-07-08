@@ -1,0 +1,37 @@
+<main>
+    @if (!mostrandoStaff) {
+    <div class="carta-wrapper">
+        <div class="carta">
+            <div class="indicador-slides">
+                @for (slide of slides; track $index) {
+                <span class="punto" [class.activo]="$index === slideActual"></span>
+                }
+            </div>
+            <p class="texto-prologo">
+                {{ textoMostrado }}<span class="cursor" [class.oculto]="typewriterDone">|</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="acciones-confirmar">
+        <button class="boton-siguiente" (click)="siguiente()">
+            {{ !typewriterDone ? 'CONTINUAR ▶' : esUltimaSlide ? 'VER CRÉDITOS' : 'SIGUIENTE ▶' }}
+        </button>
+        <button class="btn-saltar" (click)="saltar()">SALTAR</button>
+    </div>
+    } @else {
+    <div class="carta-wrapper">
+        <div class="carta carta-staff">
+            <div class="staff-roll">
+                @for (linea of staff; track $index) {
+                <p class="staff-linea" [class.staff-vacia]="!linea">{{ linea }}</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="acciones-confirmar">
+        <button class="boton-siguiente" (click)="siguiente()">VOLVER AL INICIO</button>
+    </div>
+    }
+</main>

@@ -15,6 +15,7 @@
   align-items: center;
   justify-content: center;
   flex: 1;
+  align-self: stretch; /* ocupa toda la altura del wrapper */
   padding: 0.5rem 0.8rem;
   gap: 0.55rem;
   min-height: 0;
@@ -106,6 +107,7 @@
   display: flex;
   flex-direction: row;
   height: min(510px, 70vh);
+  height: min(510px, 70dvh);
   /* Tapa de cuero como fondo + borde */
   background: linear-gradient(160deg, #5a3010 0%, #3d1e06 45%, #4a2808 100%);
   border-left:  10px solid #3a1e06;
@@ -579,18 +581,35 @@
     justify-content: flex-start;
   }
 
+  .grimorio-header { padding: 0.25rem 1rem; gap: 0.6rem; }
+  .grimorio-titulo { letter-spacing: 3px; }
+
+  /* El libro llena la altura disponible en vez de usar vh fijos */
+  .libro {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
   .libro-paginas {
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
     height: auto;
-    max-height: 80vh;
+    max-height: none;
+    border-left-width: 6px;
+    border-right-width: 6px;
   }
 
   .libro-canto-top { margin: 0 16px; }
   .libro-canto-bottom { margin: 0 4px; }
 
+  .pagina { padding: 0.7rem 0.8rem 1rem; }
+
   .pagina-izq {
     flex: 0 0 auto;
-    max-height: 32vh;
+    max-height: 30vh;
+    max-height: 30dvh;
   }
 
   .lomo {
@@ -620,7 +639,7 @@
   .capitulos-nav {
     flex-direction: row;
     flex-wrap: wrap;
-    overflow-y: visible;
+    overflow-y: auto;
     gap: 3px;
   }
 
@@ -628,22 +647,44 @@
   .cap-desc, .cap-pag { display: none; }
   .cap-titulo { font-size: 0.65rem; }
 
+  /* La página derecha flexea y el scroll queda en .entradas-scroll,
+     así la navegación Ant./Sig. queda siempre visible */
   .pagina-der {
-    flex: 1;
-    max-height: 48vh;
-    overflow-y: auto;
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
   }
 
+  .num-pagina { display: none; }
   .page-curl { display: none; }
   .clasp { display: none; }
 }
 
 /* ══════════════════════════════════════════════
-   RESPONSIVE — PANTALLA BAJA
+   RESPONSIVE — PANTALLA BAJA (ej: celular apaisado)
 ══════════════════════════════════════════════ */
 @media (max-height: 560px) {
-  .libro-paginas { height: min(400px, 78vh); }
-  .pagina { padding: 0.7rem 0.8rem 1.5rem; }
+  .grimorio-escena { padding: 0.25rem 0.5rem; gap: 0.3rem; }
+  .grimorio-header { padding: 0.1rem 1rem; }
+  .grimorio-titulo { font-size: clamp(0.9rem, 2.4vw, 1.3rem); letter-spacing: 3px; }
+
+  .libro { flex: 1; min-height: 0; }
+  .libro-paginas { flex: 1; min-height: 0; height: auto; max-height: none; }
+
+  .pagina { padding: 0.55rem 0.7rem 1rem; }
   .entradas-scroll { gap: 0.55rem; }
   .entrada { gap: 2px; }
+  .cap-header { gap: 8px; }
+  .cap-icono-grande { font-size: 1.3rem; }
+  .num-pagina { display: none; }
+  .clasp { display: none; }
+  .volver-btn { padding: 4px 14px; }
+}
+
+/* Pantallas muy angostas */
+@media (max-width: 400px) {
+  .grimorio-titulo { letter-spacing: 2px; }
+  .grimorio-header { padding: 0.2rem 0.6rem; }
+  .pagina { padding: 0.6rem 0.6rem 0.9rem; }
+  .cap-nombre { letter-spacing: 1.5px; }
 }

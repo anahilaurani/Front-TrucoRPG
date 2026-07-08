@@ -1,104 +1,85 @@
 <main>
   <div class="perfil-card">
 
-    <!-- Avatar clickeable -->
-    <button class="avatar-btn" (click)="pickerAbierto.set(!pickerAbierto())">
-      @if (avatarUrl()) {
-        <img [src]="avatarUrl()!" class="avatar-img" alt="avatar" />
-      } @else {
-        <span class="avatar-inicial">{{ inicial() }}</span>
-      }
-      <span class="avatar-edit">✎</span>
-    </button>
-
-    <h1 class="nombre">{{ usuario()?.nombre }}</h1>
-    <p class="email">{{ usuario()?.email }}</p>
-
-    <!-- Picker de avatares -->
+    <!-- ── Vista picker de avatar ── -->
     @if (pickerAbierto()) {
-      <div class="picker">
-        <p class="picker-titulo">Elegí tu avatar</p>
-        <div class="picker-grid">
-          @for (av of avatares; track av.src) {
-            <button class="picker-item" [class.seleccionado]="avatarUrl() === av.src" (click)="seleccionarAvatar(av.src)">
-              <img [src]="av.src" [alt]="av.nombre" />
-            </button>
-          }
-        </div>
-        @if (avatarUrl()) {
-          <button class="picker-quitar" (click)="quitarAvatar()">Quitar avatar</button>
+      <p class="picker-titulo">Elegí tu avatar</p>
+      <div class="picker-grid">
+        @for (av of avatares; track av.src) {
+          <button class="picker-item" [class.seleccionado]="avatarUrl() === av.src" (click)="seleccionarAvatar(av.src)">
+            <img [src]="av.src" [alt]="av.nombre" />
+          </button>
         }
       </div>
-    }
-
-    <div class="sep"></div>
-
-    @if (heroe()) {
-      <div class="fila-heroe">
-        <span class="fila-label">Héroe</span>
-        <span class="fila-valor" [style.color]="heroe()!.color">{{ heroe()!.nombre }}</span>
-      </div>
-      <div class="fila-heroe">
-        <span class="fila-label">Habilidad</span>
-        <span class="fila-valor fila-desc">{{ heroe()!.descripcion }}</span>
-      </div>
+      @if (avatarUrl()) {
+        <button class="picker-quitar" (click)="quitarAvatar()">Quitar avatar</button>
+      }
       <div class="sep"></div>
+      <button class="fila-accion fila-volver" (click)="pickerAbierto.set(false)">
+        <span>← Cancelar</span>
+      </button>
     }
 
-    <a class="fila-accion" routerLink="/configuracion">
-      <span>Configuración</span>
-      <span class="arrow">›</span>
-    </a>
-    <div class="sep"></div>
-
-    <!-- Cambiar contraseña -->
-    <button class="fila-accion fila-toggle-pass" (click)="toggleFormPass()">
-      <span>Cambiar contraseña</span>
-      <span class="arrow">{{ formPassAbierto ? '▾' : '›' }}</span>
-    </button>
-
-    @if (formPassAbierto) {
-      <div class="form-pass">
-        <input
-          type="password"
-          class="pass-input"
-          [(ngModel)]="passwordActual"
-          placeholder="Contraseña actual"
-          autocomplete="current-password"
-        />
-        <input
-          type="password"
-          class="pass-input"
-          [(ngModel)]="passwordNueva"
-          placeholder="Nueva contraseña"
-          autocomplete="new-password"
-        />
-        <input
-          type="password"
-          class="pass-input"
-          [(ngModel)]="passwordConfirmar"
-          placeholder="Confirmar nueva contraseña"
-          autocomplete="new-password"
-        />
-
-        @if (mensajePass) {
-          <p class="pass-msg" [class.pass-ok]="!errorPass" [class.pass-err]="errorPass">
-            {{ mensajePass }}
-          </p>
+    <!-- ── Vista perfil principal ── -->
+    @if (!pickerAbierto()) {
+      <button class="avatar-btn" (click)="pickerAbierto.set(true)">
+        @if (avatarUrl()) {
+          <img [src]="avatarUrl()!" class="avatar-img" alt="avatar" />
+        } @else {
+          <span class="avatar-inicial">{{ inicial() }}</span>
         }
+        <span class="avatar-edit">✎</span>
+      </button>
 
-        <button class="pass-btn" [disabled]="guardandoPass" (click)="cambiarPassword()">
-          {{ guardandoPass ? 'Guardando…' : 'Confirmar cambio' }}
-        </button>
-      </div>
+      <h1 class="nombre">{{ usuario()?.nombre }}</h1>
+      <p class="email">{{ usuario()?.email }}</p>
+
+      <div class="sep"></div>
+
+      <a class="fila-accion" routerLink="/configuracion">
+        <span>Configuración</span>
+        <span class="arrow">›</span>
+      </a>
+      <div class="sep"></div>
+
+      <button class="fila-accion fila-toggle-pass" (click)="toggleFormPass()">
+        <span>Cambiar contraseña</span>
+        <span class="arrow">{{ formPassAbierto ? '▾' : '›' }}</span>
+      </button>
+
+      @if (formPassAbierto) {
+        <div class="form-pass">
+          <input type="password" class="pass-input" [(ngModel)]="passwordActual"
+            placeholder="Contraseña actual" autocomplete="current-password" />
+          <input type="password" class="pass-input" [(ngModel)]="passwordNueva"
+            placeholder="Nueva contraseña" autocomplete="new-password" />
+          <input type="password" class="pass-input" [(ngModel)]="passwordConfirmar"
+            placeholder="Confirmar nueva contraseña" autocomplete="new-password" />
+
+          @if (mensajePass) {
+            <p class="pass-msg" [class.pass-ok]="!errorPass" [class.pass-err]="errorPass">
+              {{ mensajePass }}
+            </p>
+          }
+
+          <button class="pass-btn" [disabled]="guardandoPass" (click)="cambiarPassword()">
+            {{ guardandoPass ? 'Guardando…' : 'Confirmar cambio' }}
+          </button>
+        </div>
+      }
+
+      <div class="sep"></div>
+
+      <button class="fila-accion fila-cerrar" (click)="cerrarSesion()">
+        <span>Cerrar Sesión</span>
+        <span class="arrow">›</span>
+      </button>
+      <div class="sep"></div>
+
+      <a class="fila-accion fila-volver" routerLink="/home">
+        <span>← Volver</span>
+      </a>
     }
-
-    <div class="sep"></div>
-
-    <button class="fila-accion fila-cerrar" (click)="cerrarSesion()">
-      <span>Cerrar Sesión</span>
-      <span class="arrow">›</span>
-    </button>
 
   </div>
 </main>
