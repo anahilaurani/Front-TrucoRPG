@@ -443,6 +443,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private mandingaMaldicionInterval: ReturnType<typeof setInterval> | null = null;
   private envidoRevealTimer: ReturnType<typeof setTimeout> | null = null;
   private envidoRevealManoId: string | null = null;
+  /** Id de la mano actual para mantener cada carta en su slot del abanico. */
+  private misCartsManoId: string | null = null;
   private rasgunoWatchdog: ReturnType<typeof setInterval> | null = null;
   private rasgunoConfirmando = false;
   private nuevaManoEnCurso = false;
@@ -945,7 +947,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     if (idxHand < 0) return;
     const carta = this.misCarts[idxHand].carta;
 
-    this.misCarts = this.misCarts.map((mc, i) => i === idxHand ? { ...mc, visible: false } : mc);
+    this.misCarts = this.misCarts.map((mc, i) =>
+      i === idxHand ? { ...mc, carta: null, visible: false, seleccionada: false } : mc);
 
     const slotIdx = m.bazas?.length ?? 0;
     if (carta && slotIdx >= 0 && slotIdx < this.slots.length) {
@@ -1067,6 +1070,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.salpicaduraCartasOriginales = [];
     this.rasgunoCartasOriginales = [];
     this.envidoRevealManoId = null;
+    this.misCartsManoId = null;
     this.cancelarEnvidoRevealTimer();
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
@@ -2027,17 +2031,52 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private actualizarCartasMano(m: ManoState): void {
-    const manoVisible = this.cartasParaAbanico(m);
-    this.misCarts = [0, 1, 2].map(i => {
-      const carta = manoVisible[i] ?? null;
-      return {
-        carta,
-        visible: !!carta,
-        seleccionada: this.habilidadCartaIdx === i,
-        oculta: !!carta && this.cartaEsOculta(carta, m),
-      };
+    const manoVisible = this.cartasParaAbanico(m).map(c => this.normalizarCarta(c));
+    const prev = this.misCarts;
+    const esNuevaMano = this.misCartsManoId !== m.id;
+
+    if (esNuevaMano) {
+      this.misCartsManoId = m.id;
+      this.misCarts = [0, 1, 2].map(i => this.crearMisCartSlot(manoVisible[i] ?? null, i, m));
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const usadas = new Set<number>();
+    const slots = [0, 1, 2].map(slotIdx => {
+      const prevCarta = prev[slotIdx]?.carta;
+      if (!prevCarta) {
+        return this.crearMisCartSlot(null, slotIdx, m);
+      }
+      const idxEnMano = manoVisible.findIndex(
+        (c, i) => !usadas.has(i) && this.cartaCoincide(c, prevCarta),
+      );
+      if (idxEnMano >= 0) {
+        usadas.add(idxEnMano);
+        return this.crearMisCartSlot(manoVisible[idxEnMano], slotIdx, m);
+      }
+      return this.crearMisCartSlot(null, slotIdx, m);
     });
+
+    for (let i = 0; i < manoVisible.length; i++) {
+      if (usadas.has(i)) continue;
+      const slotLibre = slots.findIndex(s => !s.carta);
+      if (slotLibre < 0) break;
+      usadas.add(i);
+      slots[slotLibre] = this.crearMisCartSlot(manoVisible[i], slotLibre, m);
+    }
+
+    this.misCarts = slots;
     this.cdr.markForCheck();
+  }
+
+  private crearMisCartSlot(carta: Carta | null, slotIdx: number, m: ManoState) {
+    return {
+      carta,
+      visible: !!carta,
+      seleccionada: this.habilidadCartaIdx === slotIdx,
+      oculta: !!carta && this.cartaEsOculta(carta, m),
+    };
   }
 
   private actualizarCartasRival(m: ManoState, cantOp: number): void {
@@ -2208,8 +2247,20 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       .map(c => this.normalizarCarta(c));
   }
 
-  private fueAlMazo(m: ManoState): boolean {
-    return (m.estadoTruco ?? '').toLowerCase().includes('mazo');
+  /** Cartas del rival ya jugadas o visibles en la mesa (bazas + carta pendiente). */
+  private cartasMaquinaVisiblesEnMesa(m: ManoState): Carta[] {
+    const visibles = this.cartasMaquinaEnBazas(m);
+    if (m.cartaMaquinaEnMesa) {
+      visibles.push(this.normalizarCarta(m.cartaMaquinaEnMesa));
+    }
+    return visibles;
+  }
+
+  private cartasEnvidoNoEstanEnMesa(cartasEnvido: Carta[], m: ManoState): boolean {
+    const visibles = this.cartasMaquinaVisiblesEnMesa(m);
+    return cartasEnvido.some(c =>
+      !visibles.some(v => this.cartaCoincide(c, v)),
+    );
   }
 
   /** Cartas con las que la máquina formó su mejor envido (mano + jugadas). */
@@ -2257,12 +2308,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     const cartasEnvido = this.obtenerCartasEnvidoMaquina(m);
     if (cartasEnvido.length === 0) return false;
 
-    if (this.fueAlMazo(m)) return true;
-
-    const jugadas = this.cartasMaquinaEnBazas(m);
-    return cartasEnvido.some(c =>
-      !jugadas.some(j => this.cartaCoincide(c, j)),
-    );
+    return this.cartasEnvidoNoEstanEnMesa(cartasEnvido, m);
   }
 
   private iniciarRevelacionEnvidoFinMano(m: ManoState): void {
