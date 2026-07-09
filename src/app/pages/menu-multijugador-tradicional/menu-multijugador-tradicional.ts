@@ -159,10 +159,10 @@ export class MenuMultijugadorTradicional implements OnInit, OnDestroy {
     try {
       this.sala.reset();
       await this.sala.conectar();
-      const ok = await this.sala.unirseASala(codigo);
+      const ok = await this.sala.unirseASala(codigo, this.gameMode);
 
       if (!ok) {
-        this.errorUnirse = 'Sala no encontrada o llena.';
+        this.errorUnirse = `Sala no encontrada, llena o de otro modo (esta pantalla es ${this.gameMode}).`;
         this.cargando = false;
         if (onError) onError();
         return;
