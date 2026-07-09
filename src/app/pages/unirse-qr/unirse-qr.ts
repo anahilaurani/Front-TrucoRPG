@@ -40,9 +40,9 @@ export class UnirseQrComponent implements OnInit {
     try {
       this.sala.reset();
       await this.sala.conectar();
-      const ok = await this.sala.unirseASala(codigo);
+      const ok = await this.sala.unirseASala(codigo, this.gameMode);
       if (!ok) {
-        this.fallar('Sala no encontrada o llena.');
+        this.fallar(`Sala no encontrada, llena o de otro modo (el QR es para ${this.gameMode}).`);
         return;
       }
       this.router.navigate(['/menu-multijugador-tradicional-sala'], {

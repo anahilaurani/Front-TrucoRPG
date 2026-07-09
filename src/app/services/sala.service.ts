@@ -170,8 +170,12 @@ export class SalaService {
     return await this.hub.invoke<SalaPublicaInfo[]>('ListarSalasPublicas', modo);
   }
 
-  async unirseASala(codigo: string): Promise<boolean> {
-    const ok = await this.hub.invoke<boolean>('UnirseASala', codigo.toUpperCase().trim());
+  /**
+   * Se une a una sala por código. Si se pasa `modoEsperado`, el servidor
+   * rechaza el código cuando la sala pertenece a otro modo (1v1/2v2/3v3).
+   */
+  async unirseASala(codigo: string, modoEsperado?: '1v1' | '2v2' | '3v3'): Promise<boolean> {
+    const ok = await this.hub.invoke<boolean>('UnirseASala', codigo.toUpperCase().trim(), modoEsperado ?? null);
     if (ok) {
       this.codigoSala$.next(codigo.toUpperCase().trim());
     }
