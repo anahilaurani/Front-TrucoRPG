@@ -4,7 +4,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: url('/assets/home.png') center center / cover no-repeat;
+  background: url('/assets/home-nuevo.png') center center / cover no-repeat;
 }
 
 :host([standalone="false"]),

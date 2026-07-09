@@ -4,7 +4,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #6e6e6eb4 url('/assets/home.png') center center / cover no-repeat;
+  background: #6e6e6eb4 url('/assets/home-nuevo.png') center center / cover no-repeat;
   background-blend-mode: multiply;
 }
 

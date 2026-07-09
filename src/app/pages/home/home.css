@@ -17,7 +17,7 @@ main {
     padding: 2rem;
     overflow:hidden;
     font-family: 'Jersey 20';
-    background: url('/assets/home.png') center center / cover no-repeat;
+    background: url('/assets/home-nuevo.png') center center / cover no-repeat;
 }
 
 /* ── Wrapper logo + panel ────────────────────────────────────── */
@@ -146,25 +146,17 @@ main {
 
 /* ── Pantalla baja (landscape mobile / tablet landscape chico) ── */
 @media (max-height: 620px) {
-    .menu-logo { width: 100px; margin-bottom: -34px; }
-    .menu-wrapper { width: min(540px, 92vw); animation: none; }
-    .contenedor-menu {
-        padding: 42px 20px 32px;
-        gap: 8px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-    }
-    /* separadores ocupan todo el ancho */
-    .menu-sep { grid-column: 1 / -1; margin: 0; }
-    .contenedor-menu a { height: 48px; font-size: 0.9rem; letter-spacing: 1px; width: 100%; }
+    .menu-logo { width: 80px; margin-bottom: -26px; }
+    .menu-wrapper { width: min(400px, 92vw); animation: none; }
+    .contenedor-menu { padding: 20px 20px 16px; gap: 6px; }
+    .menu-sep { display: none; }
+    .contenedor-menu a { height: 44px; font-size: 0.9rem; letter-spacing: 1px; }
 }
 
 @media (max-height: 500px) {
-    main { padding: 0.5rem; align-items: center; }
-    .menu-logo { width: 80px; margin-bottom: -26px; }
-    .menu-wrapper { width: min(580px, 96vw); }
-    .contenedor-menu { padding: 34px 16px 22px; gap: 6px; }
-    .contenedor-menu a { height: 40px; font-size: 0.85rem; letter-spacing: 0.5px; }
+    main { padding: 0.5rem; }
+    .contenedor-menu { padding: 14px 16px 12px; gap: 4px; }
+    .contenedor-menu a { height: 38px; font-size: 0.85rem; letter-spacing: 0.5px; }
 }
 
 @keyframes flotar {
