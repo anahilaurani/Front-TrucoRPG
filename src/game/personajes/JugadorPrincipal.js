@@ -9,6 +9,14 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
     escena.add.existing(this);
     escena.physics.add.existing(this);
 
+    // Movimiento alternativo con WASD (además de las flechas)
+    this.teclasWASD = escena.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+    });
+
     this.sonidoPasos = escena.sound.add('pasos', {
       loop: true,
       volume: 0.5,
@@ -94,11 +102,12 @@ export default class JugadorPrincipal extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(0);
 
     let joyStick = this.scene.joyStick;
+    const wasd = this.teclasWASD;
 
-    let moverIzquierda = keys.left.isDown || joyStick?.left;
-    let moverDerecha = keys.right.isDown || joyStick?.right;
-    let moverArriba = keys.up.isDown || joyStick?.up;
-    let moverAbajo = keys.down.isDown || joyStick?.down;
+    let moverIzquierda = keys.left.isDown || wasd?.left?.isDown || joyStick?.left;
+    let moverDerecha = keys.right.isDown || wasd?.right?.isDown || joyStick?.right;
+    let moverArriba = keys.up.isDown || wasd?.up?.isDown || joyStick?.up;
+    let moverAbajo = keys.down.isDown || wasd?.down?.isDown || joyStick?.down;
 
     if (moverIzquierda) this.setVelocityX(-velocidad);
     if (moverDerecha) this.setVelocityX(velocidad);
