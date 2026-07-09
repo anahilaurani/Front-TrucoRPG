@@ -14,6 +14,10 @@
         <div class="esperando-ia">Esperando a los otros jugadores...</div>
       }
     </div>
+    <button class="senia-btn"
+      (click)="abrirMenuSenias()">
+      Enviar Seña
+    </button>
   </aside>
 
   <!-- ── ARENA ──────────────────────────────────────────────────── -->
@@ -37,7 +41,16 @@
             </div>
           </div>
           @if (dialogos['compa']) {
-            <div class="dialogo-burbuja burbuja-top">{{ dialogos['compa']!.texto }}</div>
+            <div class="dialogo-burbuja burbuja-top">
+              @if (dialogos['compa']!.imagen) {
+                <img
+                  class="dialogo-senia-img"
+                  [src]="dialogos['compa']!.imagen"
+                  [alt]="dialogos['compa']!.texto ?? 'Seña'" />
+              } @else {
+                {{ dialogos['compa']!.texto }}
+              }
+            </div>
           }
         </div>
       }
@@ -112,9 +125,6 @@
               <img class="card-back card-back-side" src="assets/cards/back.PNG" alt="reverso" />
             }
           </div>
-          @if (dialogos['der']) {
-            <div class="dialogo-burbuja burbuja-right">{{ dialogos['der']!.texto }}</div>
-          }
         </div>
       }
 
@@ -128,7 +138,13 @@
           <span class="yo-nombre">VOS ({{ miRol }})</span>
           @if (esMano('yo')) { <span class="mano-badge">MANO</span> }
           @if (dialogos['yo']) {
-            <div class="dialogo-burbuja burbuja-bottom">{{ dialogos['yo']!.texto }}</div>
+            <div class="dialogo-burbuja burbuja-bottom">
+              @if (dialogos['yo']!.imagen) {
+                <img class="dialogo-senia-img" [src]="dialogos['yo']!.imagen" [alt]="dialogos['yo']!.texto ?? 'Seña'" />
+              } @else {
+                {{ dialogos['yo']!.texto }}
+              }
+            </div>
           }
         </div>
         <div class="fan-wrap-2v2">
@@ -146,7 +162,39 @@
         </div>
       }
     </div>
-
+      @if (mostrarMenuSenias) {
+        <div class="sena-overlay">
+          <div class="sena-box">
+            <h3>Elegí una seña</h3>
+            <div class="sena-list">
+              <button (click)="enviarSenia('anchoEspada')">
+                Ancho de Espada
+              </button>
+              <button (click)="enviarSenia('anchoBasto')">
+                Ancho de Basto
+              </button>
+              <button (click)="enviarSenia('sieteEspada')">
+                7 de Espada
+              </button>
+              <button (click)="enviarSenia('sieteOro')">
+                7 de Oro
+              </button>
+              <button (click)="enviarSenia('ninguna')">
+                Nada importante
+              </button>
+              <button (click)="enviarSenia('cualquierTres')">
+                Cualquier Tres
+              </button>
+              <button (click)="enviarSenia('cualquierDos')">
+                Cualquier Dos
+              </button>
+              <button (click)="enviarSenia('falsoUno')">
+                Falso Uno
+              </button>
+            </div>
+          </div>
+        </div>
+      }
   </main>
 
   <!-- ── PANEL DER — tanteador ──────────────────────────────────── -->

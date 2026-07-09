@@ -108,6 +108,7 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
   mesa: MesaJugadas = { yo: [], compa: [], izq: [], der: [] };
   tallySticksNosotros: any[] = [];
   tallySticksEllos:    any[] = [];
+  mostrarMenuSenias = false;
 
   toastMsg = '';
   toastTipo: 'error' | 'info' = 'error';
@@ -123,7 +124,7 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
   readonly fanXOff   = [-18, 0, 18];
 
   // Burbujas de diálogo por asiento
-  dialogos: Record<Seat, { texto: string } | null> = { yo: null, compa: null, izq: null, der: null };
+  dialogos: Record<Seat, { texto?: string; imagen?: string | null } | null> = { yo: null, compa: null, izq: null, der: null };
   private dialogoTimers: Record<Seat, ReturnType<typeof setTimeout> | null> = { yo: null, compa: null, izq: null, der: null };
   private prevEstadoEnvido = '';
   private prevEstadoTruco  = '';
@@ -139,12 +140,19 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subs.push(
+
       this.sala.trucoEstado2v2$.subscribe(data => {
         if (data) this.onEstado(data as Msg2v2);
       }),
+
       this.sala.jugadorDesconectado$.subscribe(v => {
         if (v) this.showToast('Un jugador se desconectó de la partida.');
       }),
+
+      this.sala.seniaRecibida$.subscribe(tipo => {
+        if (!tipo) return;
+        this.mostrarDialogo('compa', this.getSeniaLabel(tipo), tipo);
+      })
     );
   }
 
@@ -453,9 +461,11 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
     return null;
   }
 
-  private mostrarDialogo(seat: Seat, texto: string): void {
-    if (!texto) return;
-    this.dialogos[seat] = { texto };
+  private mostrarDialogo(seat: Seat, texto: string, tipoSenia?: string): void {
+    const imagen = this.seniaImg(tipoSenia);
+
+    if (!texto && !imagen) return;
+    this.dialogos[seat] = { texto: texto || this.getSeniaLabel(tipoSenia ?? ''), imagen };
     this.cdr.markForCheck();
     const prev = this.dialogoTimers[seat];
     if (prev) clearTimeout(prev);
@@ -463,6 +473,26 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
       this.dialogos[seat] = null;
       this.cdr.markForCheck();
     }, 2400);
+  }
+
+  private getSeniaLabel(tipo: string): string {
+    switch (tipo) {
+      case 'anchoEspada': return 'Ancho de Espada';
+      case 'anchoBasto': return 'Ancho de Basto';
+      case 'sieteEspada': return '7 de Espada';
+      case 'sieteOro': return '7 de Oro';
+      case 'cualquierTres': return 'Cualquier Tres';
+      case 'cualquierDos': return 'Cualquier Dos';
+      case 'falsoUno': return 'Falso Uno';
+      case 'ninguna': return 'Nada importante';
+      default: return tipo;
+    }
+  }
+
+  private seniaImg(tipo?: string | null): string | null {
+    if (!tipo) return null;
+    const tiposValidos = ['anchoEspada', 'anchoBasto', 'sieteEspada', 'sieteOro', 'cualquierTres', 'cualquierDos', 'falsoUno', 'ninguna'];
+    return tiposValidos.includes(tipo) ? `assets/señas/${tipo}.png` : null;
   }
 
   // ── Cuenta regresiva nueva mano ───────────────────────────────
@@ -547,4 +577,30 @@ export class TrucoMulti2v2Component implements OnInit, OnDestroy {
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => { this.toastMsg = ''; this.cdr.markForCheck(); }, tipo === 'info' ? 2600 : 4000);
   }
+
+  abrirMenuSenias() {
+    this.mostrarMenuSenias = !this.mostrarMenuSenias;
+    this.cdr.markForCheck();
+  }
+
+  enviarSenia(tipo: string): void {
+    this.mostrarDialogo('yo', this.getSeniaLabel(tipo), tipo);
+    this.hub('EnviarSenia2v2', tipo);
+    this.mostrarMenuSenias = false;
+  }
+
+  /* c#
+  public async Task EnviarSenia2v2(string tipo)
+  {
+      var jugador = ObtenerJugadorActual();
+      var companero = ObtenerCompanero(jugador);
+
+      await Clients.Client(companero.ConnectionId)
+          .SendAsync("RecibirSenia", tipo);
+  }
+
+  var companero = ObtenerCompanero(jugadorActual);
+  await Clients.Client(companero.ConnectionId)
+    .SendAsync("RecibirSena", sena);
+  */
 }
