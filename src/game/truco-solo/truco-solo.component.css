@@ -14,7 +14,7 @@
   --divider: #5a4020;
   --font-pixel: 'Press Start 2P', monospace;
   --font-data: 'VT323', monospace;
-  --log-text-size: 15px;
+  --log-text-size: 17px;
   display: block;
   width: 100%;
   height: 100%;
@@ -70,7 +70,7 @@
 
 .action-btn {
   font-family: var(--font-data);
-  font-size: 18px;
+  font-size: 20px;
   letter-spacing: 1px;
   color: var(--btn-color, #aaa);
   background: #1e1a14;
@@ -106,7 +106,7 @@
   justify-content: flex-start;
   position: relative;
   overflow: visible;
-  padding-top: 160px;
+  padding-top: 148px;
   /* espacio para el sprite del rival */
 }
 
@@ -138,7 +138,7 @@
 
 .rival-label {
   font-family: var(--font-data);
-  font-size: 14px;
+  font-size: 16px;
   color: #aaa;
   background: #00000099;
   padding: 2px 8px;
@@ -159,7 +159,7 @@
   border-radius: 8px;
   padding: 5px 12px;
   font-family: var(--font-data);
-  font-size: 18px;
+  font-size: 20px;
   color: #111;
   white-space: nowrap;
   animation: bubblePop 0.18s ease-out;
@@ -179,7 +179,7 @@
 /* Burbuja del jugador: centrada arriba de su mano, con la colita apuntando hacia abajo. */
 .bubble-humano {
   top: auto;
-  bottom: 168px;
+  bottom: 186px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
@@ -245,7 +245,7 @@
 .rival-hand {
   display: flex;
   gap: 10px;
-  margin-top: 40px;
+  margin-top: 26px;
 }
 
 .card-back {
@@ -265,7 +265,7 @@
 }
 
 .card-back-img {
-  height: 80px;
+  height: 92px;
   width: auto;
   border-radius: 4px;
   box-shadow: 1px 2px 6px #0009;
@@ -296,7 +296,7 @@
 }
 
 .rival-card-face-img {
-  height: 80px;
+  height: 92px;
   width: auto;
   border-radius: 4px;
   box-shadow:
@@ -399,7 +399,7 @@
 
 .baza-winner {
   font-family: var(--font-data);
-  font-size: 12px;
+  font-size: 14px;
   padding: 1px 5px;
   border-radius: 3px;
   background: #00000099;
@@ -425,7 +425,7 @@
   transform: translateX(-50%);
 
   font-family: var(--font-data);
-  font-size: 13px;
+  font-size: 15px;
   color: #ffff88;
 
   background: #000000cc;
@@ -453,9 +453,9 @@
 /* ── Abanico ──────────────────────────────────────────────────────────────── */
 .fan-wrap {
   position: relative;
-  height: 142px;
-  width: 300px;
-  margin-top: 8px;
+  height: 160px;
+  width: 340px;
+  margin-top: 6px;
   flex-shrink: 0;
   z-index: 3; /* por encima de la mesa (z-index 2) para que las cartas sean clickeables */
 }
@@ -464,9 +464,9 @@
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 78px;
-  height: 112px;
-  margin-left: -39px;
+  width: 90px;
+  height: 130px;
+  margin-left: -45px;
 
   transform: translateX(var(--xoff)) rotate(var(--angle)) translateY(0px);
   transform-origin: bottom center;
@@ -506,9 +506,11 @@
   align-items: center;
   justify-content: center;
 }
-.baza-slot.far-slot,
+.baza-slot.far-slot {
+  min-height: 116px;
+}
 .baza-slot.near-slot {
-  min-height: 113px;
+  min-height: 126px;
 }
 
 .fan-card:hover:not(.hidden):not(.played-out) {
@@ -575,7 +577,7 @@
 
 .score-title {
   font-family: var(--font-pixel);
-  font-size: 7px;
+  font-size: 8px;
   color: var(--gold);
   letter-spacing: 1px;
   text-align: center;
@@ -587,7 +589,7 @@
   display: flex;
   justify-content: space-between;
   font-family: var(--font-data);
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .score-vos {
@@ -615,7 +617,7 @@
 
 .state-title {
   font-family: var(--font-pixel);
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1px;
 }
 
@@ -637,7 +639,7 @@
 .back-btn {
   margin-top: auto;
   font-family: var(--font-data);
-  font-size: 17px;
+  font-size: 19px;
   color: #aa6633;
   background: #1a1208;
   border: 1px solid var(--divider);
@@ -1389,11 +1391,11 @@
 /* Hint del Manipulador sobre el abanico */
 .manipulador-hint {
   position: absolute;
-  bottom: 170px;
+  bottom: 188px;
   left: 50%;
   transform: translateX(-50%);
   font-family: "Jersey 10", monospace;
-  font-size: 14px;
+  font-size: 15px;
   color: #cc88ff;
   background: #1a0a2a;
   border: 1px solid #aa44ff;
@@ -1407,13 +1409,23 @@
 @media (max-width: 1400px) {
   .side-panel { width: 155px; }
   .table-surface { width: 540px; height: 400px; }
+  .fan-wrap { width: 310px; height: 148px; }
+  .fan-card { width: 82px; height: 118px; margin-left: -41px; }
+  .card-back-img { height: 84px; }
+  .rival-card-face-img { height: 84px; }
+  .baza-slot.far-slot { min-height: 106px; }
+  .baza-slot.near-slot { min-height: 112px; }
+  .rival-hand { margin-top: 30px; }
+  .bubble-humano { bottom: 174px; }
+  .turno-badge { font-size: 14px; }
+  .envido-reveal-slot { width: 86px; }
 }
 
 @media (max-width: 1200px) {
   .side-panel { width: 140px; padding: 10px 8px; }
   .action-btn { font-size: 16px; padding: 7px 5px; }
   .table-surface { width: 480px; height: 360px; }
-  .fan-wrap { width: 260px; height: 126px; }
+  .fan-wrap { width: 260px; height: 126px; margin-top: 8px; }
   .fan-card { width: 68px; height: 98px; margin-left: -34px; }
   .scoreboard { padding: 8px 6px; }
   .score-title { font-size: 8px; }
@@ -1422,6 +1434,24 @@
   .state-title { font-size: 10px; }
   .habilidad-btn { padding: 8px 6px; }
   .back-btn { font-size: 15px; }
+
+  /* Restaurar valores previos al agrandado desktop: de acá para abajo
+     el layout queda idéntico a como estaba antes. */
+  :host { --log-text-size: 15px; }
+  .arena { padding-top: 160px; }
+  .card-back-img { height: 80px; }
+  .rival-card-face-img { height: 80px; }
+  .baza-slot.far-slot,
+  .baza-slot.near-slot { min-height: 113px; }
+  .rival-hand { margin-top: 40px; }
+  .bubble { font-size: 18px; }
+  .bubble-humano { bottom: 168px; }
+  .rival-label { font-size: 14px; }
+  .turno-badge { font-size: 13px; }
+  .baza-winner { font-size: 12px; }
+  .manipulador-hint { bottom: 170px; font-size: 14px; }
+  .envido-reveal-slot { width: 80px; }
+  .envido-reveal-titulo { font-size: 9px; }
 }
 
 @media (max-width: 1050px) {
@@ -2007,7 +2037,7 @@
 .envido-reveal-titulo {
   margin: 0;
   font-family: var(--font-pixel);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--cream);
   text-shadow: 2px 2px 0 #000;
   letter-spacing: 0.5px;
@@ -2021,7 +2051,7 @@
 }
 
 .envido-reveal-slot {
-  width: 80px;
+  width: 92px;
 }
 
 .envido-reveal-carta {
