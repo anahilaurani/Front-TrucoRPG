@@ -105,18 +105,18 @@ export class AuthService {
   }
 
   cambiarPassword(passwordActual: string, passwordNueva: string): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${this.apiUrl}/change-password`, {
+    return this.http.put<{ message: string }>(`${this.apiUrl}/changePassword`, {
       passwordActual,
       passwordNueva,
     });
   }
 
   solicitarResetPassword(email: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgotPassword`, { email });
   }
 
   resetPassword(email: string, token: string, nuevaPassword: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/resetPassword`, {
       email,
       token,
       nuevaPassword,

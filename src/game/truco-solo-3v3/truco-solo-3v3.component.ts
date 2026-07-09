@@ -190,33 +190,33 @@ export class TrucoSolo3v3Component implements OnInit, OnDestroy {
       return;
     }
     if (this.mano.turnoActual !== 'J1') { this.showToast('Esperá tu turno para jugar.', 'info'); return; }
-    await this.call('jugar-carta', { manoId: this.mano.id, numero: carta.numero, palo: carta.palo });
+    await this.call('jugarCarta', { manoId: this.mano.id, numero: carta.numero, palo: carta.palo });
   }
 
   async cantarEnvido(tipo: string): Promise<void> {
     if (!this.mano) return;
     this.mostrarDialogo('J1', '¡' + tipo + '!');
-    await this.call('cantar-envido', { manoId: this.mano.id, tipo });
+    await this.call('cantarEnvido', { manoId: this.mano.id, tipo });
   }
   async responderEnvido(aceptar: boolean, escalarA?: string): Promise<void> {
     if (!this.mano) return;
     this.mostrarDialogo('J1', escalarA ? '¡' + escalarA + '!' : (aceptar ? '¡Quiero!' : '¡No quiero!'));
-    await this.call('responder-envido', { manoId: this.mano.id, aceptar, escalarA });
+    await this.call('responderEnvido', { manoId: this.mano.id, aceptar, escalarA });
   }
   async declararTanto(tanto: number): Promise<void> {
     if (!this.mano) return;
     this.mostrarDialogo('J1', String(tanto));
-    await this.call('declarar-tanto', { manoId: this.mano.id, tanto });
+    await this.call('declararTanto', { manoId: this.mano.id, tanto });
   }
   async sonBuenas(): Promise<void> {
     if (!this.mano) return;
     this.mostrarDialogo('J1', '¡Son buenas!');
-    await this.call('son-buenas', { manoId: this.mano.id });
+    await this.call('sonBuenas', { manoId: this.mano.id });
   }
   async cantarTruco(): Promise<void> {
     if (!this.mano) return;
     this.mostrarDialogo('J1', '¡Truco!');
-    await this.call('cantar-truco', { manoId: this.mano.id });
+    await this.call('cantarTruco', { manoId: this.mano.id });
   }
   async responderTruco(aceptar: boolean, escalarA?: string): Promise<void> {
     if (!this.mano) return;
@@ -224,17 +224,17 @@ export class TrucoSolo3v3Component implements OnInit, OnDestroy {
       ? '¡' + (escalarA === 'retruco' ? 'Retruco' : 'Vale cuatro') + '!'
       : (aceptar ? '¡Quiero!' : '¡No quiero!');
     this.mostrarDialogo('J1', txt);
-    await this.call('responder-truco', { manoId: this.mano.id, aceptar, escalarA });
+    await this.call('responderTruco', { manoId: this.mano.id, aceptar, escalarA });
   }
   async escalarTruco(): Promise<void> {
     if (!this.mano) return;
     const nombre = this.mano.nivelTruco === 1 ? 'Retruco' : 'Vale cuatro';
     this.mostrarDialogo('J1', '¡' + nombre + '!');
-    await this.call('escalar-truco', { manoId: this.mano.id });
+    await this.call('escalarTruco', { manoId: this.mano.id });
   }
   async irseAlMazo(): Promise<void> {
     if (!this.mano) return;
-    await this.call('irse-al-mazo', { manoId: this.mano.id });
+    await this.call('irseAlMazo', { manoId: this.mano.id });
   }
 
   // ── Respuestas a las consultas del compañero ──────────────────
@@ -243,7 +243,7 @@ export class TrucoSolo3v3Component implements OnInit, OnDestroy {
     const consultor = this.mano.compaConsultor ?? 'J3';
     this.mostrarDialogo('J1', aceptar ? '¡Dale!' : 'No, jugá');
     if (aceptar) this.mostrarDialogo(consultor, '¡Envido!');
-    await this.call('responder-consulta-envido', { manoId: this.mano.id, aceptar });
+    await this.call('responderConsultaEnvido', { manoId: this.mano.id, aceptar });
   }
 
   async responderConsultaTruco(voy: boolean): Promise<void> {
@@ -251,18 +251,18 @@ export class TrucoSolo3v3Component implements OnInit, OnDestroy {
     const consultor = this.mano.compaConsultor ?? 'J3';
     this.mostrarDialogo('J1', voy ? '¡Vení!' : '¡Poné la alta!');
     this.mostrarDialogo(consultor, voy ? 'Va la baja' : '¡La alta!');
-    await this.call('responder-consulta-truco', { manoId: this.mano.id, voy });
+    await this.call('responderConsultaTruco', { manoId: this.mano.id, voy });
   }
   async nuevaMano(): Promise<void> {
     if (!this.mano) return;
     this.cancelarCountdown();
-    await this.call('nueva-mano', { manoId: this.mano.id });
+    await this.call('nuevaMano', { manoId: this.mano.id });
     this.gameOver = false;
   }
 
   async nuevaPartida(): Promise<void> {
     try {
-      const res = await firstValueFrom(this.http.post<ManoTruco3v3>(`${API}/nueva-partida`, {}));
+      const res = await firstValueFrom(this.http.post<ManoTruco3v3>(`${API}/nuevaPartida`, {}));
       this.actualizarEstado(res);
       await this.correrMaquinas();
     } catch (e: any) {
@@ -321,7 +321,7 @@ export class TrucoSolo3v3Component implements OnInit, OnDestroy {
 
         let res: PasoResponse;
         try {
-          res = await firstValueFrom(this.http.post<PasoResponse>(`${API}/avanzar-maquina`, { manoId: m.id }));
+          res = await firstValueFrom(this.http.post<PasoResponse>(`${API}/avanzarMaquina`, { manoId: m.id }));
         } catch {
           this.showToast('Error de conexión con el servidor.');
           break;
@@ -631,7 +631,7 @@ export class TrucoSolo3v3Component implements OnInit, OnDestroy {
     // Registrar la orden en el backend; la máquina la ejecutará en su próximo turno.
     try {
       const res = await firstValueFrom(
-        this.http.post<ManoTruco3v3>(`${API}/ordenar-mayor`, { manoId: this.mano.id, jugadorId })
+        this.http.post<ManoTruco3v3>(`${API}/ordenarMayor`, { manoId: this.mano.id, jugadorId })
       );
       this.actualizarEstado(res);
       await this.correrMaquinas();

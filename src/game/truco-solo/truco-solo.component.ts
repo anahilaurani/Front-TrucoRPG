@@ -590,7 +590,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarMandingaTimers();
     this.rasgunoManoId = null;
 
-    this.call('nueva-partida', this.construirBodyPartida());
+    this.call('nuevaPartida', this.construirBodyPartida());
   }
 
   private cargarRival(nivel: number): void {
@@ -697,8 +697,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Acciones tras las cuales la máquina juega/responde → conviene simular que "piensa". */
   private readonly ENDPOINTS_PENSAR = new Set([
-    'jugar-carta', 'cantar-envido', 'cantar-envido-tipo', 'responder-envido',
-    'son-buenas', 'cantar-truco', 'responder-truco', 'escalar-truco',
+    'jugarCarta', 'cantarEnvido', 'cantarEnvidoTipo', 'responderEnvido',
+    'sonBuenas', 'cantarTruco', 'responderTruco', 'escalarTruco',
   ]);
 
   private esPartidaHistoria(m?: ManoState | null): boolean {
@@ -758,7 +758,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         try {
           const res = await firstValueFrom(
             this.http.post<{ mano: ManoState; evento?: { tipo: string; texto: string } }>(
-              `${API}/avanzar-maquina`,
+              `${API}/avanzarMaquina`,
               { manoId: m.id },
             ),
           );
@@ -788,23 +788,23 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async call(endpoint: string, body: object): Promise<void> {
     if (this.loading || this.maquinaCorriendo) return;
-    if (endpoint !== 'confirmar-salpicadura'
-      && endpoint !== 'confirmar-travesura'
-      && endpoint !== 'confirmar-rasguno'
-      && endpoint !== 'confirmar-aullido'
-      && endpoint !== 'confirmar-destello'
-      && endpoint !== 'confirmar-espejismo'
-      && endpoint !== 'confirmar-mandinga-espejo'
-      && endpoint !== 'confirmar-mandinga-engano'
-      && endpoint !== 'confirmar-mandinga-maldicion'
-      && endpoint !== 'ganar-automatico-debug'
-      && endpoint !== 'sumar-puntos-humano-debug'
+    if (endpoint !== 'confirmarSalpicadura'
+      && endpoint !== 'confirmarTravesura'
+      && endpoint !== 'confirmarRasguno'
+      && endpoint !== 'confirmarAullido'
+      && endpoint !== 'confirmarDestello'
+      && endpoint !== 'confirmarEspejismo'
+      && endpoint !== 'confirmarMandingaEspejo'
+      && endpoint !== 'confirmarMandingaEngano'
+      && endpoint !== 'confirmarMandingaMaldicion'
+      && endpoint !== 'ganarAutomaticoDebug'
+      && endpoint !== 'sumarPuntosHumanoDebug'
       && this.accionesBloqueadasPorHabilidadRival) return;
     this.loading = true;
 
     const pensar = this.ENDPOINTS_PENSAR.has(endpoint);
     // Tu carta aparece al instante en la mesa; la máquina "piensa" antes de mostrar su jugada.
-    if (endpoint === 'jugar-carta') this.colocarCartaHumanoOptimista(body);
+    if (endpoint === 'jugarCarta') this.colocarCartaHumanoOptimista(body);
     // Tu canto aparece al instante en tu burbuja (la respuesta/tantos los muestra la secuencia).
     this.feedbackCantoHumano(endpoint, body);
 
@@ -889,7 +889,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         paloCarta: c.palo,
       };
       this.misCarts = this.misCarts.map(mc => ({ ...mc, seleccionada: false }));
-      this.call('activar-habilidad', body);
+      this.call('activarHabilidad', body);
       return;
     }
 
@@ -907,7 +907,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Flujo normal: jugar la carta
     new Audio('/assets/musica/card.mp3').play().catch(() => { });
-    this.call('jugar-carta', { manoId: this.mano.id, numero: c.numero, palo: c.palo });
+    this.call('jugarCarta', { manoId: this.mano.id, numero: c.numero, palo: c.palo });
   }
 
   // ── Usar habilidad ────────────────────────────────────────────────────────
@@ -924,7 +924,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Resto de héroes: llamar al backend directamente sin elegir carta
-    this.call('activar-habilidad', { manoId: this.mano.id });
+    this.call('activarHabilidad', { manoId: this.mano.id });
   }
 
   private iniciarCountdown(onComplete: () => void): void {
@@ -967,7 +967,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarRasgunoTimer();
     this.cancelarDestelloTimer();
     this.cancelarEspejismoTimers();
-    this.call('nueva-partida', this.construirBodyPartida());
+    this.call('nuevaPartida', this.construirBodyPartida());
   }
 
   mostrarConfirmSalir = false;
@@ -1033,12 +1033,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
-    this.call('ganar-automatico-debug', { manoId: this.mano.id });
+    this.call('ganarAutomaticoDebug', { manoId: this.mano.id });
   }
 
   ganar10PuntosDebug(): void {
     if (!this.mano || !this.esMandinga) return;
-    this.call('sumar-puntos-humano-debug', { manoId: this.mano.id });
+    this.call('sumarPuntosHumanoDebug', { manoId: this.mano.id });
   }
 
   private registrarVictoriaHistoria(m: ManoState): void {
@@ -1046,7 +1046,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.victoriaHistoriaRegistrada = true;
 
     const diferencia = Math.max(0, m.puntosHumano - m.puntosMaquina);
-    this.http.post(`${API_HISTORIA}/registrar-victoria`, {
+    this.http.post(`${API_HISTORIA}/registrarVictoria`, {
       rivalNivel: this.rivalNivel,
       diferenciaPuntos: diferencia,
     }).subscribe({
@@ -1238,7 +1238,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.salpicaduraSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-salpicadura', m.id);
+        this.confirmarHabilidadRival('confirmarSalpicadura', m.id);
       }
     }, SALPICADURA_REVEAL_SEG * 1000);
 
@@ -1306,7 +1306,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.travesuraSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-travesura', m.id);
+        this.confirmarHabilidadRival('confirmarTravesura', m.id);
       }
     }, TRAVESURA_REVEAL_SEG * 1000);
 
@@ -1371,7 +1371,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rasgunoCartasOriginales = [];
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-rasguno', m.id);
+        this.confirmarHabilidadRival('confirmarRasguno', m.id);
       }
     }, RASGUNO_REVEAL_SEG * 1000);
 
@@ -1432,7 +1432,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.aullidoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-aullido', m.id);
+        this.confirmarHabilidadRival('confirmarAullido', m.id);
       }
     }, AULLIDO_REVEAL_SEG * 1000);
 
@@ -1497,7 +1497,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.destelloSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-destello', m.id);
+        this.confirmarHabilidadRival('confirmarDestello', m.id);
       }
     }, DESTELLO_REVEAL_SEG * 1000);
 
@@ -1653,7 +1653,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.espejismoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-espejismo', m.id);
+        this.confirmarHabilidadRival('confirmarEspejismo', m.id);
       }
     }, ESPEJISMO_REVEAL_SEG * 1000);
 
@@ -1736,7 +1736,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaEspejoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-mandinga-espejo', m.id);
+        this.confirmarHabilidadRival('confirmarMandingaEspejo', m.id);
       }
     }, MANDINGA_ESPEJO_SEG * 1000);
 
@@ -1775,7 +1775,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaEnganoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-mandinga-engano', m.id);
+        this.confirmarHabilidadRival('confirmarMandingaEngano', m.id);
       }
     }, MANDINGA_ENGANO_SEG * 1000);
 
@@ -1814,7 +1814,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaMaldicionSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-mandinga-maldicion', m.id);
+        this.confirmarHabilidadRival('confirmarMandingaMaldicion', m.id);
       }
     }, MANDINGA_MALDICION_SEG * 1000);
 
@@ -1822,10 +1822,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private confirmarHabilidadRival(
-    endpoint: 'confirmar-salpicadura' | 'confirmar-travesura' | 'confirmar-rasguno' | 'confirmar-aullido' | 'confirmar-destello' | 'confirmar-espejismo' | 'confirmar-mandinga-espejo' | 'confirmar-mandinga-engano' | 'confirmar-mandinga-maldicion',
+    endpoint: 'confirmarSalpicadura' | 'confirmarTravesura' | 'confirmarRasguno' | 'confirmarAullido' | 'confirmarDestello' | 'confirmarEspejismo' | 'confirmarMandingaEspejo' | 'confirmarMandingaEngano' | 'confirmarMandingaMaldicion',
     manoId: string,
   ): void {
-    if (endpoint === 'confirmar-rasguno') this.rasgunoConfirmando = true;
+    if (endpoint === 'confirmarRasguno') this.rasgunoConfirmando = true;
     firstValueFrom(
       this.http.post<ManoState>(`${API}/${endpoint}`, { manoId }),
     ).then(data => {
@@ -1839,7 +1839,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaEnganoManoId = null;
       this.mandingaMaldicionManoId = null;
       this.recibirMano(data);
-      if (endpoint === 'confirmar-espejismo' && this.mano) {
+      if (endpoint === 'confirmarEspejismo' && this.mano) {
         this.iniciarEspejismoParpadeo(this.mano);
         this.actualizarCartaEspejismoEnMesa(this.mano);
       }
@@ -1968,7 +1968,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.nuevaManoEnCurso = true;
     const manoAnteriorId = this.mano.id;
     firstValueFrom(
-      this.http.post<ManoState>(`${API}/nueva-mano`, { manoAnteriorId }),
+      this.http.post<ManoState>(`${API}/nuevaMano`, { manoAnteriorId }),
     ).then(data => {
       this.recibirMano(data);
       return this.correrMaquinas();
@@ -2171,10 +2171,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Muestra el canto del humano en su burbuja apenas lo hace (envido/truco). */
   private feedbackCantoHumano(endpoint: string, body: any): void {
     let txt = '';
-    if (endpoint === 'cantar-envido' || endpoint === 'cantar-envido-tipo')
+    if (endpoint === 'cantarEnvido' || endpoint === 'cantarEnvidoTipo')
       txt = '¡' + (body?.tipo ?? 'Envido') + '!';
-    else if (endpoint === 'cantar-truco') txt = '¡Truco!';
-    else if (endpoint === 'escalar-truco') txt = '¡Quiero más!';
+    else if (endpoint === 'cantarTruco') txt = '¡Truco!';
+    else if (endpoint === 'escalarTruco') txt = '¡Quiero más!';
     if (txt) this.showTempBubbleHumano(txt, 1800);
   }
 
@@ -2254,59 +2254,59 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     } else if (pendEnv) {
       raw.push(['QUIERO', '#44ff44',
-        () => this.call('responder-envido', { manoId: m.id, aceptar: true })]);
+        () => this.call('responderEnvido', { manoId: m.id, aceptar: true })]);
       const tipoEnv = m.tipoEnvidoCantado;
       if (tipoEnv === 'Envido')
         raw.push(['ENVIDO', '#ffdd00',
-          () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Envido Envido' })]);
+          () => this.call('responderEnvido', { manoId: m.id, aceptar: true, escalarA: 'Envido Envido' })]);
       if (tipoEnv === 'Envido' || tipoEnv === 'EnvidoEnvido')
         raw.push(['REAL ENVIDO', '#ffaa00',
-          () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Real Envido' })]);
+          () => this.call('responderEnvido', { manoId: m.id, aceptar: true, escalarA: 'Real Envido' })]);
       // El backend normaliza el tipo como 'FaltaEnvido' (sin espacio): comparar contra
       // ambos, si no el botón aparecía aunque la máquina ya hubiera cantado la falta.
       if (tipoEnv !== 'FaltaEnvido' && tipoEnv !== 'Falta Envido')
         raw.push(['FALTA ENVIDO', '#ff8800',
-          () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Falta Envido' })]);
+          () => this.call('responderEnvido', { manoId: m.id, aceptar: true, escalarA: 'Falta Envido' })]);
       raw.push(['NO QUIERO', '#ff4444',
-        () => this.call('responder-envido', { manoId: m.id, aceptar: false })]);
+        () => this.call('responderEnvido', { manoId: m.id, aceptar: false })]);
 
     } else if (pendTru) {
       raw.push(['QUIERO', '#44ff44',
-        () => this.call('responder-truco', { manoId: m.id, aceptar: true })]);
+        () => this.call('responderTruco', { manoId: m.id, aceptar: true })]);
       if ((m.nivelTruco ?? 0) < 3) {
         const lbl = m.nivelTruco === 1 ? 'RETRUCO' : 'VALE 4';
         const esc = m.nivelTruco === 1 ? 'retruco' : 'valecuatro';
         raw.push([lbl, '#ffaa00',
-          () => this.call('responder-truco', { manoId: m.id, aceptar: true, escalarA: esc })]);
+          () => this.call('responderTruco', { manoId: m.id, aceptar: true, escalarA: esc })]);
       }
       raw.push(['NO QUIERO', '#ff4444',
-        () => this.call('responder-truco', { manoId: m.id, aceptar: false })]);
+        () => this.call('responderTruco', { manoId: m.id, aceptar: false })]);
       if (!m.envidoCantado && (m.bazas?.length ?? 0) === 0) {
-        raw.push(['Envido', '#4488ff', () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Envido' })]);
-        raw.push(['Real Envido', '#4488ff', () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Real Envido' })]);
-        raw.push(['Falta Envido', '#4488ff', () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Falta Envido' })]);
+        raw.push(['Envido', '#4488ff', () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Envido' })]);
+        raw.push(['Real Envido', '#4488ff', () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Real Envido' })]);
+        raw.push(['Falta Envido', '#4488ff', () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Falta Envido' })]);
       }
 
     } else {
       const envidoPosible = !m.envidoCantado && !m.trucoResuelto
         && (m.bazas?.length ?? 0) === 0 && !manoEnd;
       if (envidoPosible) {
-        raw.push(['Envido', '#4488ff', esMiTurno ? () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Envido' }) : null]);
-        raw.push(['Real Envido', '#4488ff', esMiTurno ? () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Real Envido' }) : null]);
-        raw.push(['Falta Envido', '#4488ff', esMiTurno ? () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Falta Envido' }) : null]);
+        raw.push(['Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Envido' }) : null]);
+        raw.push(['Real Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Real Envido' }) : null]);
+        raw.push(['Falta Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Falta Envido' }) : null]);
       }
 
       if (!trucoCantado) {
         raw.push(['Truco', '#cc4444',
-          esMiTurno && !manoEnd ? () => this.call('cantar-truco', { manoId: m.id }) : null]);
+          esMiTurno && !manoEnd ? () => this.call('cantarTruco', { manoId: m.id }) : null]);
       } else if (trucoCantado && !trucoResuelto && (m.nivelTruco ?? 0) < 3 && m.cantorTruco !== 'Humano') {
         const lbl = m.nivelTruco === 1 ? 'Retruco' : 'Vale Cuatro';
         raw.push([lbl, '#cc4444',
-          esMiTurno && !manoEnd ? () => this.call('escalar-truco', { manoId: m.id }) : null]);
+          esMiTurno && !manoEnd ? () => this.call('escalarTruco', { manoId: m.id }) : null]);
       }
 
       if (esMiTurno && !manoEnd)
-        raw.push(['Ir al mazo', '#556677', () => this.call('irse-al-mazo', { manoId: m.id })]);
+        raw.push(['Ir al mazo', '#556677', () => this.call('irseAlMazo', { manoId: m.id })]);
     }
 
     const bloqueado = this.accionesBloqueadasPorHabilidadRival;

@@ -50,7 +50,7 @@ export class HistoriaService {
 
   /** Vuelve a 0 solo el estado de rivales derrotados; conserva puntos, monedas, ropa, etc. */
   reiniciarRivales(): Observable<ProgresoHistoria> {
-    return this.http.post<ProgresoHistoria>(`${this.apiUrl}/reiniciar-rivales`, {});
+    return this.http.post<ProgresoHistoria>(`${this.apiUrl}/reiniciarRivales`, {});
   }
 
   obtenerPersonajeBD(): Observable<Personaje> {
@@ -72,8 +72,8 @@ export class HistoriaService {
       SpriteKeyNuevo: spriteKeyNuevo 
     };
 
-    console.log('Enviando PUT a /equipar-avatar con el body:', body);
-    return this.http.put<{ mensaje: string }>(`${this.apiUrl}/equipar-avatar`, body);
+    console.log('Enviando PUT a /equiparAvatar con el body:', body);
+    return this.http.put<{ mensaje: string }>(`${this.apiUrl}/equiparAvatar`, body);
   }
 
   setHeroeSeleccionado(id: number): void {
