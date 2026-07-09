@@ -343,11 +343,39 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private salpicaduraCartasOriginales: Carta[] = [];
   private rasgunoCartasOriginales: Carta[] = [];
 
-  // Habilidad disponible = el backend dice que está lista y no fue usada esta mano
+  // Inicio de la mano = sin bazas jugadas, sin ganador de mano y partida en curso
+  // (misma regla que ReglasHabilidadActiva.EsInicioDeMano en el backend).
+  get esInicioDeMano(): boolean {
+    const m = this.mano;
+    if (!m) return false;
+    return (m.bazas?.length ?? 0) === 0 && !m.ganadorMano && !m.partidaTerminada;
+  }
+
+  /**
+   * Manipulador (0), Timbero (1) y Mentiroso (3) solo pueden activar al inicio de
+   * la mano. Fanfarrón (2) no (su activa aplica al próximo envido/truco).
+   */
+  private get activaRequiereInicioDeMano(): boolean {
+    const clase = this.heroe?.id;
+    return clase === 0 || clase === 1 || clase === 3;
+  }
+
+  // Habilidad disponible = el backend dice que está lista, no fue usada esta mano
+  // y, si la activa lo exige, estamos al inicio de la mano (así el botón no queda
+  // habilitado para una acción que el backend va a rechazar con 400).
   get habilidadDisponible(): boolean {
     const v = this.vista;
     if (!this.heroe || !v?.habilidadesActivasEnPartida) return false;
-    return !!v.activaDisponible && !v.activaUsadaEnEstaMano;
+    if (!v.activaDisponible || v.activaUsadaEnEstaMano) return false;
+    if (this.activaRequiereInicioDeMano && !this.esInicioDeMano) return false;
+    return true;
+  }
+
+  /** La activa está lista pero deshabilitada solo por no ser el inicio de la mano. */
+  get habilidadSoloAlInicio(): boolean {
+    const v = this.vista;
+    return !!v?.activaDisponible && !v?.activaUsadaEnEstaMano
+      && this.activaRequiereInicioDeMano && !this.esInicioDeMano;
   }
 
   // True cuando el jugador tocó el botón y el Manipulador espera que elija carta
