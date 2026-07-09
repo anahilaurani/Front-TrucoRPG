@@ -85,7 +85,7 @@
     <div class="table-wrap">
       <div class="table-surface">
 
-        <div class="rival-hand">
+        <div class="rival-hand" [class.oculto-envido-reveal]="envidoRevealActivo">
           @for (c of opCards; track $index) {
           @if (c.revelada && c.carta) {
           <div class="rival-card-face-wrap" [class.hidden]="!c.visible">
@@ -97,6 +97,20 @@
           }
           }
         </div>
+
+        @if (envidoRevealActivo) {
+        <div class="envido-reveal-mesa">
+          <p class="envido-reveal-titulo">Cartas de envido del rival</p>
+          <div class="envido-reveal-fila">
+            @for (c of envidoRevealCartas; track c.numero + '-' + c.palo) {
+            <div class="baza-slot far-slot envido-reveal-slot">
+              <img class="baza-card-img far-card-img envido-reveal-carta" [src]="cardImg(c)"
+                [alt]="c.numero + ' de ' + c.palo" />
+            </div>
+            }
+          </div>
+        </div>
+        }
 
         <div class="bazas">
           @for (s of slots; track $index) {
@@ -126,7 +140,7 @@
           }
         </div>
 
-        @if (turnoBadge) {
+        @if (turnoBadge && !envidoRevealActivo) {
         <div class="turno-badge">{{ turnoBadge }}</div>
         }
 
@@ -289,7 +303,7 @@
   }
 
 
-  @if (countdown !== null) {
+  @if (countdown !== null && !envidoRevealActivo) {
   <div class="nueva-mano-countdown">Nueva mano en {{ countdown }}</div>
   }
 

@@ -74,8 +74,8 @@ export interface VistaHabilidadesRival {
 
 export interface ManoState {
   id: string;
-  humano: { mano: Carta[] };
-  maquina: { mano: Carta[] };
+  humano: { mano: Carta[]; jugadas?: Carta[] };
+  maquina: { mano: Carta[]; jugadas?: Carta[] };
   bazas: Baza[];
   turnoActual: 'Humano' | 'Maquina';
   puntosHumano: number;
@@ -195,6 +195,7 @@ const ESPEJISMO_PARPADEO_MS = 2000;
 const MANDINGA_ESPEJO_SEG = 3;
 const MANDINGA_ENGANO_SEG = 5;
 const MANDINGA_MALDICION_SEG = 3;
+const ENVIDO_REVEAL_SEG = 3;
 
 const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
   mandinga: 'Mandinga_batalla.png',
@@ -354,6 +355,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!this.heroe && this.heroe.id === 0 && this.modoSeleccionCarta;
   }
 
+  /** Revelación de cartas de envido del rival al cerrar la mano (modo historia). */
+  envidoRevealActivo = false;
+  envidoRevealCartas: Carta[] = [];
+
   // ── Modo práctica ─────────────────────────────────────────────────────────
   escenarioPractica: number | null = null;
   cartasBrillan: boolean[] = [false, false, false];
@@ -436,6 +441,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private mandingaMaldicionManoId: string | null = null;
   private mandingaMaldicionTimer: ReturnType<typeof setTimeout> | null = null;
   private mandingaMaldicionInterval: ReturnType<typeof setInterval> | null = null;
+  private envidoRevealTimer: ReturnType<typeof setTimeout> | null = null;
+  private envidoRevealManoId: string | null = null;
   private rasgunoWatchdog: ReturnType<typeof setInterval> | null = null;
   private rasgunoConfirmando = false;
   private nuevaManoEnCurso = false;
@@ -722,6 +729,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarDestelloTimer();
     this.cancelarEspejismoTimers();
     this.cancelarMandingaTimers();
+    this.cancelarEnvidoRevealTimer();
     if (this.rasgunoWatchdog) {
       clearInterval(this.rasgunoWatchdog);
       this.rasgunoWatchdog = null;
@@ -1058,6 +1066,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.prevMensajeRival = null;
     this.salpicaduraCartasOriginales = [];
     this.rasgunoCartasOriginales = [];
+    this.envidoRevealManoId = null;
+    this.cancelarEnvidoRevealTimer();
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
@@ -1200,7 +1210,11 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.habilidadCartaIdx = null;
       this.modoSeleccionCarta = false;
       if (!m.partidaTerminada && m.ganadorMano !== this.prevGanadorMano) {
-        this.iniciarCountdown(() => this.solicitarNuevaMano());
+        if (this.debeRevelarCartasEnvidoFinMano(m)) {
+          this.iniciarRevelacionEnvidoFinMano(m);
+        } else if (!this.envidoRevealActivo) {
+          this.iniciarCountdown(() => this.solicitarNuevaMano());
+        }
       }
     } else {
       this.rivalLabel = m.turnoActual === 'Maquina' ? 'Pensando...' : '...';
@@ -1215,6 +1229,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.rasgunoRevelando) {
       this.turnoBadge = 'Rasguño: el Lobizón va a debilitar una carta...';
+    } else if (this.envidoRevealActivo) {
+      this.turnoBadge = '';
     } else if (this.aullidoRevelando) {
       this.turnoBadge = 'Aullido: el Lobizón te asusta...';
     } else if (this.travesuraRevelando) {
@@ -1245,7 +1261,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.prevEnvidoResuelto = !!m.envidoResuelto;
 
     const cantOp = m.maquina?.mano?.length ?? 0;
-    this.actualizarCartasRival(m, cantOp);
+    if (!this.envidoRevealActivo) {
+      this.actualizarCartasRival(m, cantOp);
+    }
 
     this.manejarSalpicadura(m);
     this.manejarRasguno(m);
@@ -1277,6 +1295,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.actualizarCartasMano(m);
+
+    if (this.envidoRevealActivo) {
+      this.btns = [];
+      this.cdr.markForCheck();
+      return;
+    }
 
     this.buildBtns(m, esMiTurno, pendEnv, pendTru);
 
@@ -1974,6 +1998,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.manoInicialRecibida = true;
       this.evaluarCombateListo();
     }
+    if (this.envidoRevealManoId && data.id !== this.envidoRevealManoId) {
+      this.envidoRevealManoId = null;
+    }
     this.updateEventosHabilidad(data);
     this.updateUI(data);
     if (this.rasgunoBloqueandoEn(data) && this.rasgunoManoId !== data.id) {
@@ -2157,6 +2184,112 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       if (pts > max) max = pts;
     }
     return max;
+  }
+
+  private esModoHistoria(): boolean {
+    return this.rivalNivel !== null
+      || this.heroe !== null
+      || (this.mano?.configuracion?.modo === 1);
+  }
+
+  private cartasMaquinaOriginales(m: ManoState): Carta[] {
+    const mano = (m.maquina?.mano ?? []).map(c => this.normalizarCarta(c));
+    const raw = m.maquina as unknown as Record<string, unknown> | undefined;
+    const jugadasRaw = (raw?.['jugadas'] ?? raw?.['Jugadas'] ?? m.maquina?.jugadas ?? []) as
+      (Carta | Record<string, unknown>)[];
+    const jugadas = jugadasRaw.map(c => this.normalizarCarta(c));
+    return [...mano, ...jugadas];
+  }
+
+  private cartasMaquinaEnBazas(m: ManoState): Carta[] {
+    return (m.bazas ?? [])
+      .map(b => b.cartaMaquina)
+      .filter((c): c is Carta => !!c)
+      .map(c => this.normalizarCarta(c));
+  }
+
+  private fueAlMazo(m: ManoState): boolean {
+    return (m.estadoTruco ?? '').toLowerCase().includes('mazo');
+  }
+
+  /** Cartas con las que la máquina formó su mejor envido (mano + jugadas). */
+  private seleccionarCartasEnvido(cartas: Carta[]): Carta[] {
+    if (cartas.length === 0) return [];
+
+    const grupos: Record<string, Carta[]> = {};
+    for (const c of cartas) {
+      if (!grupos[c.palo]) grupos[c.palo] = [];
+      grupos[c.palo].push(c);
+    }
+
+    let mejorCartas: Carta[] = [];
+    let mejorPts = 0;
+
+    for (const delPalo of Object.values(grupos)) {
+      if (delPalo.length < 2) continue;
+      const sorted = [...delPalo].sort(
+        (a, b) => this.envidoValorCarta(b.numero) - this.envidoValorCarta(a.numero),
+      );
+      const pts = this.envidoValorCarta(sorted[0].numero)
+        + this.envidoValorCarta(sorted[1].numero) + 20;
+      if (pts > mejorPts) {
+        mejorPts = pts;
+        mejorCartas = [sorted[0], sorted[1]];
+      }
+    }
+
+    if (mejorPts > 0) return mejorCartas;
+
+    return [cartas.reduce((best, c) =>
+      this.envidoValorCarta(c.numero) > this.envidoValorCarta(best.numero) ? c : best,
+    )];
+  }
+
+  private obtenerCartasEnvidoMaquina(m: ManoState): Carta[] {
+    return this.seleccionarCartasEnvido(this.cartasMaquinaOriginales(m));
+  }
+
+  private debeRevelarCartasEnvidoFinMano(m: ManoState): boolean {
+    if (!this.esModoHistoria()) return false;
+    if (m.ganadorEnvido !== 'Maquina' || !m.envidoResuelto) return false;
+    if (this.envidoRevealManoId === m.id) return false;
+
+    const cartasEnvido = this.obtenerCartasEnvidoMaquina(m);
+    if (cartasEnvido.length === 0) return false;
+
+    if (this.fueAlMazo(m)) return true;
+
+    const jugadas = this.cartasMaquinaEnBazas(m);
+    return cartasEnvido.some(c =>
+      !jugadas.some(j => this.cartaCoincide(c, j)),
+    );
+  }
+
+  private iniciarRevelacionEnvidoFinMano(m: ManoState): void {
+    this.cancelarCountdown();
+    this.cancelarEnvidoRevealTimer();
+
+    this.envidoRevealManoId = m.id;
+    this.envidoRevealCartas = this.obtenerCartasEnvidoMaquina(m);
+    this.envidoRevealActivo = true;
+    this.btns = [];
+    this.turnoBadge = '';
+
+    this.envidoRevealTimer = setTimeout(() => {
+      this.cancelarEnvidoRevealTimer();
+      this.solicitarNuevaMano();
+    }, ENVIDO_REVEAL_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
+  private cancelarEnvidoRevealTimer(): void {
+    if (this.envidoRevealTimer) {
+      clearTimeout(this.envidoRevealTimer);
+      this.envidoRevealTimer = null;
+    }
+    this.envidoRevealActivo = false;
+    this.envidoRevealCartas = [];
   }
 
   // ── Burbuja ───────────────────────────────────────────────────────────────
