@@ -2193,9 +2193,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const cartas = m.humano?.mano ?? [];
     const manoTerminada = !!m.ganadorMano;
-    const envidoPosible = !m.envidoCantado && !m.trucoResuelto
-      && (m.bazas?.length ?? 0) === 0 && !manoTerminada
-      && !m.envidoPendienteRespuestaHumano && !m.trucoPendienteRespuestaHumano;
+    const envidoPosible = this.envidoPosibleEnMano(m, manoTerminada);
 
     // 1. Siempre: marcar la carta más fuerte
     if (cartas.length > 0 && !manoTerminada) {
@@ -2236,6 +2234,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private envidoValorCarta(numero: number): number {
     return numero <= 7 ? numero : 0;
+  }
+
+  private envidoPosibleEnMano(m: ManoState, manoEnd: boolean): boolean {
+    return !m.envidoCantado && !m.envidoResuelto
+      && (m.bazas?.length ?? 0) === 0 && !manoEnd
+      && (!m.trucoCantado || !!m.trucoPendienteRespuestaHumano);
   }
 
   private calcularPuntosEnvido(cartas: Carta[]): number {
@@ -2595,8 +2599,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
     } else {
-      const envidoPosible = !m.envidoCantado && !m.trucoResuelto
-        && (m.bazas?.length ?? 0) === 0 && !manoEnd;
+      const envidoPosible = this.envidoPosibleEnMano(m, manoEnd);
       if (envidoPosible) {
         raw.push(['Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Envido' }) : null]);
         raw.push(['Real Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Real Envido' }) : null]);
