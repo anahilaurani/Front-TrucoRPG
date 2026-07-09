@@ -4,6 +4,7 @@ import JugadorPrincipal from '../personajes/JugadorPrincipal.js';
 import Portal from '../objetos/Portal.js';
 import Oponente from '../personajes/Oponente.js';
 import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
+import { environment } from '../../environments/environment';
 
 const RIVAL_MANDINGA_NIVEL = 5;
 
@@ -104,7 +105,7 @@ export default class MapaAventura3Scene extends BaseScene {
   async cargarPuedePelearMandinga() {
     try {
       const res = await fetch(
-        `/api/historia/rivales/${RIVAL_MANDINGA_NIVEL}/puede-pelear`,
+        `${environment.apiUrl}/api/historia/rivales/${RIVAL_MANDINGA_NIVEL}/puede-pelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;

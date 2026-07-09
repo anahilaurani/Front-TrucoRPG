@@ -5,6 +5,7 @@ import Oponente from '../personajes/Oponente.js';
 import Portal from '../objetos/Portal.js';
 import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
 import BarreraPinches from '../objetos/BarreraPinches.js';
+import { environment } from '../../environments/environment';
 
 const RIVAL_LOBIZON_NIVEL = 3;
 const RIVAL_LUZMALA_NIVEL = 4;
@@ -250,7 +251,7 @@ export default class MapaAventura2Scene extends BaseScene {
   async cargarDerrotaLuzMala(animar = false) {
     try {
       const res = await fetch(
-        `/api/historia/rivales/${RIVAL_MANDINGA_NIVEL}/puede-pelear`,
+        `${environment.apiUrl}/api/historia/rivales/${RIVAL_MANDINGA_NIVEL}/puede-pelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;
