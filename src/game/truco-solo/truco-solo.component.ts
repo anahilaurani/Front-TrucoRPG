@@ -248,17 +248,26 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.esPartidaHistoria(this.mano) && !this.gameOver && !!this.mano;
   }
 
-  get mostrarBotonGanar10Puntos(): boolean {
+  /** SOLO PRUEBAS — Atajo oculto (tecla O) para sumar 10 puntos contra Mandinga. */
+  get puedeUsarGanar10PuntosDebug(): boolean {
     return this.puedeUsarGanarAutomaticoDebug && this.esMandinga;
   }
 
   @HostListener('document:keydown', ['$event'])
-  onGanarAutomaticoDebugKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'p' && event.key !== 'P') return;
+  onDebugKeydown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
     if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return;
-    if (!this.puedeUsarGanarAutomaticoDebug) return;
-    this.ganarAutomaticoDebug();
+
+    if (event.key === 'p' || event.key === 'P') {
+      if (!this.puedeUsarGanarAutomaticoDebug) return;
+      this.ganarAutomaticoDebug();
+      return;
+    }
+
+    if (event.key === 'o' || event.key === 'O') {
+      if (!this.puedeUsarGanar10PuntosDebug) return;
+      this.ganar10PuntosDebug();
+    }
   }
 
   get accionesBloqueadasPorHabilidadRival(): boolean {
