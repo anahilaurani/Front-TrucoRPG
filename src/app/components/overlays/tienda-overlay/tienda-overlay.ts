@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { CategoriaTienda } from '../../../interfaces/categoriaTienda';
 import { ObjetoTienda } from '../../../interfaces/ObjetoTienda';
 import { TiendaService } from '../../../services/tienda/tienda-service';
+import { InventarioService } from '../../../services/inventario/inventario-service';
 
 @Component({
   selector: 'app-tienda-overlay',
@@ -13,13 +14,17 @@ import { TiendaService } from '../../../services/tienda/tienda-service';
 })
 export class TiendaOverlayComponent implements OnInit {
   private tiendaService = inject(TiendaService);
+  private inventarioService = inject(InventarioService);
 
   datos: CategoriaTienda[] = [];
   objetoActivo: ObjetoTienda | null = null;
   objetoFijado: ObjetoTienda | null = null;
   confirmandoCompra: boolean = false;
   monedas: number = 0;
-  
+
+  /** Ids de ítems que el usuario ya posee (no se pueden volver a comprar). */
+  idsComprados = new Set<number>();
+
   mensajeResultado: string | null = null;
   esError: boolean = false;
 
@@ -33,6 +38,25 @@ export class TiendaOverlayComponent implements OnInit {
 
   ngOnInit() {
     this.cargarTienda();
+    this.cargarInventario();
+  }
+
+  cargarInventario() {
+    this.inventarioService.obtenerInventario().subscribe({
+      next: (res) => {
+        const items = res?.items ?? res?.Items ?? [];
+        this.idsComprados = new Set<number>(
+          items
+            .map((l: any) => l.itemTiendaId ?? l.ItemTiendaId ?? l.itemTienda?.id)
+            .filter((id: any): id is number => id != null),
+        );
+      },
+      error: (err) => console.error('Error al obtener el inventario', err),
+    });
+  }
+
+  estaComprado(objeto: ObjetoTienda | null): boolean {
+    return objeto != null && this.idsComprados.has(objeto.id);
   }
 
   private claseDesde(descripcion?: string): string | null {
@@ -126,11 +150,14 @@ export class TiendaOverlayComponent implements OnInit {
         this.esError = false;
         this.mensajeResultado = respuesta.mensaje || '¡Compra realizada con éxito!';
         this.confirmandoCompra = false;
-        
+
+        // Marcar como comprado para que no se pueda volver a comprar.
+        this.idsComprados.add(itemComprado.id);
+
         const precioItem = itemComprado.precio || (itemComprado as any).Precio;
-        
+
         if (precioItem) {
-          this.monedas -= precioItem; 
+          this.monedas -= precioItem;
         }
       },
       error: (err) => {

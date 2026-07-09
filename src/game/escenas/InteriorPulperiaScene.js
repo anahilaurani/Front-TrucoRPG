@@ -145,23 +145,40 @@ export default class InteriorPulperiaScene extends BaseScene {
 
     this.mesasDecoracion = this.add.group();
 
-    this.mesa3 = new GauchosPulperia(this, 1040, 370, 'MesaEjemplo3');
-    this.mesa4 = new GauchosPulperia(this, 1480, 370, 'MesaEjemplo4');
+    // Mesas decorativas de abajo (las del medio se quitaron para despejar el paso).
     this.mesa5 = new GauchosPulperia(this, 1605, 570, 'MesaEjemplo6');
     this.mesa6 = new GauchosPulperia(this, 1050, 560, 'MesaEjemplo5');
 
-    this.mesa3.posXOriginal = 1040;
-    this.mesa3.posYOriginal = 370;
-    this.mesa4.posXOriginal = 1480;
-    this.mesa4.posYOriginal = 370;
     this.mesa5.posXOriginal = 1605;
     this.mesa5.posYOriginal = 570;
     this.mesa6.posXOriginal = 1050;
     this.mesa6.posYOriginal = 560;
 
-    this.mesasDecoracion.addMultiple([this.mesa3, this.mesa4, this.mesa5, this.mesa6]);
+    this.mesasDecoracion.addMultiple([this.mesa5, this.mesa6]);
 
     this.mesaSolitario = new GauchosPulperia(this, 1590, 180, 'MesaSolitario');
+
+    // Colisión: el jugador no puede pararse encima de las mesas decorativas.
+    // Usamos rectángulos estáticos invisibles en coordenadas del mundo, del tamaño
+    // de la mesa de madera (no del sprite completo, que incluye gauchos y sillas),
+    // para poder seguir caminando entre las mesas.
+    // mesaSolitario queda caminable (su "E" está en el centro de la mesa).
+    // Las de abajo (mesa5/mesa6) sincronizan su colisión con la visibilidad, porque
+    // MesaManager las oculta para reemplazarlas por mesas de sala que hay que pisar.
+    const crearColisionMesa = (mesa) => {
+      // La mesa de madera está ~37px por debajo del centro del sprite (escala 1.1).
+      const rect = this.add.rectangle(mesa.x, mesa.y + 37, 128, 80).setVisible(false);
+      this.physics.add.existing(rect, true); // cuerpo estático
+      rect.mesaAsociada = mesa; // para sincronizar la colisión con la visibilidad
+      return rect;
+    };
+    this.colisionesMesas = [
+      crearColisionMesa(this.mesa),
+      crearColisionMesa(this.mesa2),
+      crearColisionMesa(this.mesa5),
+      crearColisionMesa(this.mesa6),
+    ];
+    this.physics.add.collider(this.JugadorPrincipal, this.colisionesMesas);
 
     const pasosCargados = TUTORIALES.pulperia.map((paso) => {
       if (paso.enfoque === 'npc') {
@@ -258,6 +275,17 @@ export default class InteriorPulperiaScene extends BaseScene {
   }
 
   update() {
+    // La colisión de las mesas sigue su visibilidad (las de sala se ocultan y hay
+    // que poder pisarlas para unirse).
+    if (this.colisionesMesas) {
+      this.colisionesMesas.forEach((rect) => {
+        const visible = rect.mesaAsociada ? rect.mesaAsociada.visible : true;
+        if (rect.body && rect.body.enable !== visible) {
+          rect.body.enable = visible;
+        }
+      });
+    }
+
     if (this.tutorial && this.tutorial.activo) {
       this.tutorial.update();
     } else {

@@ -89,6 +89,31 @@
     background-color: #282828;
 }
 
+.objeto.comprado {
+    opacity: 0.55;
+    border-color: #3a7a3a;
+}
+
+.objeto.comprado:hover {
+    border-color: #4caf50;
+}
+
+.badge-comprado {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    background-color: #2e7d32;
+    color: #fff;
+    border: 2px solid #000;
+    font-size: 0.62rem;
+    letter-spacing: 0.5px;
+    text-align: center;
+    padding: 1px 0;
+    text-transform: uppercase;
+    z-index: 2;
+}
+
 .objeto img {
     width: 70%;
     height: 44%;

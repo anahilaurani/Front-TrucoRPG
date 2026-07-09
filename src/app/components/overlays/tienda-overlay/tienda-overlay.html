@@ -9,11 +9,15 @@
             class="objeto"
             [class.seleccionado]="objetoActivo === objeto"
             [class.fijado]="objetoFijado === objeto"
+            [class.comprado]="estaComprado(objeto)"
             [title]="obtenerNombre(objeto) + ' — ' + objeto.descripcion"
             (mouseenter)="mostrarInfo(objeto)"
             (mouseleave)="ocultarInfo(objeto)"
             (click)="seleccionarObjeto(objeto)"
           >
+            @if (estaComprado(objeto)) {
+              <span class="badge-comprado">✓ Comprado</span>
+            }
             <img [src]="obtenerIcono(objeto)" [alt]="obtenerNombre(objeto)" />
             <span class="nombre-objeto">{{ obtenerNombre(objeto) }}</span>
             <div class="cartelito-simple">
@@ -67,11 +71,13 @@
 
           <button
             class="boton-comprar-fijo"
-            [disabled]="!objetoFijado"
-            [class.deshabilitado]="!objetoFijado"
+            [disabled]="!objetoFijado || estaComprado(objetoActivo)"
+            [class.deshabilitado]="!objetoFijado || estaComprado(objetoActivo)"
             (click)="confirmandoCompra = true"
           >
-            @if (objetoFijado) {
+            @if (estaComprado(objetoActivo)) {
+              YA LO TENÉS
+            } @else if (objetoFijado) {
               COMPRAR (${{ objetoActivo.precio }})
             } @else {
               SELECCIONA PARA COMPRAR
