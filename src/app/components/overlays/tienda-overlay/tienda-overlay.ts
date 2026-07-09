@@ -23,8 +23,43 @@ export class TiendaOverlayComponent implements OnInit {
   mensajeResultado: string | null = null;
   esError: boolean = false;
 
+  // Nombres/iconos por clase de habilidad (fallback cuando el backend manda el placeholder).
+  private static readonly NOMBRE_CLASE: Record<string, string> = {
+    manipulador: 'Manipulador',
+    timbero: 'Timbero',
+    fanfarron: 'Fanfarrón',
+    mentiroso: 'Mentiroso',
+  };
+
   ngOnInit() {
     this.cargarTienda();
+  }
+
+  private claseDesde(descripcion?: string): string | null {
+    const d = (descripcion ?? '').toLowerCase();
+    if (d.includes('manipulador')) return 'manipulador';
+    if (d.includes('timbero')) return 'timbero';
+    if (d.includes('fanfarr')) return 'fanfarron';
+    if (d.includes('mentiroso')) return 'mentiroso';
+    return null;
+  }
+
+  /** Icono a mostrar: usa el del backend salvo que sea el placeholder inexistente (objeto.png). */
+  obtenerIcono(objeto: ObjetoTienda | null): string {
+    const img = objeto?.img ?? '';
+    if (img && !img.endsWith('/objeto.png')) return img;
+    const clase = this.claseDesde(objeto?.descripcion);
+    return clase ? `/assets/objetos/habilidad-${clase}.png` : img || '/assets/objetos/objeto.png';
+  }
+
+  /** Nombre a mostrar: corrige el placeholder repetido "BOLEADORAS" por el nombre de la clase. */
+  obtenerNombre(objeto: ObjetoTienda | null): string {
+    const nombre = objeto?.nombre ?? '';
+    const clase = this.claseDesde(objeto?.descripcion);
+    if (clase && nombre.trim().toUpperCase() === 'BOLEADORAS') {
+      return TiendaOverlayComponent.NOMBRE_CLASE[clase];
+    }
+    return nombre;
   }
 
   cargarTienda() {
@@ -41,6 +76,16 @@ export class TiendaOverlayComponent implements OnInit {
     if (this.objetoFijado) return;
     if (this.objetoActivo !== objeto) {
       this.objetoActivo = objeto;
+      this.confirmandoCompra = false;
+      this.limpiarMensaje();
+    }
+  }
+
+  ocultarInfo(objeto: ObjetoTienda) {
+    // Al retirar el cursor, se vuelve al estado original (salvo que haya algo fijado con click).
+    if (this.objetoFijado) return;
+    if (this.objetoActivo === objeto) {
+      this.objetoActivo = null;
       this.confirmandoCompra = false;
       this.limpiarMensaje();
     }

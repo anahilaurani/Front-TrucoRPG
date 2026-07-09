@@ -9,10 +9,13 @@
             class="objeto"
             [class.seleccionado]="objetoActivo === objeto"
             [class.fijado]="objetoFijado === objeto"
+            [title]="obtenerNombre(objeto) + ' — ' + objeto.descripcion"
             (mouseenter)="mostrarInfo(objeto)"
+            (mouseleave)="ocultarInfo(objeto)"
             (click)="seleccionarObjeto(objeto)"
           >
-            <img [src]="objeto.img" [alt]="objeto.nombre" />
+            <img [src]="obtenerIcono(objeto)" [alt]="obtenerNombre(objeto)" />
+            <span class="nombre-objeto">{{ obtenerNombre(objeto) }}</span>
             <div class="cartelito-simple">
               <span class="precio">${{ objeto.precio }}</span>
             </div>
@@ -49,9 +52,9 @@
       @if (!confirmandoCompra) {
         <div class="detalles-contenido animate-pixel">
           <div class="marco-imagen">
-            <img [src]="objetoActivo.img" [alt]="objetoActivo.nombre" class="img-grande" />
+            <img [src]="obtenerIcono(objetoActivo)" [alt]="obtenerNombre(objetoActivo)" class="img-grande" />
           </div>
-          <h4 class="titulo-detalle">{{ objetoActivo.nombre }}</h4>
+          <h4 class="titulo-detalle">{{ obtenerNombre(objetoActivo) }}</h4>
 
           @if (objetoFijado) {
             <span class="tag-fijado">Fijado</span>
@@ -84,7 +87,7 @@
           <h4 class="titulo-alerta">¿ESTÁS SEGURO?</h4>
           <div class="separador-pixel alerta"></div>
           <p class="texto-alerta">
-            ¿Deseas comprar <strong>{{ objetoActivo.nombre }}</strong> por
+            ¿Deseas comprar <strong>{{ obtenerNombre(objetoActivo) }}</strong> por
             <span class="resaltar-precio">${{ objetoActivo.precio }}</span
             >?
           </p>
