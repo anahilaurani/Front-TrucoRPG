@@ -1591,7 +1591,12 @@
   .fan-wrap { height: 72px; width: 165px; margin-top: 1px; }
   .fan-card { width: 40px; height: 58px; margin-left: -20px; }
   .state-section { display: none; }
+  /* La sección del héroe comparte .state-section pero debe seguir visible en mobile */
+  .state-section.heroe-section { display: flex; padding: 2px 0 2px 4px; gap: 2px; }
   .heroe-section .heroe-desc { display: none; }
+  .heroe-nombre { font-size: 8px; }
+  .info-btn { font-size: 9px; padding: 3px 2px; }
+  .habilidad-btn { min-height: 28px; padding: 3px 2px; font-size: 10px; }
   .tally-svg { height: 56px; }
   .score-row { font-size: 11px; }
 }
