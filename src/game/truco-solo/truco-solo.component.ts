@@ -7,6 +7,7 @@ import {
   ElementRef,
   ChangeDetectorRef,
   ChangeDetectionStrategy,
+  HostListener,
   inject,
 } from '@angular/core';
 import { CommonModule, NgStyle } from '@angular/common';
@@ -243,13 +244,22 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.mano?.vistaHabilidadesRival;
   }
 
-  /** SOLO PRUEBAS — Botón debug de victoria automática. Eliminar antes de producción. */
-  get mostrarBotonGanarAutomatico(): boolean {
+  /** SOLO PRUEBAS — Atajo oculto (tecla P) para victoria automática en historia. */
+  get puedeUsarGanarAutomaticoDebug(): boolean {
     return this.esPartidaHistoria(this.mano) && !this.gameOver && !!this.mano;
   }
 
   get mostrarBotonGanar10Puntos(): boolean {
-    return this.mostrarBotonGanarAutomatico && this.esMandinga;
+    return this.puedeUsarGanarAutomaticoDebug && this.esMandinga;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onGanarAutomaticoDebugKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'p' && event.key !== 'P') return;
+    const target = event.target as HTMLElement | null;
+    if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return;
+    if (!this.puedeUsarGanarAutomaticoDebug) return;
+    this.ganarAutomaticoDebug();
   }
 
   get accionesBloqueadasPorHabilidadRival(): boolean {
