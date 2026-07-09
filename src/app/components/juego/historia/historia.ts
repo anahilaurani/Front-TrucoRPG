@@ -97,7 +97,9 @@ export class Historia implements OnInit, OnDestroy {
         this.document.body.classList.add('modo-phaser-mobile');
       },
       error: (err) => {
-        alert('Error al guardar personaje: ' + (err.error || err.message));
+        if (err?.status === 401) return; // el interceptor ya redirige al login
+        const detalle = err?.error?.detail || err?.error?.mensaje || err?.message || 'Error desconocido';
+        alert('Error al guardar personaje: ' + detalle);
       },
     });
   }
