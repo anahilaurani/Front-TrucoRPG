@@ -47,7 +47,8 @@ class MultiplayerManager {
     }
 
     async unirseASala(codigo) {
-        const ok = await this.connection.invoke("UnirseASala", codigo);
+        // null = sin validación de modo (flujo legacy de Phaser, no conoce el modo)
+        const ok = await this.connection.invoke("UnirseASala", codigo, null);
         if (ok) { this.codigoSala = codigo; this.esHost = false; }
         return ok;
     }
