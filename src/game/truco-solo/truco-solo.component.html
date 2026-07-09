@@ -1,3 +1,31 @@
+@if (rivalNivel !== null && !combateListo) {
+<div class="combate-skeleton" aria-busy="true" aria-label="Cargando combate">
+  <aside class="skeleton-panel skeleton-left">
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-rival-info"></div>
+    <div class="skeleton-block skeleton-rival-info short"></div>
+  </aside>
+
+  <main class="skeleton-arena">
+    <div class="skeleton-block skeleton-rival"></div>
+    <div class="skeleton-block skeleton-table"></div>
+    <div class="skeleton-block skeleton-hand"></div>
+  </main>
+
+  <aside class="skeleton-panel skeleton-right">
+    <div class="skeleton-block skeleton-title"></div>
+    <div class="skeleton-block skeleton-score"></div>
+    <div class="skeleton-block skeleton-score"></div>
+    <div class="skeleton-block skeleton-tally"></div>
+    <div class="skeleton-block skeleton-stat"></div>
+    <div class="skeleton-block skeleton-stat"></div>
+  </aside>
+</div>
+} @else {
 <div class="root" [ngStyle]="fondoStyle">
 
   <!-- ── PANEL IZQUIERDO: botones de acción ──────────────────────────────── -->
@@ -279,6 +307,7 @@
   }
 
 </div>
+}
 
 @if (salpicaduraRevelando) {
 <div class="salpicadura-overlay">

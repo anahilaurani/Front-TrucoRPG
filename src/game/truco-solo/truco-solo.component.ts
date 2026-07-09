@@ -200,6 +200,14 @@ const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
   mandinga: 'Mandinga_batalla.png',
 };
 
+const RIVAL_NIVEL_SLUG: Record<number, string> = {
+  1: 'nahuelito',
+  2: 'pomberito',
+  3: 'lobizon',
+  4: 'luzmala',
+  5: 'mandinga',
+};
+
 // ── Componente ───────────────────────────────────────────────────────────────
 
 @Component({
@@ -225,6 +233,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   heroe: Heroe | null = null;
 
   rival: Rival | null = null;
+
+  /** Pantalla de combate contra jefe: oculta el layout hasta cargar assets + mano inicial. */
+  combateListo = false;
+  rivalNivel: number | null = null;
 
   // Índice de la carta seleccionada para el Manipulador (claseHeroe === 0)
   habilidadCartaIdx: number | null = null;
@@ -392,7 +404,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private envidoSeqTimers: ReturnType<typeof setTimeout>[] = [];
   private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
-  private rivalNivel: number | null = null;
+  private manoInicialRecibida = false;
+  private assetsCombateListos = false;
   private salpicaduraManoId: string | null = null;
   private salpicaduraTimer: ReturnType<typeof setTimeout> | null = null;
   private salpicaduraInterval: ReturnType<typeof setInterval> | null = null;
@@ -434,14 +447,16 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Slug normalizado del rival (ej. "El Pomberito" -> "pomberito"). Vacío si no hay rival.
   get rivalSlug(): string {
-    if (!this.rival?.nombre) return '';
-    return this.rival.nombre
-      .toLowerCase()
-      .replace(/^(el|la|los|las)\s+/i, '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '')
-      .trim();
+    if (this.rival?.nombre) {
+      return this.rival.nombre
+        .toLowerCase()
+        .replace(/^(el|la|los|las)\s+/i, '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '')
+        .trim();
+    }
+    return this.obtenerSlugRivalDesdeNivel(this.rivalNivel);
   }
 
   get rivalSlugFondo(): string {
@@ -572,7 +587,11 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     const rivalNivelStr = localStorage.getItem('rivalNivel');
     if (rivalNivelStr !== null) {
       this.rivalNivel = parseInt(rivalNivelStr, 10);
+      this.hidratarRivalLocal(this.rivalNivel);
       this.cargarRival(this.rivalNivel);
+      this.iniciarPrecargaCombate();
+    } else {
+      this.assetsCombateListos = true;
     }
 
     const escStr = localStorage.getItem('practicaEscenario');
@@ -603,9 +622,81 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: () => {
+        if (!this.rival) {
+          this.hidratarRivalLocal(nivel);
+        }
         this.showToast('No se pudo cargar los datos del rival.');
       },
     });
+  }
+
+  private obtenerSlugRivalDesdeNivel(nivel: number | null): string {
+    if (nivel === null) return '';
+    return RIVAL_NIVEL_SLUG[nivel] ?? '';
+  }
+
+  private hidratarRivalLocal(nivel: number): void {
+    const oponente = OPONENTES[nivel - 1];
+    if (!oponente) return;
+
+    const habilidades = oponente.habilidades ?? [];
+    const descripcionHabilidad = habilidades.length > 0
+      ? habilidades.map(h => `${h.nombre}: ${h.texto}`).join(' ')
+      : (oponente.fases?.map(f => `${f.titulo}: ${f.texto}`).join(' ') ?? oponente.intro);
+
+    this.rival = {
+      id: oponente.id,
+      nivel,
+      nombre: oponente.nombre,
+      descripcion: oponente.intro,
+      nombreHabilidad: habilidades[0]?.nombre ?? oponente.fases?.[0]?.titulo ?? '',
+      descripcionHabilidad: this.formatearDescripcionRival(descripcionHabilidad),
+      tipoRival: 0,
+      tipoHabilidad: 0,
+    };
+  }
+
+  private iniciarPrecargaCombate(): void {
+    const slug = this.obtenerSlugRivalDesdeNivel(this.rivalNivel);
+    if (!slug) {
+      this.assetsCombateListos = true;
+      this.evaluarCombateListo();
+      return;
+    }
+
+    const fondoSlug = slug === 'luzmala' ? 'lobizon' : slug;
+    const fondoUrl = `assets/fondos1v1/${fondoSlug}_fondo.png`;
+    const batallaArchivo = RIVAL_BATALLA_ARCHIVO[slug] ?? `${slug}_batalla.png`;
+    const rivalUrl = `assets/oponentes1v1/${batallaArchivo}`;
+
+    Promise.all([
+      this.preloadImagen(fondoUrl),
+      this.preloadImagen(rivalUrl),
+    ]).finally(() => {
+      this.assetsCombateListos = true;
+      this.evaluarCombateListo();
+    });
+  }
+
+  private preloadImagen(src: string): Promise<void> {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = src;
+    });
+  }
+
+  private evaluarCombateListo(): void {
+    if (this.combateListo) return;
+    if (this.rivalNivel === null) {
+      this.combateListo = this.manoInicialRecibida;
+    } else {
+      this.combateListo = this.manoInicialRecibida && this.assetsCombateListos;
+    }
+    if (this.combateListo) {
+      this.cdr.markForCheck();
+    }
   }
 
   private construirBodyPartida(): Record<string, unknown> {
@@ -819,6 +910,11 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (err: unknown) {
       const msg = this.extraerErrorApi(err);
       this.showToast(`Error en ${endpoint}: ${msg}`);
+      if (endpoint === 'nuevaPartida') {
+        this.manoInicialRecibida = true;
+        this.assetsCombateListos = true;
+        this.combateListo = true;
+      }
       if (this.mano) this.updateUI(this.mano);
     } finally {
       this.loading = false;
@@ -1874,6 +1970,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     this.mano = data;
+    if (!this.manoInicialRecibida) {
+      this.manoInicialRecibida = true;
+      this.evaluarCombateListo();
+    }
     this.updateEventosHabilidad(data);
     this.updateUI(data);
     if (this.rasgunoBloqueandoEn(data) && this.rasgunoManoId !== data.id) {
