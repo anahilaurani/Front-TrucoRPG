@@ -54,8 +54,42 @@
               <div class="dropdown-sep"></div>
               <a routerLink="/perfil" class="dropdown-item">Mi perfil</a>
               <a routerLink="/configuracion" class="dropdown-item">Configuración</a>
+              <button class="dropdown-item" (click)="abrirCambiarPersonaje($event)">Cambiar personaje</button>
               <div class="dropdown-sep"></div>
               <button class="dropdown-item dropdown-cerrar" (click)="cerrarSesion()">Cerrar Sesión</button>
+            </div>
+          }
+
+          <!-- Modal: cambiar personaje del modo historia -->
+          @if (cambiarAbierto()) {
+            <div class="cp-overlay" (click)="cerrarCambiarPersonaje()">
+              <div class="cp-modal" (click)="$event.stopPropagation()">
+                <h3 class="cp-titulo">CAMBIAR PERSONAJE</h3>
+                <p class="cp-sub">Elegí el personaje para el modo historia</p>
+
+                <div class="cp-grid">
+                  @for (p of personajes; track p.id) {
+                    <button
+                      class="cp-item"
+                      [class.sel]="spriteSeleccionado() === p.spriteKey"
+                      (click)="seleccionarPersonaje(p.spriteKey)"
+                    >
+                      <img [src]="p.img" [alt]="p.nombrePersonaje" />
+                    </button>
+                  }
+                </div>
+
+                <div class="cp-acciones">
+                  <button class="cp-btn cancelar" (click)="cerrarCambiarPersonaje()">Cancelar</button>
+                  <button
+                    class="cp-btn confirmar"
+                    [disabled]="spriteSeleccionado() === null || guardandoPersonaje()"
+                    (click)="confirmarCambioPersonaje()"
+                  >
+                    {{ guardandoPersonaje() ? 'Guardando...' : 'Confirmar' }}
+                  </button>
+                </div>
+              </div>
             </div>
           }
 
