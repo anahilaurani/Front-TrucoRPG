@@ -49,6 +49,86 @@ main {
   margin: 0% !important;
 }
 
+/* ===== Pantalla de carga modo historia ===== */
+.loading-screen {
+  flex: 1;
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url('/assets/home-nuevo.png') center center / cover no-repeat, #20170a;
+  font-family: 'Jersey 20';
+}
+
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  background-color: rgba(26, 19, 11, 0.92);
+  border: 6px solid #000;
+  box-shadow: inset -6px -6px 0 #140d0c, 6px 6px 0 rgba(0, 0, 0, 0.4);
+  padding: 32px 44px;
+}
+
+.loading-cartas {
+  display: flex;
+  gap: 10px;
+}
+
+.carta-load {
+  width: 26px;
+  height: 38px;
+  background-color: #f4e9d0;
+  border: 3px solid #000;
+  box-shadow: inset -3px -3px 0 #c9b98f;
+  animation: carta-flip 1.2s ease-in-out infinite;
+}
+
+.carta-load:nth-child(2) { animation-delay: 0.15s; }
+.carta-load:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes carta-flip {
+  0%, 100% { transform: translateY(0) rotateY(0); background-color: #f4e9d0; }
+  50%      { transform: translateY(-10px) rotateY(180deg); background-color: #ffcc00; }
+}
+
+.spinner-truco {
+  width: 44px;
+  height: 44px;
+  border: 6px solid #4b3a29;
+  border-top-color: #ffcc00;
+  border-radius: 50%;
+  animation: spinner-girar 0.9s linear infinite;
+}
+
+@keyframes spinner-girar {
+  to { transform: rotate(360deg); }
+}
+
+.loading-texto {
+  color: #ffcc00;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 0 #000;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.puntos-load::after {
+  content: '';
+  animation: puntos-anim 1.2s steps(4, end) infinite;
+}
+
+@keyframes puntos-anim {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
+
 @media (max-width: 767px) {
     main {
         padding: 0;

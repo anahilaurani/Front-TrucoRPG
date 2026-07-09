@@ -1,6 +1,14 @@
 @if (cargandoEstado) {
   <div class="loading-screen">
-    <p>Cargando datos del modo historia...</p>
+    <div class="loading-box">
+      <div class="loading-cartas">
+        <span class="carta-load"></span>
+        <span class="carta-load"></span>
+        <span class="carta-load"></span>
+      </div>
+      <div class="spinner-truco"></div>
+      <p class="loading-texto">Cargando el modo historia<span class="puntos-load"></span></p>
+    </div>
   </div>
 } @else {
   @if (vistaActual === 'seleccion-heroe') {
