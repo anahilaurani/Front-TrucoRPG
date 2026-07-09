@@ -160,16 +160,27 @@ export default class BaseScene extends Phaser.Scene {
     });
 
     this.add
-      .text(10, 10, '[Pantalla completa]', { fill: '0f0' })
-      .setInteractive()
+      .text(12, 12, 'Pantalla completa', {
+        fontFamily: '"Jersey 10"',
+        fontSize: '16px',
+        color: '#ffffff',
+        backgroundColor: '#000000cc',
+        padding: { x: 8, y: 5 },
+      })
+      .setOrigin(0, 0)
+      .setScrollFactor(0) // fija el botón a la pantalla: no se va al mover el mapa
+      .setStroke('#573a04', 3)
+      .setDepth(1000)
+      .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         if (!this.scale.isFullscreen) {
           this.scale.startFullscreen();
           if (screen.orientation?.lock) {
             screen.orientation.lock('landscape').catch(() => {});
           }
+        } else {
+          this.scale.stopFullscreen();
         }
-      })
-      .setDepth(5);
+      });
   }
 }
