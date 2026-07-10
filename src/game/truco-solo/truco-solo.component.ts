@@ -866,7 +866,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       let sinProgreso = 0;
       while (this.mano) {
         const m = this.mano;
-        if (m.ganadorPartida || m.ganadorMano) break;
+        if (m.ganadorPartida || m.ganadorMano || m.partidaTerminada) break;
         if (this.accionesBloqueadasPorHabilidadRival) {
           if (this.mano?.id === m.id && this.rasgunoBloqueandoEn(m) && this.rasgunoManoId !== m.id) {
             this.manejarRasguno(m);
@@ -1210,19 +1210,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         this.turnoBadge = '';
         this.reproducirSecuenciaEnvido(m);
         this.prevEnvidoResuelto = true;
-        if (this.gameOverTimer) clearTimeout(this.gameOverTimer);
-        this.gameOverTimer = setTimeout(() => {
-          this.gameOver = true;
-          this.gameOverWon = m.ganadorPartida === 'Humano';
-          // La partida también puede definirse por el envido: hay que registrar la
-          // victoria de historia acá igual que en el cierre normal, si no el progreso
-          // (rival derrotado) no se guarda y el siguiente rival queda bloqueado.
-          if (this.gameOverWon && this.rivalNivel !== null) {
-            this.registrarVictoriaHistoria(m);
-          }
-          if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
-          this.cdr.markForCheck();
-        }, this.duracionSecuenciaEnvido(m) + 800);
+        this.programarCierrePartidaPorEnvido(m);
         this.cdr.markForCheck();
         return;
       }
@@ -2344,6 +2332,38 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private iniciarRevelacionEnvidoFinMano(m: ManoState): void {
+    this.iniciarRevelacionEnvido(m, () => this.solicitarNuevaMano());
+  }
+
+  /** Tras resolver un envido que cierra la partida: secuencia de cantos → cartas (si aplica) → cartel. */
+  private programarCierrePartidaPorEnvido(m: ManoState): void {
+    const duracionSecuencia = this.duracionSecuenciaEnvido(m) + 800;
+    const mostrarCartel = () => this.mostrarGameOverPorEnvido(m);
+
+    if (this.gameOverTimer) clearTimeout(this.gameOverTimer);
+
+    const trasSecuencia = () => {
+      if (m.ganadorPartida === 'Maquina' && this.debeRevelarCartasEnvidoFinMano(m)) {
+        this.iniciarRevelacionEnvido(m, mostrarCartel);
+        return;
+      }
+      mostrarCartel();
+    };
+
+    this.gameOverTimer = setTimeout(trasSecuencia, duracionSecuencia);
+  }
+
+  private mostrarGameOverPorEnvido(m: ManoState): void {
+    this.gameOver = true;
+    this.gameOverWon = m.ganadorPartida === 'Humano';
+    if (this.gameOverWon && this.rivalNivel !== null) {
+      this.registrarVictoriaHistoria(m);
+    }
+    if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
+    this.cdr.markForCheck();
+  }
+
+  private iniciarRevelacionEnvido(m: ManoState, alTerminar: () => void): void {
     this.cancelarCountdown();
     this.cancelarEnvidoRevealTimer();
 
@@ -2355,7 +2375,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.envidoRevealTimer = setTimeout(() => {
       this.cancelarEnvidoRevealTimer();
-      this.solicitarNuevaMano();
+      alTerminar();
     }, ENVIDO_REVEAL_SEG * 1000);
 
     this.cdr.markForCheck();
