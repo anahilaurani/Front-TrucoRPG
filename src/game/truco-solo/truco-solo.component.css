@@ -903,6 +903,37 @@
   line-height: 1.35;
 }
 
+.trampa-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 22, 0.6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  z-index: 100000;
+  pointer-events: all;
+}
+
+.trampa-box {
+  background: rgba(55, 55, 58, 0.95);
+  border: 2px solid #9a9a9f;
+  color: #ececec;
+  padding: 16px 28px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  max-width: min(92vw, 640px);
+}
+
+.trampa-texto {
+  font-family: var(--font-data);
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  line-height: 1.35;
+  color: #f0f0f0;
+}
+
 .destello-box {
   background: rgba(35, 30, 15, 0.94);
   border-color: #f5e6a8;

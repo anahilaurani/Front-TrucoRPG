@@ -127,6 +127,7 @@ export interface ManoState {
   mandingaEnganoManoOculta?: boolean;
   mandingaMaldicionBloqueando?: boolean;
   mandingaMaldicionActivaEnMano?: boolean;
+  ultimoMensajeHabilidadRival?: string;
 }
 
 export interface Btn {
@@ -198,6 +199,9 @@ const MANDINGA_MALDICION_SEG = 3;
 const ENVIDO_REVEAL_SEG = 3;
 const REMOLINO_HOLD_MS = 2000;
 const REMOLINO_ANIM_MS = 900;
+const TRAMPA_MONTE_MS = 3000;
+const TRAMPA_MONTE_TEXTO = 'Trampa: Pomberito obtiene +1 punto.';
+const CLASE_RIVAL_POMBERITO = 2;
 
 const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
   mandinga: 'Mandinga_batalla.png',
@@ -292,6 +296,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       || this.rasgunoRevelando
       || this.rasgunoConfirmando
       || this.remolinoEnCurso
+      || this.trampaDelMonteActivo
       || this.destelloRevelando
       || this.espejismoRevelando
       || this.mandingaEspejoRevelando
@@ -398,6 +403,13 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   remolinoCartaOriginal: Carta | null = null;
   remolinoCartaNueva: Carta | null = null;
   private ultimaCartaJugadaOptimista: Carta | null = null;
+
+  trampaDelMonteActivo = false;
+  trampaDelMonteSegundos = 0;
+  private trampaDelMonteManoId: string | null = null;
+  private trampaDelMonteTimer: ReturnType<typeof setTimeout> | null = null;
+  private trampaDelMonteInterval: ReturnType<typeof setInterval> | null = null;
+  readonly trampaDelMonteTexto = TRAMPA_MONTE_TEXTO;
 
   // ── Modo práctica ─────────────────────────────────────────────────────────
   escenarioPractica: number | null = null;
@@ -773,6 +785,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarMandingaTimers();
     this.cancelarEnvidoRevealTimer();
     this.cancelarRemolino();
+    this.cancelarTrampaDelMonte();
     if (this.rasgunoWatchdog) {
       clearInterval(this.rasgunoWatchdog);
       this.rasgunoWatchdog = null;
@@ -794,6 +807,26 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   mensajeHabilidadLimpio(msg?: string | null): string {
     if (!msg) return '';
     return msg.replace(/\s*\(Truco\s+\d+\)/gi, '').trim();
+  }
+
+  mensajeEsTrampaDelMonte(msg?: string | null): boolean {
+    return !!msg && msg.includes('Trampa del monte');
+  }
+
+  private mensajeRivalActual(m: ManoState): string {
+    return m.vistaHabilidadesRival?.ultimoMensajeHabilidad
+      ?? m.ultimoMensajeHabilidadRival
+      ?? '';
+  }
+
+  private esRivalPomberito(m: ManoState): boolean {
+    return m.configuracion?.rivalDeLaMaquina === CLASE_RIVAL_POMBERITO
+      || this.rivalNivel === CLASE_RIVAL_POMBERITO
+      || this.rival?.id === 'pomberito';
+  }
+
+  private esManoSilenciosa(m: ManoState): boolean {
+    return !m.envidoCantado && !m.trucoCantado;
   }
 
   private formatearDescripcionRival(desc: string): string {
@@ -1120,9 +1153,11 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.salpicaduraCartasOriginales = [];
     this.rasgunoCartasOriginales = [];
     this.envidoRevealManoId = null;
+    this.trampaDelMonteManoId = null;
     this.misCartsManoId = null;
     this.cancelarEnvidoRevealTimer();
     this.cancelarRemolino();
+    this.cancelarTrampaDelMonte();
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
@@ -1237,13 +1272,13 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.markForCheck();
         return;
       }
-      this.gameOver = true;
-      this.gameOverWon = m.ganadorPartida === 'Humano';
-      if (this.gameOverWon && this.rivalNivel !== null) {
-        this.registrarVictoriaHistoria(m);
+      if (m.ganadorMano && this.debeMostrarTrampaDelMonte(m)) {
+        this.rivalLabel = m.ganadorMano === 'Humano' ? '¡Perdí la mano!' : '¡Gané la mano!';
+        this.iniciarAvisoTrampaDelMonte(m);
+        this.cdr.markForCheck();
+        return;
       }
-      if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
-      this.cdr.markForCheck();
+      this.finalizarGameOverPorMano(m);
       return;
     }
     this.gameOver = false;
@@ -1252,7 +1287,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rivalLabel = m.ganadorMano === 'Humano' ? '¡Perdí la mano!' : '¡Gané la mano!';
       this.habilidadCartaIdx = null;
       this.modoSeleccionCarta = false;
-      if (!m.partidaTerminada && m.ganadorMano !== this.prevGanadorMano) {
+      if (this.debeMostrarTrampaDelMonte(m)) {
+        this.iniciarAvisoTrampaDelMonte(m);
+      } else if (!m.partidaTerminada && m.ganadorMano !== this.prevGanadorMano) {
         if (this.debeRevelarCartasEnvidoFinMano(m)) {
           this.iniciarRevelacionEnvidoFinMano(m);
         } else if (!this.envidoRevealActivo) {
@@ -2473,6 +2510,67 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.remolinoCartaOriginal = null;
     this.remolinoCartaNueva = null;
     this.ultimaCartaJugadaOptimista = null;
+  }
+
+  private debeMostrarTrampaDelMonte(m: ManoState): boolean {
+    if (this.trampaDelMonteManoId === m.id) return false;
+    if (!m.ganadorMano) return false;
+    if (this.mensajeEsTrampaDelMonte(this.mensajeRivalActual(m))) return true;
+    return this.esRivalPomberito(m) && this.esManoSilenciosa(m);
+  }
+
+  private finalizarGameOverPorMano(m: ManoState): void {
+    this.gameOver = true;
+    this.gameOverWon = m.ganadorPartida === 'Humano';
+    if (this.gameOverWon && this.rivalNivel !== null) {
+      this.registrarVictoriaHistoria(m);
+    }
+    if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
+    this.cdr.markForCheck();
+  }
+
+  private alTerminarAvisoTrampaDelMonte(m: ManoState): void {
+    if (m.ganadorPartida || m.partidaTerminada) {
+      this.finalizarGameOverPorMano(m);
+      return;
+    }
+    this.solicitarNuevaMano();
+  }
+
+  private iniciarAvisoTrampaDelMonte(m: ManoState): void {
+    this.cancelarCountdown();
+    this.cancelarTrampaDelMonte();
+
+    this.trampaDelMonteManoId = m.id;
+    this.trampaDelMonteActivo = true;
+    this.trampaDelMonteSegundos = TRAMPA_MONTE_MS / 1000;
+    this.btns = [];
+    this.turnoBadge = '';
+    this.cdr.markForCheck();
+
+    this.trampaDelMonteInterval = setInterval(() => {
+      this.trampaDelMonteSegundos = Math.max(0, this.trampaDelMonteSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.trampaDelMonteTimer = setTimeout(() => {
+      this.cancelarTrampaDelMonte();
+      this.alTerminarAvisoTrampaDelMonte(m);
+      this.cdr.markForCheck();
+    }, TRAMPA_MONTE_MS);
+  }
+
+  private cancelarTrampaDelMonte(): void {
+    if (this.trampaDelMonteTimer) {
+      clearTimeout(this.trampaDelMonteTimer);
+      this.trampaDelMonteTimer = null;
+    }
+    if (this.trampaDelMonteInterval) {
+      clearInterval(this.trampaDelMonteInterval);
+      this.trampaDelMonteInterval = null;
+    }
+    this.trampaDelMonteActivo = false;
+    this.trampaDelMonteSegundos = 0;
   }
 
   // ── Burbuja ───────────────────────────────────────────────────────────────

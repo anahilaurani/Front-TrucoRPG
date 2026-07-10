@@ -46,7 +46,7 @@
     <div class="rival-panel-left">
       <div class="rival-nombre-panel">{{ rivalIconoPanel }} {{ rival.nombre }}</div>
       <div class="heroe-desc">{{ rival.descripcionHabilidad }}</div>
-      @if (vistaRival?.ultimoMensajeHabilidad) {
+      @if (vistaRival?.ultimoMensajeHabilidad && !mensajeEsTrampaDelMonte(vistaRival?.ultimoMensajeHabilidad) && !mensajeEsTrampaDelMonte(mano?.ultimoMensajeHabilidadRival)) {
       <div class="heroe-desc rival-log-msg">{{ mensajeHabilidadLimpio(vistaRival?.ultimoMensajeHabilidad) }}</div>
       }
       @if (esMandinga) {
@@ -311,7 +311,7 @@
   }
 
 
-  @if (countdown !== null && !envidoRevealActivo) {
+  @if (countdown !== null && !envidoRevealActivo && !trampaDelMonteActivo) {
   <div class="nueva-mano-countdown">Nueva mano en {{ countdown }}</div>
   }
 
@@ -328,6 +328,14 @@
   </div>
   }
 
+</div>
+}
+
+@if (trampaDelMonteActivo) {
+<div class="trampa-overlay">
+  <div class="trampa-box">
+    <div class="trampa-texto">{{ trampaDelMonteTexto }}</div>
+  </div>
 </div>
 }
 
