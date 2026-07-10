@@ -139,6 +139,7 @@ export default class InteriorPulperiaScene extends BaseScene {
     this.teclaE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
     this.npc = new Npc(this, 536, 272, 'Facu').setDepth(1);
+    this._crearFernetDeFacu();
 
     this.mesa = new GauchosPulperia(this, 960, 180, 'MesaEjemplo');
     this.mesa2 = new GauchosPulperia(this, 205, 495, 'MesaEjemplo2');
@@ -262,6 +263,71 @@ export default class InteriorPulperiaScene extends BaseScene {
 
     this.onStartMatchBound = this.manejarInicioPartida.bind(this);
     window.addEventListener('start-multiplayer-match', this.onStartMatchBound);
+  }
+
+  /* ── Fernet de Facu ─────────────────────────────────────────────────────
+     Botella de fernet, botella de coca y un vaso servido por la mitad,
+     sobre la barra a la izquierda de Facu. Pixel-art procedural. */
+  _crearFernetDeFacu() {
+    if (!this.textures.exists('fx-fernet')) {
+      const g = this.make.graphics({ add: false });
+      // botella oscura de fernet
+      g.fillStyle(0x111111);
+      g.fillRect(3, 0, 4, 2); // tapa
+      g.fillStyle(0x0f2416);
+      g.fillRect(3, 2, 4, 5); // cuello
+      g.fillRect(1, 7, 8, 17); // cuerpo
+      g.fillStyle(0x1d3a26);
+      g.fillRect(2, 8, 1, 14); // brillo
+      g.fillStyle(0xe8dcb0);
+      g.fillRect(2, 11, 6, 8); // etiqueta crema
+      g.fillStyle(0x8a2020);
+      g.fillRect(3, 13, 4, 1);
+      g.fillStyle(0x555555);
+      g.fillRect(3, 15, 4, 1);
+      g.generateTexture('fx-fernet', 10, 24);
+      g.destroy();
+    }
+
+    if (!this.textures.exists('fx-coca')) {
+      const g = this.make.graphics({ add: false });
+      g.fillStyle(0xcc1111);
+      g.fillRect(2, 0, 4, 2); // tapa roja
+      g.fillStyle(0x3a1408);
+      g.fillRect(3, 2, 3, 4); // cuello
+      g.fillRect(1, 6, 7, 16); // cuerpo
+      g.fillStyle(0x5c2410);
+      g.fillRect(2, 7, 1, 14); // brillo
+      g.fillStyle(0xd8281e);
+      g.fillRect(1, 12, 7, 4); // banda roja
+      g.fillStyle(0xffffff);
+      g.fillRect(2, 13, 5, 1); // onda blanca
+      g.generateTexture('fx-coca', 9, 22);
+      g.destroy();
+    }
+
+    if (!this.textures.exists('fx-vaso-fernet')) {
+      const g = this.make.graphics({ add: false });
+      // fernet servido hasta la mitad
+      g.fillStyle(0x3a1a0c);
+      g.fillRect(1, 5, 6, 5);
+      // espumita
+      g.fillStyle(0xd8c8a8);
+      g.fillRect(1, 4, 6, 1);
+      // paredes del vaso
+      g.fillStyle(0xdff0f4, 0.55);
+      g.fillRect(0, 0, 1, 10);
+      g.fillRect(7, 0, 1, 10);
+      g.fillRect(1, 9, 6, 1);
+      g.generateTexture('fx-vaso-fernet', 8, 10);
+      g.destroy();
+    }
+
+    // sobre la barra, a la izquierda de Facu (base apoyada en la mesada)
+    const baseY = 312;
+    this.add.image(462, baseY, 'fx-fernet').setOrigin(0.5, 1).setDepth(3);
+    this.add.image(476, baseY, 'fx-coca').setOrigin(0.5, 1).setDepth(3);
+    this.add.image(489, baseY, 'fx-vaso-fernet').setOrigin(0.5, 1).setDepth(3);
   }
 
   manejarInicioPartida() {
