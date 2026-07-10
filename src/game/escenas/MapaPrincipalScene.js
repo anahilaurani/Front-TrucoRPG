@@ -1,9 +1,11 @@
 import BaseScene from './BaseScene.js';
 import JugadorPrincipal from '../personajes/JugadorPrincipal.js';
 import Portal from '../objetos/Portal.js';
+import Phaser from 'phaser';
 import Npc from '../personajes/Npc.js';
 import Tutorial from '../objetos/Tutorial.js';
 import SalidaMenu from '../objetos/SalidaMenu.js';
+import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
 import { TUTORIALES } from '../data/tutoriales.js';
 
 export default class MapaPrincipalScene extends BaseScene {
@@ -112,6 +114,9 @@ export default class MapaPrincipalScene extends BaseScene {
     this.npc = new Npc(this, 333, 438, 'Nuri').setDepth(1);
     this.npc.setScale(1.3);
 
+    // interactuar con Nuria repite el tutorial del lobby
+    this.zonaNuria = new ZonaInteraccionNpc(this, 333, 438);
+
     // pava y mate de Nuria (abajo a la derecha de ella)
     this.add.image(370, 464, 'Pava').setDepth(0);
     this.add.image(352, 470, 'Mate').setDepth(0);
@@ -180,6 +185,15 @@ export default class MapaPrincipalScene extends BaseScene {
     this.portalAPulperia.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
     this.portalAOponentes.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
     this.salidaMenu.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
+
+    // Nuria: repetir el tutorial al interactuar
+    const enZonaNuria = this.zonaNuria.update(this.JugadorPrincipal, !this.tutorial.activo);
+    if (
+      enZonaNuria &&
+      (Phaser.Input.Keyboard.JustDown(this.teclaE) || interactuoMobile)
+    ) {
+      this.tutorial.reiniciar();
+    }
 
     if (this.botonInteractuarPresionado) {
       this.botonInteractuarPresionado = false;
