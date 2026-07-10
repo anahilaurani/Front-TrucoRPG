@@ -166,13 +166,21 @@
       @for (c of misCarts; track $index) {
       <div class="fan-card" [class.hidden]="!c.visible" [class.played-out]="!c.carta"
         [class.carta-seleccionada]="c.seleccionada" [class.brilla]="cartasBrillan[$index]"
-        [class.carta-oculta]="c.oculta" [style.--angle]="fanAngles[$index] + 'deg'"
+        [class.carta-oculta]="c.oculta"
+        [class.rasguno-animando]="rasgunoAnimando && rasgunoSlotIdx === $index"
+        [class.rasguno-debilitada]="rasgunoMostrarDebilitada && rasgunoSlotIdx === $index && rasgunoAnimEnCurso"
+        [style.--angle]="fanAngles[$index] + 'deg'"
         [style.--xoff]="fanXOff[$index] + 'px'" (click)="jugarCarta($index)">
         @if (c.carta) {
         @if (c.oculta) {
         <img class="fan-card-img fan-card-back" src="assets/cards/back.PNG" alt="carta oculta" />
         } @else {
-        <img class="fan-card-img" [src]="cardImg(c.carta)" [alt]="c.carta.numero + ' ' + c.carta.palo" />
+        <div class="fan-card-img-wrap">
+          <img class="fan-card-img" [src]="cardImg(c.carta)" [alt]="c.carta.numero + ' ' + c.carta.palo" />
+          @if (rasgunoAnimando && rasgunoSlotIdx === $index) {
+          <div class="rasguno-garras" aria-hidden="true"></div>
+          }
+        </div>
         }
         }
       </div>

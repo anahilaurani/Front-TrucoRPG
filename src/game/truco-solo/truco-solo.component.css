@@ -1012,6 +1012,86 @@
   }
 }
 
+.fan-card-img-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.fan-card.rasguno-animando {
+  z-index: 30;
+}
+
+.fan-card.rasguno-animando .fan-card-img {
+  animation: rasguno-ara 0.85s ease-in-out forwards;
+  filter: drop-shadow(0 0 12px rgba(190, 45, 45, 0.9));
+}
+
+.fan-card.rasguno-debilitada .fan-card-img {
+  animation: rasguno-revelar 0.45s ease-out forwards;
+}
+
+.rasguno-garras {
+  position: absolute;
+  inset: 8% 12%;
+  pointer-events: none;
+  background:
+    linear-gradient(125deg, transparent 42%, rgba(220, 60, 60, 0.85) 43%, rgba(220, 60, 60, 0.85) 46%, transparent 47%),
+    linear-gradient(55deg, transparent 52%, rgba(180, 40, 40, 0.75) 53%, rgba(180, 40, 40, 0.75) 56%, transparent 57%),
+    linear-gradient(165deg, transparent 38%, rgba(200, 50, 50, 0.7) 39%, rgba(200, 50, 50, 0.7) 42%, transparent 43%);
+  opacity: 0;
+  animation: rasguno-rayas 0.85s ease-in-out forwards;
+}
+
+@keyframes rasguno-ara {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  18% {
+    transform: scale(0.93) rotate(-7deg);
+    opacity: 0.85;
+    filter: brightness(0.72) saturate(0.65);
+  }
+  38% {
+    transform: scale(1.04) rotate(6deg);
+    opacity: 0.7;
+    filter: brightness(0.55) saturate(0.45);
+  }
+  58% {
+    transform: scale(0.9) rotate(-4deg);
+    opacity: 0.55;
+    filter: brightness(0.45) sepia(0.35);
+  }
+  78% {
+    transform: scale(1.02) rotate(2deg);
+    opacity: 0.75;
+    filter: brightness(0.65);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: brightness(0.88) saturate(0.85);
+  }
+}
+
+@keyframes rasguno-rayas {
+  0%, 100% { opacity: 0; transform: scale(0.85); }
+  25%, 55% { opacity: 0.95; transform: scale(1); }
+  70% { opacity: 0.35; transform: scale(1.05); }
+}
+
+@keyframes rasguno-revelar {
+  0% {
+    transform: scale(0.92);
+    filter: brightness(0.55) grayscale(0.35);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
 @keyframes espejismo-flash {
   0% {
     opacity: 0.35;

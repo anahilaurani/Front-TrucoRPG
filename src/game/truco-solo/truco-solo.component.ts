@@ -189,6 +189,8 @@ const FAN_X = [-84, 0, 84];
 const SALPICADURA_REVEAL_SEG = 5;
 const TRAVESURA_REVEAL_SEG = 5;
 const RASGUNO_REVEAL_SEG = 3;
+const RASGUNO_ANIM_MS = 850;
+const RASGUNO_POST_ANIM_MS = 450;
 const AULLIDO_REVEAL_SEG = 3;
 const DESTELLO_REVEAL_SEG = 3;
 const ESPEJISMO_REVEAL_SEG = 3;
@@ -294,6 +296,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.salpicaduraRevelando
       || this.travesuraRevelando
       || this.rasgunoRevelando
+      || this.rasgunoAnimEnCurso
       || this.rasgunoConfirmando
       || this.remolinoEnCurso
       || this.trampaDelMonteActivo
@@ -334,6 +337,11 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   travesuraSegundos = 0;
   rasgunoRevelando = false;
   rasgunoSegundos = 0;
+  rasgunoAnimEnCurso = false;
+  rasgunoAnimando = false;
+  rasgunoMostrarDebilitada = false;
+  rasgunoSlotIdx: number | null = null;
+  private rasgunoManoPendiente: ManoState | null = null;
   aullidoRevelando = false;
   aullidoSegundos = 0;
   destelloRevelando = false;
@@ -1309,6 +1317,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.rasgunoRevelando) {
       this.turnoBadge = 'Rasguño: el Lobizón va a debilitar una carta...';
+    } else if (this.rasgunoAnimEnCurso) {
+      this.turnoBadge = this.rasgunoAnimando
+        ? 'Rasguño: el Lobizón ara tu carta...'
+        : 'Rasguño: la carta pierde valor...';
     } else if (this.remolinoEnCurso) {
       this.turnoBadge = this.remolinoAnimando
         ? '¡Remolino! La carta gira en remolino...'
@@ -1536,6 +1548,15 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.rasgunoSegundos = 0;
     this.rasgunoCartasOriginales = [];
     this.rasgunoManoId = null;
+    this.cancelarRasgunoAnimacion();
+  }
+
+  private cancelarRasgunoAnimacion(): void {
+    this.rasgunoAnimEnCurso = false;
+    this.rasgunoAnimando = false;
+    this.rasgunoMostrarDebilitada = false;
+    this.rasgunoSlotIdx = null;
+    this.rasgunoManoPendiente = null;
   }
 
   private rasgunoBloqueandoEn(m: ManoState): boolean {
@@ -1578,14 +1599,85 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rasgunoInterval = null;
       this.rasgunoRevelando = false;
       this.rasgunoSegundos = 0;
-      this.rasgunoCartasOriginales = [];
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmarRasguno', m.id);
+        void this.ejecutarSecuenciaRasguno(m);
       }
     }, RASGUNO_REVEAL_SEG * 1000);
 
     this.cdr.detectChanges();
+  }
+
+  private indiceCartaDebilitadaRasguno(originales: Carta[], nuevas: Carta[]): number {
+    for (let i = 0; i < Math.min(originales.length, nuevas.length); i++) {
+      const o = originales[i];
+      const n = nuevas[i];
+      if (o.numero !== n.numero || o.palo !== n.palo || o.valorTruco !== n.valorTruco) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private async ejecutarSecuenciaRasguno(m: ManoState): Promise<void> {
+    const originales = this.rasgunoCartasOriginales.map(c => this.normalizarCarta(c));
+    if (originales.length === 0) {
+      this.confirmarHabilidadRival('confirmarRasguno', m.id);
+      return;
+    }
+
+    this.rasgunoConfirmando = true;
+    try {
+      const data = await firstValueFrom(
+        this.http.post<ManoState>(`${API}/confirmarRasguno`, { manoId: m.id }),
+      );
+      const nuevas = this.cartasHumano(data);
+      const slotIdx = this.indiceCartaDebilitadaRasguno(originales, nuevas);
+
+      if (slotIdx < 0) {
+        this.rasgunoCartasOriginales = [];
+        this.finalizarRasguno(data);
+        return;
+      }
+
+      this.rasgunoManoPendiente = data;
+      this.rasgunoAnimEnCurso = true;
+      this.rasgunoSlotIdx = slotIdx;
+      this.rasgunoMostrarDebilitada = false;
+      this.rasgunoAnimando = false;
+      this.btns = [];
+      this.actualizarCartasMano(m);
+      this.cdr.markForCheck();
+
+      await this.delay(180);
+      this.rasgunoAnimando = true;
+      this.cdr.markForCheck();
+      await this.delay(RASGUNO_ANIM_MS);
+
+      this.rasgunoAnimando = false;
+      this.rasgunoMostrarDebilitada = true;
+      this.actualizarCartasMano(m);
+      this.cdr.markForCheck();
+      await this.delay(RASGUNO_POST_ANIM_MS);
+
+      this.rasgunoCartasOriginales = [];
+      this.finalizarRasguno(data);
+    } catch (err) {
+      this.rasgunoManoId = null;
+      this.rasgunoConfirmando = false;
+      this.rasgunoCartasOriginales = [];
+      this.cancelarRasgunoAnimacion();
+      this.showToast(`Error en confirmarRasguno: ${this.extraerErrorApi(err)}`);
+      this.cdr.markForCheck();
+    }
+  }
+
+  private finalizarRasguno(data: ManoState): void {
+    this.cancelarRasgunoAnimacion();
+    this.rasgunoManoId = null;
+    this.rasgunoConfirmando = false;
+    this.recibirMano(data);
+    void this.correrMaquinas();
   }
 
   private aullidoBloqueandoEn(m: ManoState): boolean {
@@ -2121,6 +2213,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     const prev = this.misCarts;
     const esNuevaMano = this.misCartsManoId !== m.id;
 
+    if (this.rasgunoAnimEnCurso) {
+      this.misCarts = [0, 1, 2].map(i => this.crearMisCartSlot(manoVisible[i] ?? null, i, m));
+      this.cdr.markForCheck();
+      return;
+    }
+
     if (esNuevaMano) {
       this.misCartsManoId = m.id;
       this.misCarts = [0, 1, 2].map(i => this.crearMisCartSlot(manoVisible[i] ?? null, i, m));
@@ -2188,6 +2286,14 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private cartasParaAbanico(m: ManoState): Carta[] {
     if (this.salpicaduraRevelando && this.salpicaduraCartasOriginales.length > 0) {
       return this.salpicaduraCartasOriginales;
+    }
+    if (this.rasgunoAnimEnCurso) {
+      if (this.rasgunoMostrarDebilitada && this.rasgunoManoPendiente) {
+        return this.cartasHumano(this.rasgunoManoPendiente);
+      }
+      if (this.rasgunoCartasOriginales.length > 0) {
+        return this.rasgunoCartasOriginales;
+      }
     }
     if (this.rasgunoRevelando && this.rasgunoCartasOriginales.length > 0) {
       return this.rasgunoCartasOriginales;
