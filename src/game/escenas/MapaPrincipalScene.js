@@ -112,6 +112,30 @@ export default class MapaPrincipalScene extends BaseScene {
     this.npc = new Npc(this, 333, 438, 'Nuri').setDepth(1);
     this.npc.setScale(1.3);
 
+    // pava y mate de Nuria (abajo a la derecha de ella)
+    this.add.image(370, 464, 'Pava').setDepth(0);
+    this.add.image(352, 470, 'Mate').setDepth(0);
+
+    // vapor de la pava
+    if (!this.textures.exists('fx-vapor')) {
+      const g = this.make.graphics({ add: false });
+      g.fillStyle(0xffffff);
+      g.fillRect(0, 0, 3, 3);
+      g.generateTexture('fx-vapor', 3, 3);
+      g.destroy();
+    }
+    this.add
+      .particles(366, 452, 'fx-vapor', {
+        frequency: 420,
+        lifespan: { min: 900, max: 1500 },
+        speedY: { min: -14, max: -8 },
+        speedX: { min: -3, max: 3 },
+        scale: { start: 0.8, end: 1.8 },
+        alpha: { start: 0.35, end: 0 },
+        tint: 0xeeeeee,
+      })
+      .setDepth(2);
+
     const pasosCargados = TUTORIALES.mapaPrincipal.map((paso) => {
       if (paso.enfoque === 'npc') {
         return { ...paso, enfoqueNpc: this.npc };
