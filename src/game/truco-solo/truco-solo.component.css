@@ -66,6 +66,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Cantos abajo a la izquierda, a la altura de las cartas del jugador.
+     order alto → renderiza último; margin-top:auto lo empuja al fondo del panel. */
+  order: 99;
+  margin-top: auto;
 }
 
 .action-btn {

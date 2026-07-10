@@ -149,7 +149,8 @@
 }
 
 .acciones-btn {
-  margin-top: auto;
+  /* Acciones arriba a la izquierda; los cantos ahora ocupan el fondo del panel. */
+  margin-top: 0;
   font-family: var(--font-data, 'VT323', monospace);
   font-size: 17px;
   letter-spacing: 1px;
