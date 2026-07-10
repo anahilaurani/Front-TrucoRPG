@@ -677,14 +677,15 @@ p {
 
     /* Modos */
 
+    /* Se mantiene en fila (igual que en desktop); si no entra, envuelve
+       gracias al flex-wrap del estilo base. */
     .modos-juego {
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
+        align-items: flex-start;
+        gap: 1.5rem;
     }
 
     .modo-juego {
-        max-width: 100%;
+        max-width: 9rem;
     }
 
     .circulo-icono,

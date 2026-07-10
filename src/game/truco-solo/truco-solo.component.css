@@ -1731,14 +1731,14 @@
   .baza-slot.near-slot { min-height: 64px; }
   .back-btn { min-height: 44px; font-size: 15px; }
   .habilidad-btn { min-height: 44px; }
-  .score-title { font-size: 6px; }
-  .score-row { font-size: 14px; }
+  .score-title { font-size: 8px; }
+  .score-row { font-size: 16px; }
   :host { --log-text-size: 13px; }
 }
 
 /* ── Pantalla baja (cualquier dispositivo < 540px alto) ─────────────────── */
 @media (max-height: 540px) {
-  .side-panel { width: 110px; padding: 6px 5px; gap: 4px; }
+  .side-panel { width: 126px; padding: 6px 5px; gap: 4px; }
   .action-btn { font-size: 13px; padding: 5px 3px; min-height: 36px; }
   .arena { padding-top: 40px; }
   .rival-portrait {
@@ -1756,24 +1756,24 @@
     mask-image: none;
     -webkit-mask-image: none;
   }
-  .rival-zone { top: 50%; left: 50%; transform: translate(-50%, -195px); z-index: 5; }
+  .rival-zone { top: 50%; left: 50%; transform: translate(-50%, -212px); z-index: 5; }
   .rival-hand { margin-top: 4px; }
   .bubble { top: 50px; left: calc(100% + 8px); font-size: 13px; }
   .table-wrap { perspective: 500px; margin-top: 2px; }
-  .table-surface { width: 280px; height: 190px; }
-  .far-card-img { height: 24px; }
-  .near-card-img { height: 36px; }
-  .baza-slot.far-slot  { min-height: 24px; }
-  .baza-slot.near-slot { min-height: 36px; }
-  .fan-wrap { height: 70px; width: 155px; margin-top: 2px; }
-  .fan-card { width: 38px; height: 55px; margin-left: -19px; }
+  .table-surface { width: 330px; height: 224px; }
+  .far-card-img { height: 32px; }
+  .near-card-img { height: 48px; }
+  .baza-slot.far-slot  { min-height: 32px; }
+  .baza-slot.near-slot { min-height: 48px; }
+  .fan-wrap { height: 92px; width: 200px; margin-top: 2px; }
+  .fan-card { width: 50px; height: 72px; margin-left: -25px; }
   .fan-card-img { width: 100%; height: 100%; }
-  .card-back-img { height: 40px; }
-  .rival-card-face-img { height: 40px; }
-  .scoreboard { padding: 4px; gap: 3px; }
-  .score-title { font-size: 5px; }
-  .score-row { font-size: 12px; }
-  .tally-svg { height: 72px; }
+  .card-back-img { height: 50px; }
+  .rival-card-face-img { height: 50px; }
+  .scoreboard { padding: 6px 5px; gap: 3px; }
+  .score-title { font-size: 8px; }
+  .score-row { font-size: 16px; }
+  .tally-svg { height: 92px; }
   .state-section { padding-top: 4px; gap: 1px; }
   .state-title { font-size: 7px; }
   :host { --log-text-size: 11px; }
@@ -1783,16 +1783,16 @@
 
 /* ── Pantalla muy baja (< 400px alto, ej. teléfono landscape pequeño) ─────── */
 @media (max-height: 400px) {
-  .side-panel { width: 95px; padding: 4px; gap: 3px; }
+  .side-panel { width: 112px; padding: 4px; gap: 3px; }
   .action-btn { font-size: 12px; padding: 4px 2px; min-height: 30px; }
   .arena { padding-top: 30px; }
-  .rival-portrait { width: 28px; height: 28px; font-size: 16px; }
-  .rival-zone { top: 50%; left: 50%; transform: translate(-50%, -150px); z-index: 5; }
+  .rival-portrait { width: 32px; height: 32px; font-size: 16px; }
+  .rival-zone { top: 50%; left: 50%; transform: translate(-50%, -166px); z-index: 5; }
   .rival-label { display: none; }
   .table-wrap { margin-top: 1px; }
-  .table-surface { width: 260px; height: 180px; }
-  .fan-wrap { height: 72px; width: 165px; margin-top: 1px; }
-  .fan-card { width: 40px; height: 58px; margin-left: -20px; }
+  .table-surface { width: 300px; height: 206px; }
+  .fan-wrap { height: 88px; width: 195px; margin-top: 1px; }
+  .fan-card { width: 48px; height: 70px; margin-left: -24px; }
   .state-section { display: none; }
   /* La sección del héroe comparte .state-section pero debe seguir visible en mobile */
   .state-section.heroe-section { display: flex; padding: 2px 0 2px 4px; gap: 2px; }
@@ -1800,8 +1800,9 @@
   .heroe-nombre { font-size: 8px; }
   .info-btn { font-size: 9px; padding: 3px 2px; }
   .habilidad-btn { min-height: 28px; padding: 3px 2px; font-size: 10px; }
-  .tally-svg { height: 56px; }
-  .score-row { font-size: 11px; }
+  .tally-svg { height: 76px; }
+  .score-row { font-size: 14px; }
+  .score-title { font-size: 7px; }
 }
 
 /* ── Pantalla muy estrecha (< 640px ancho, tablet portrait con game) ──────── */
