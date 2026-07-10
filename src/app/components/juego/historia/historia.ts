@@ -1,5 +1,6 @@
 import { Component, OnDestroy, Inject, OnInit } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { Router } from '@angular/router';
 import { SeleccionPersonajeHistoria } from '../../../pages/seleccion-personaje-historia/seleccion-personaje-historia';
 import { HistoriaService } from '../../../services/historia/historia-service';
 import { TrucoSoloComponent } from '../../../../game/truco-solo/truco-solo.component';
@@ -56,6 +57,7 @@ export class Historia implements OnInit, OnDestroy {
     private historiaService: HistoriaService,
     private salaService: SalaService,
     private uiService: PulperiaUiService,
+    private router: Router,
     @Inject(DOCUMENT) private document: Document,
   ) {}
 
@@ -222,7 +224,13 @@ export class Historia implements OnInit, OnDestroy {
     this.historiaService.reanudarEscenaMapaTrasCombate();
   }
 
+  /** Salida al menú desde el mapa (zona de salida de Phaser). */
+  salirAlMenu = (): void => {
+    this.router.navigate(['/home']);
+  };
+
   private inicializarListeners(): void {
+    window.addEventListener('historia:exit', this.salirAlMenu);
     window.addEventListener('truco-solo:start', this.abrirMesaTruco);
     window.addEventListener('truco-solo:end', this.cerrarMesaTruco);
     window.addEventListener('truco-2v2:start', this.abrirMesa2v2);
@@ -238,6 +246,7 @@ export class Historia implements OnInit, OnDestroy {
   }
 
   private removerListeners(): void {
+    window.removeEventListener('historia:exit', this.salirAlMenu);
     window.removeEventListener('truco-solo:start', this.abrirMesaTruco);
     window.removeEventListener('truco-solo:end', this.cerrarMesaTruco);
     window.removeEventListener('truco-2v2:start', this.abrirMesa2v2);

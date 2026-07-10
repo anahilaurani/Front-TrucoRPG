@@ -3,6 +3,7 @@ import JugadorPrincipal from '../personajes/JugadorPrincipal.js';
 import Portal from '../objetos/Portal.js';
 import Npc from '../personajes/Npc.js';
 import Tutorial from '../objetos/Tutorial.js';
+import SalidaMenu from '../objetos/SalidaMenu.js';
 import { TUTORIALES } from '../data/tutoriales.js';
 
 export default class MapaPrincipalScene extends BaseScene {
@@ -105,6 +106,9 @@ export default class MapaPrincipalScene extends BaseScene {
       y: 552,
     });
 
+    // salida al menú en el camino del borde izquierdo
+    this.salidaMenu = new SalidaMenu(this, 25, 470, 50, 150);
+
     this.npc = new Npc(this, 333, 438, 'Nuri').setDepth(1);
     this.npc.setScale(1.3);
 
@@ -126,6 +130,13 @@ export default class MapaPrincipalScene extends BaseScene {
       return;
     }
 
+    // con el cartel de salida abierto se frena todo
+    if (this.salidaMenu.abierto || this.salidaMenu.saliendo) {
+      this.JugadorPrincipal.setVelocity(0);
+      this.botonInteractuarPresionado = false;
+      return;
+    }
+
     this.JugadorPrincipal.update(this.keys, this.teclaE);
 
     const seMueve =
@@ -144,6 +155,7 @@ export default class MapaPrincipalScene extends BaseScene {
     this.portalACasa.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
     this.portalAPulperia.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
     this.portalAOponentes.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
+    this.salidaMenu.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
 
     if (this.botonInteractuarPresionado) {
       this.botonInteractuarPresionado = false;
