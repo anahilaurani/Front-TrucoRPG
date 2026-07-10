@@ -57,6 +57,7 @@
         <div class="avatar-display">
           <img
             [src]="obtenerRutaPreviewGrande()"
+            (error)="onPreviewError()"
             alt="Previa del Personaje"
             class="avatar-grande"
           />

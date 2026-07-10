@@ -93,11 +93,17 @@ export class ArmarioOverlay implements OnInit {
       return;
     }
 
+    // El tinte solo aporta el color: se aplica siempre sobre el personaje base.
+    // Se tolera data vieja donde spriteKey venía como "personaje1rosa".
     const itemKey = itemActivo.spriteKey || '';
-    if (itemKey.includes('personaje')) {
-      this.assetPreview = itemKey;
-    } else {
-      this.assetPreview = `${this.personajeBase}${itemKey}`;
+    const color = itemKey.replace(/personaje\d+/, '');
+    this.assetPreview = color ? `${this.personajeBase}${color}` : this.personajeBase;
+  }
+
+  onPreviewError() {
+    // Si no existe la variante de color para este personaje, se muestra el base.
+    if (this.assetPreview !== this.personajeBase) {
+      this.assetPreview = this.personajeBase;
     }
   }
 
