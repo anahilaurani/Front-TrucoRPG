@@ -342,6 +342,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   rasgunoMostrarDebilitada = false;
   rasgunoSlotIdx: number | null = null;
   private rasgunoManoPendiente: ManoState | null = null;
+  private debilitarCartaMotivo: 'rasguno' | 'lunaLlena' | null = null;
   aullidoRevelando = false;
   aullidoSegundos = 0;
   destelloRevelando = false;
@@ -821,6 +822,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!msg && msg.includes('Trampa del monte');
   }
 
+  private mensajeEsLunaLlena(msg?: string | null): boolean {
+    return !!msg && msg.includes('Luna llena');
+  }
+
   private mensajeRivalActual(m: ManoState): string {
     return m.vistaHabilidadesRival?.ultimoMensajeHabilidad
       ?? m.ultimoMensajeHabilidadRival
@@ -991,16 +996,31 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     // Tu canto aparece al instante en tu burbuja (la respuesta/tantos los muestra la secuencia).
     this.feedbackCantoHumano(endpoint, body);
 
+    let cartasAntesLunaLlena: Carta[] | null = null;
+    const bodyRecord = body as { aceptar?: boolean; escalarA?: string };
+    if (endpoint === 'responderTruco'
+      && bodyRecord.aceptar === true
+      && !bodyRecord.escalarA
+      && this.mano?.cantorTruco === 'Maquina') {
+      cartasAntesLunaLlena = this.cartasHumano(this.mano).map(c => ({ ...c }));
+    }
+
     try {
       const data = await firstValueFrom(
         this.http.post<ManoState>(`${API}/${endpoint}`, body)
       );
       const remolinoPendiente = endpoint === 'jugarCarta' && this.debeAnimarRemolino(data);
+      const lunaLlenaPendiente = cartasAntesLunaLlena
+        && this.debeAnimarLunaLlena(data, cartasAntesLunaLlena);
 
       if (remolinoPendiente) {
         this.recibirMano(data);
         await this.ejecutarSecuenciaRemolino(data);
         await this.delay(this.delayMaquinaMs);
+        await this.correrMaquinas();
+      } else if (lunaLlenaPendiente) {
+        if (pensar) await this.delay(this.delayMaquinaMs);
+        await this.ejecutarSecuenciaLunaLlena(cartasAntesLunaLlena!, data);
         await this.correrMaquinas();
       } else {
         if (pensar) await this.delay(this.delayMaquinaMs);
@@ -1318,9 +1338,15 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.rasgunoRevelando) {
       this.turnoBadge = 'Rasguño: el Lobizón va a debilitar una carta...';
     } else if (this.rasgunoAnimEnCurso) {
-      this.turnoBadge = this.rasgunoAnimando
-        ? 'Rasguño: el Lobizón ara tu carta...'
-        : 'Rasguño: la carta pierde valor...';
+      if (this.debilitarCartaMotivo === 'lunaLlena') {
+        this.turnoBadge = this.rasgunoAnimando
+          ? 'Luna llena: el Lobizón ara tu carta...'
+          : 'Luna llena: tu carta pierde valor...';
+      } else {
+        this.turnoBadge = this.rasgunoAnimando
+          ? 'Rasguño: el Lobizón ara tu carta...'
+          : 'Rasguño: la carta pierde valor...';
+      }
     } else if (this.remolinoEnCurso) {
       this.turnoBadge = this.remolinoAnimando
         ? '¡Remolino! La carta gira en remolino...'
@@ -1557,6 +1583,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.rasgunoMostrarDebilitada = false;
     this.rasgunoSlotIdx = null;
     this.rasgunoManoPendiente = null;
+    this.debilitarCartaMotivo = null;
   }
 
   private rasgunoBloqueandoEn(m: ManoState): boolean {
@@ -1608,7 +1635,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  private indiceCartaDebilitadaRasguno(originales: Carta[], nuevas: Carta[]): number {
+  private indiceCartaDebilitada(originales: Carta[], nuevas: Carta[]): number {
     for (let i = 0; i < Math.min(originales.length, nuevas.length); i++) {
       const o = originales[i];
       const n = nuevas[i];
@@ -1617,6 +1644,64 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     return -1;
+  }
+
+  private debeAnimarLunaLlena(data: ManoState, originales: Carta[]): boolean {
+    if (!this.mensajeEsLunaLlena(this.mensajeRivalActual(data))) return false;
+    const antes = originales.map(c => this.normalizarCarta(c));
+    const despues = this.cartasHumano(data);
+    return this.indiceCartaDebilitada(antes, despues) >= 0;
+  }
+
+  private async ejecutarAnimacionDebilitarCarta(manoUi: ManoState, data: ManoState, slotIdx: number): Promise<void> {
+    this.rasgunoManoPendiente = data;
+    this.rasgunoAnimEnCurso = true;
+    this.rasgunoSlotIdx = slotIdx;
+    this.rasgunoMostrarDebilitada = false;
+    this.rasgunoAnimando = false;
+    this.btns = [];
+    this.actualizarCartasMano(manoUi);
+    this.updateUI(manoUi);
+    this.cdr.markForCheck();
+
+    await this.delay(180);
+    this.rasgunoAnimando = true;
+    this.updateUI(manoUi);
+    this.cdr.markForCheck();
+    await this.delay(RASGUNO_ANIM_MS);
+
+    this.rasgunoAnimando = false;
+    this.rasgunoMostrarDebilitada = true;
+    this.actualizarCartasMano(manoUi);
+    this.updateUI(manoUi);
+    await this.delay(RASGUNO_POST_ANIM_MS);
+  }
+
+  private async ejecutarSecuenciaLunaLlena(originales: Carta[], data: ManoState): Promise<void> {
+    this.rasgunoCartasOriginales = originales.map(c => this.normalizarCarta(c));
+    const nuevas = this.cartasHumano(data);
+    const slotIdx = this.indiceCartaDebilitada(this.rasgunoCartasOriginales, nuevas);
+
+    if (slotIdx < 0) {
+      this.rasgunoCartasOriginales = [];
+      this.recibirMano(data);
+      return;
+    }
+
+    this.debilitarCartaMotivo = 'lunaLlena';
+    const msg = this.mensajeHabilidadLimpio(this.mensajeRivalActual(data));
+    if (msg) this.showBubble(msg);
+
+    try {
+      await this.ejecutarAnimacionDebilitarCarta(this.mano ?? data, data, slotIdx);
+      this.rasgunoCartasOriginales = [];
+      this.cancelarRasgunoAnimacion();
+      this.recibirMano(data);
+    } catch {
+      this.rasgunoCartasOriginales = [];
+      this.cancelarRasgunoAnimacion();
+      this.recibirMano(data);
+    }
   }
 
   private async ejecutarSecuenciaRasguno(m: ManoState): Promise<void> {
@@ -1632,7 +1717,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         this.http.post<ManoState>(`${API}/confirmarRasguno`, { manoId: m.id }),
       );
       const nuevas = this.cartasHumano(data);
-      const slotIdx = this.indiceCartaDebilitadaRasguno(originales, nuevas);
+      const slotIdx = this.indiceCartaDebilitada(originales, nuevas);
 
       if (slotIdx < 0) {
         this.rasgunoCartasOriginales = [];
@@ -1640,25 +1725,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
 
-      this.rasgunoManoPendiente = data;
-      this.rasgunoAnimEnCurso = true;
-      this.rasgunoSlotIdx = slotIdx;
-      this.rasgunoMostrarDebilitada = false;
-      this.rasgunoAnimando = false;
-      this.btns = [];
-      this.actualizarCartasMano(m);
-      this.cdr.markForCheck();
-
-      await this.delay(180);
-      this.rasgunoAnimando = true;
-      this.cdr.markForCheck();
-      await this.delay(RASGUNO_ANIM_MS);
-
-      this.rasgunoAnimando = false;
-      this.rasgunoMostrarDebilitada = true;
-      this.actualizarCartasMano(m);
-      this.cdr.markForCheck();
-      await this.delay(RASGUNO_POST_ANIM_MS);
+      this.debilitarCartaMotivo = 'rasguno';
+      await this.ejecutarAnimacionDebilitarCarta(m, data, slotIdx);
 
       this.rasgunoCartasOriginales = [];
       this.finalizarRasguno(data);
