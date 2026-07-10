@@ -132,8 +132,14 @@
             }
             <div class="baza-slot near-slot">
               @if (s.jugador) {
-              <img class="baza-card-img near-card-img" [src]="cardImg(s.jugador)"
-                [alt]="s.jugador.numero + ' ' + s.jugador.palo" />
+              <div class="remolino-card-wrap"
+                [class.remolino-animando]="remolinoAnimando && remolinoSlotIdx === $index">
+                <img class="baza-card-img near-card-img" [src]="cardImg(s.jugador)"
+                  [alt]="s.jugador.numero + ' ' + s.jugador.palo" />
+                @if (remolinoAnimando && remolinoSlotIdx === $index) {
+                <div class="remolino-vortex" aria-hidden="true"></div>
+                }
+              </div>
               }
             </div>
           </div>

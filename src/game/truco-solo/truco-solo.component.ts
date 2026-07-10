@@ -196,6 +196,8 @@ const MANDINGA_ESPEJO_SEG = 3;
 const MANDINGA_ENGANO_SEG = 5;
 const MANDINGA_MALDICION_SEG = 3;
 const ENVIDO_REVEAL_SEG = 3;
+const REMOLINO_HOLD_MS = 2000;
+const REMOLINO_ANIM_MS = 900;
 
 const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
   mandinga: 'Mandinga_batalla.png',
@@ -289,6 +291,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       || this.travesuraRevelando
       || this.rasgunoRevelando
       || this.rasgunoConfirmando
+      || this.remolinoEnCurso
       || this.destelloRevelando
       || this.espejismoRevelando
       || this.mandingaEspejoRevelando
@@ -386,6 +389,15 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Revelación de cartas de envido del rival al cerrar la mano (modo historia). */
   envidoRevealActivo = false;
   envidoRevealCartas: Carta[] = [];
+
+  /** Remolino (Nahuelito): muestra la carta original, anima y recién ahí aplica el cambio de palo. */
+  remolinoEnCurso = false;
+  remolinoAnimando = false;
+  remolinoMostrarNueva = false;
+  remolinoSlotIdx: number | null = null;
+  remolinoCartaOriginal: Carta | null = null;
+  remolinoCartaNueva: Carta | null = null;
+  private ultimaCartaJugadaOptimista: Carta | null = null;
 
   // ── Modo práctica ─────────────────────────────────────────────────────────
   escenarioPractica: number | null = null;
@@ -760,6 +772,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarEspejismoTimers();
     this.cancelarMandingaTimers();
     this.cancelarEnvidoRevealTimer();
+    this.cancelarRemolino();
     if (this.rasgunoWatchdog) {
       clearInterval(this.rasgunoWatchdog);
       this.rasgunoWatchdog = null;
@@ -941,10 +954,18 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       const data = await firstValueFrom(
         this.http.post<ManoState>(`${API}/${endpoint}`, body)
       );
-      // Pausa que simula a la máquina pensando antes de revelar su jugada/respuesta.
-      if (pensar) await this.delay(this.delayMaquinaMs);
-      this.recibirMano(data);
-      await this.correrMaquinas();
+      const remolinoPendiente = endpoint === 'jugarCarta' && this.debeAnimarRemolino(data);
+
+      if (remolinoPendiente) {
+        this.recibirMano(data);
+        await this.ejecutarSecuenciaRemolino(data);
+        await this.delay(this.delayMaquinaMs);
+        await this.correrMaquinas();
+      } else {
+        if (pensar) await this.delay(this.delayMaquinaMs);
+        this.recibirMano(data);
+        await this.correrMaquinas();
+      }
     } catch (err: unknown) {
       const msg = this.extraerErrorApi(err);
       this.showToast(`Error en ${endpoint}: ${msg}`);
@@ -974,6 +995,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     if (idxHand < 0) return;
     const carta = this.misCarts[idxHand].carta;
+    this.ultimaCartaJugadaOptimista = carta ? { ...carta } : null;
 
     this.misCarts = this.misCarts.map((mc, i) =>
       i === idxHand ? { ...mc, carta: null, visible: false, seleccionada: false } : mc);
@@ -1100,6 +1122,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.envidoRevealManoId = null;
     this.misCartsManoId = null;
     this.cancelarEnvidoRevealTimer();
+    this.cancelarRemolino();
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
@@ -1249,6 +1272,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.rasgunoRevelando) {
       this.turnoBadge = 'Rasguño: el Lobizón va a debilitar una carta...';
+    } else if (this.remolinoEnCurso) {
+      this.turnoBadge = this.remolinoAnimando
+        ? '¡Remolino! La carta gira en remolino...'
+        : '¡Remolino! Nahuelito agita las aguas...';
     } else if (this.envidoRevealActivo) {
       this.turnoBadge = '';
     } else if (this.aullidoRevelando) {
@@ -1302,8 +1329,14 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       const pendingHum = !b && i === idxActual && !!m.cartaHumanoEnMesa && !m.cartaMaquinaEnMesa;
       const espejismoOculto = pendingMaq && this.espejismoOcultandoMesa(m);
       const espejismoParpadeoActivo = pendingMaq && this.espejismoAlternandoEnMesa(m);
+      let jugador = b?.cartaJugador ?? (pendingHum ? m.cartaHumanoEnMesa : undefined);
+      if (this.remolinoEnCurso && i === this.remolinoSlotIdx) {
+        jugador = this.remolinoMostrarNueva
+          ? (this.remolinoCartaNueva ?? jugador)
+          : (this.remolinoCartaOriginal ?? jugador);
+      }
       return {
-        jugador: b?.cartaJugador ?? (pendingHum ? m.cartaHumanoEnMesa : undefined),
+        jugador,
         maquina: espejismoOculto
           ? undefined
           : (b?.cartaMaquina ?? (pendingMaq ? this.cartaMaquinaVisual(m) : undefined)),
@@ -2388,6 +2421,58 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.envidoRevealActivo = false;
     this.envidoRevealCartas = [];
+  }
+
+  private debeAnimarRemolino(m: ManoState): boolean {
+    if (!this.esModoHistoria() || !m.cartaHumanoEnMesa || !this.ultimaCartaJugadaOptimista) return false;
+    if ((m.bazas?.length ?? 0) !== 0) return false;
+
+    const msg = m.vistaHabilidadesRival?.ultimoMensajeHabilidad ?? '';
+    if (!msg.includes('Remolino')) return false;
+
+    const nueva = this.normalizarCarta(m.cartaHumanoEnMesa);
+    const original = this.ultimaCartaJugadaOptimista;
+    return nueva.numero === original.numero && nueva.palo !== original.palo;
+  }
+
+  private async ejecutarSecuenciaRemolino(m: ManoState): Promise<void> {
+    const original = { ...this.ultimaCartaJugadaOptimista! };
+    const nueva = this.normalizarCarta(m.cartaHumanoEnMesa!);
+
+    this.remolinoEnCurso = true;
+    this.remolinoAnimando = false;
+    this.remolinoMostrarNueva = false;
+    this.remolinoSlotIdx = m.bazas?.length ?? 0;
+    this.remolinoCartaOriginal = original;
+    this.remolinoCartaNueva = nueva;
+    this.rivalLabel = '¡Remolino!';
+    this.showBubble('¡Remolino! Nahuelito agita las aguas...');
+    this.updateUI(m);
+    this.cdr.markForCheck();
+
+    await this.delay(REMOLINO_HOLD_MS);
+
+    this.remolinoAnimando = true;
+    this.cdr.markForCheck();
+    await this.delay(REMOLINO_ANIM_MS);
+
+    this.remolinoMostrarNueva = true;
+    this.remolinoAnimando = false;
+    this.remolinoEnCurso = false;
+    this.ultimaCartaJugadaOptimista = null;
+    this.rivalLabel = 'Pensando...';
+    this.updateUI(m);
+    this.cdr.markForCheck();
+  }
+
+  private cancelarRemolino(): void {
+    this.remolinoEnCurso = false;
+    this.remolinoAnimando = false;
+    this.remolinoMostrarNueva = false;
+    this.remolinoSlotIdx = null;
+    this.remolinoCartaOriginal = null;
+    this.remolinoCartaNueva = null;
+    this.ultimaCartaJugadaOptimista = null;
   }
 
   // ── Burbuja ───────────────────────────────────────────────────────────────
