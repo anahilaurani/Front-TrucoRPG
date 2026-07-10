@@ -2390,9 +2390,18 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.seleccionarCartasEnvido(this.cartasMaquinaOriginales(m));
   }
 
+  /** Envido aceptado (quiero): se compararon tantos. No aplica a no quiero ni son buenas. */
+  private envidoFueQuerido(m: ManoState): boolean {
+    const estado = (m.estadoEnvido ?? '').toLowerCase();
+    if (estado.includes('no quis') || estado.includes('no quier')) return false;
+    if (m.sonBuenasDeclarado) return false;
+    return m.tantoHumano != null && m.tantoCantadoMaquina != null;
+  }
+
   private debeRevelarCartasEnvidoFinMano(m: ManoState): boolean {
     if (!this.esModoHistoria()) return false;
     if (m.ganadorEnvido !== 'Maquina' || !m.envidoResuelto) return false;
+    if (!this.envidoFueQuerido(m)) return false;
     if (this.envidoRevealManoId === m.id) return false;
 
     const cartasEnvido = this.obtenerCartasEnvidoMaquina(m);
