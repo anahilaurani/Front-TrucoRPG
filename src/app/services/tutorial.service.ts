@@ -11,15 +11,13 @@ export class TutorialService {
 
   private http = inject(HttpClient);
 
+  private apiUrl = '/api/Tutorial';
+
   obtenerReglas(): Observable<Reglas[]> {
-    return this.http.get<Reglas[]>(
-      'http://localhost:5001/api/Tutorial/generales'
-    );
+    return this.http.get<Reglas[]>(`${this.apiUrl}/generales`);
   }
 
   obtenerCartas(): Observable<Cartas[]> {
-    return this.http.get<Cartas[]>(
-      'http://localhost:5001/api/Tutorial/cartas'
-    );
+    return this.http.get<Cartas[]>(`${this.apiUrl}/cartas`);
   }
 }
