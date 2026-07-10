@@ -10,6 +10,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh; /* en mobile, vh incluye la barra del navegador; dvh no */
     z-index: 99999 !important;
     display: flex;
     justify-content: center;
@@ -26,7 +27,8 @@
     width: 100%;             
     max-width: 940px;       
     height: auto;
-    max-height: 95vh;      
+    max-height: 95vh;
+    max-height: 95dvh;
     text-align: center;
     font-family: 'Jersey 20', sans-serif;
     display: flex;
@@ -86,7 +88,8 @@
 
     .contenedor-modal {
         padding: 50px 8px 10px 8px;
-        max-height: 98vh; 
+        max-height: 98vh;
+        max-height: 98dvh;
     }
 
     .contenedor-modal h1,
@@ -106,6 +109,7 @@
     .contenedor-modal {
         padding: 45px 12px 10px 12px;
         max-height: 98vh;
+        max-height: 98dvh;
     }
 
     .botonCerrar {

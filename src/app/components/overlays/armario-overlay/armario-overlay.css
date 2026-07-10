@@ -9,10 +9,13 @@
     background-color: #3a221d;
     background-image: radial-gradient(#2a1612 1px, transparent 1px);
     background-size: 16px 16px;
-    width: 95vw;           
+    width: 95vw;
     max-width: 900px;
-    min-height: 90vh;      
     height: auto;
+    /* Entra completo en la pantalla: el scroll queda solo adentro (grilla). */
+    max-height: calc(100vh - 96px);
+    max-height: calc(100dvh - 96px);
+    overflow: hidden;
     border: 6px solid #000;
     box-shadow: inset -8px -8px 0px #1a0f0d, 8px 8px 0px rgba(0, 0, 0, 0.3);
     display: flex;
@@ -24,15 +27,17 @@
 
 .armario-body {
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
     flex: 1;
+    min-height: 0; /* permite que las secciones se achiquen en pantallas bajas */
     row-gap: 15px;
     column-gap: 0px;
 }
 
-.preview-section, 
+.preview-section,
 .items-section {
     flex: 1;
+    min-height: 0;
     background-color: #231516;
     padding: 16px;
     border: 4px solid #000;
@@ -109,6 +114,7 @@
     overflow-y: auto;
     padding-right: 4px;
     max-height: 280px;
+    min-height: 96px; /* al menos una fila visible; el resto scrollea adentro */
 }
 
 /* ── Estado vacío + leyenda de la tienda ─────────────────────────────────── */
@@ -281,7 +287,9 @@
 @media (min-width: 768px) {
     .armario-container {
         width: 75vw;
-        height: 560px;
+        /* En desktop queda 560px; en pantallas bajas (celu apaisado) se achica. */
+        height: min(560px, calc(100vh - 100px));
+        height: min(560px, calc(100dvh - 100px));
         min-height: auto;
         padding: 20px;
         row-gap: 15px;
@@ -318,11 +326,80 @@
     }
 
     .actions-panel {
-        flex-direction: row; 
+        flex-direction: row;
         justify-content: space-between;
     }
 
     .buttons-row {
-        width: 40%; 
+        width: 40%;
+    }
+}
+
+/* ── Celular apaisado / pantallas bajas: layout en fila y todo a la vista ── */
+@media (max-height: 520px) {
+    .armario-container {
+        height: auto;
+        max-height: calc(100vh - 76px);
+        max-height: calc(100dvh - 76px);
+        padding: 10px;
+        row-gap: 8px;
+    }
+
+    .armario-body {
+        flex-direction: row;
+        column-gap: 12px;
+        row-gap: 0;
+        height: auto;
+    }
+
+    .preview-section {
+        min-height: 0;
+        padding: 10px;
+    }
+
+    .items-section {
+        padding: 10px;
+    }
+
+    .sub {
+        font-size: 1rem;
+        margin-bottom: 6px;
+        text-align: left;
+    }
+
+    .armario-grid {
+        max-height: none;
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+        gap: 8px;
+    }
+
+    .grid-item {
+        height: 64px;
+        padding: 4px;
+    }
+
+    .item-icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 0;
+    }
+
+    .actions-wrapper {
+        min-height: 52px;
+        padding: 6px 10px;
+    }
+
+    .actions-panel {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .buttons-row {
+        width: 50%;
+    }
+
+    .info-text, .placeholder-text {
+        font-size: 0.95rem;
     }
 }

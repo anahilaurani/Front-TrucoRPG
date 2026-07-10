@@ -69,7 +69,9 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
-    max-height: 350px;
+    /* Nunca más alto que la pantalla: scrollea adentro de la grilla. */
+    max-height: min(350px, calc(100vh - 270px));
+    max-height: min(350px, calc(100dvh - 270px));
     overflow-y: auto;
 }
 
@@ -266,5 +268,44 @@
         padding: 6px 12px;
         letter-spacing: 1px;
         min-height: auto;
+    }
+}
+
+/* ── Celular apaisado / pantallas bajas: versión compacta ────────────────── */
+/* Va al final para ganarle a los bloques por ancho cuando ambos aplican. */
+@media (max-height: 520px) {
+    .contenedor-baul {
+        margin-top: 0;
+        padding: 12px;
+    }
+
+    .titulo-baul {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        padding: 2px 10px;
+    }
+
+    .categoria {
+        min-height: auto;
+        padding: 4px 10px;
+        font-size: 0.95rem;
+    }
+
+    .cuadricula-inventario {
+        max-height: max(96px, calc(100vh - 200px));
+        max-height: max(96px, calc(100dvh - 200px));
+        grid-template-columns: repeat(6, 1fr);
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .monedas-baul {
+        top: 8px;
+        right: 8px;
+        padding: 2px 8px;
+    }
+
+    .cantidad-monedas {
+        font-size: 1.1rem;
     }
 }

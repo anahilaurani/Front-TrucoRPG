@@ -26,7 +26,15 @@
     padding: 20px;
     row-gap: 2rem;
     position: relative;
+    /* Los estantes scrollean adentro; el panel de compra queda a la vista. */
+    max-height: calc(100vh - 180px);
+    max-height: calc(100dvh - 180px);
+    overflow-y: auto;
 }
+
+.contenedor-tienda::-webkit-scrollbar { width: 10px; }
+.contenedor-tienda::-webkit-scrollbar-track { background: #150c0d; }
+.contenedor-tienda::-webkit-scrollbar-thumb { background: #5e3a24; border: 2px solid #000; }
 
 .estante {
     background-color: #231516;
@@ -485,5 +493,50 @@
     .cartel-confirmacion,
     .cartel-resultado {
         min-height: 200px;
+    }
+
+    /* En columna, los estantes ceden altura para que el panel de compra
+       y el modal completo entren en la pantalla del celular. */
+    .contenedor-tienda {
+        max-height: max(160px, calc(100vh - 420px));
+        max-height: max(160px, calc(100dvh - 420px));
+    }
+}
+
+/* ── Celular apaisado / pantallas bajas: estantes + panel lado a lado ────── */
+@media (max-height: 520px) {
+    .interfaz-tienda {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 12px;
+        margin-top: 40px;
+    }
+
+    .contenedor-tienda {
+        padding: 12px;
+        max-height: calc(100vh - 165px);
+        max-height: calc(100dvh - 165px);
+    }
+
+    .pantalla-detalles {
+        width: 220px;
+        min-height: 0;
+        position: relative;
+        top: 0;
+        padding: 12px;
+        max-height: calc(100vh - 165px);
+        max-height: calc(100dvh - 165px);
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    .detalles-vacio {
+        min-height: 100px;
+        font-size: 0.95rem;
+    }
+
+    .cartel-confirmacion,
+    .cartel-resultado {
+        min-height: 140px;
     }
 }
