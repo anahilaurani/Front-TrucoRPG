@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 // ── Tipos del backend ─────────────────────────────────────────────
 export interface Carta2v2 { numero: number; palo: string; valorTruco: number; }
@@ -106,7 +107,7 @@ interface BtnAccion {
 interface EventoMaquina { jugador: string; tipo: string; texto: string; }
 interface PasoResponse  { mano: ManoTruco2v2; evento: EventoMaquina | null; }
 
-const API = '/api/truco2v2';
+const API = `${environment.apiUrl}/api/Truco2v2`;
 
 @Component({
   selector: 'app-truco-solo-2v2',

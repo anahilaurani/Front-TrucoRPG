@@ -1,16 +1,24 @@
 import { TestBed } from '@angular/core/testing';
+import { PulperiaUiService } from './pulperia-overlay-config';
 
-import { PulperiaOverlayConfig } from './pulperia-overlay-config';
-
-describe('PulperiaOverlayConfig', () => {
-  let service: PulperiaOverlayConfig;
+describe('PPulperiaUiService', () => {
+  let service: PulperiaUiService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(PulperiaOverlayConfig);
+    TestBed.configureTestingModule({
+      providers: [PulperiaUiService],
+    });
+    service = TestBed.inject(PulperiaUiService);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('should start with tipoVista as null', (done) => {
+    service.estadoOverlay$.subscribe(estado => {
+      expect(estado.tipoVista).toBeNull();
+      done();
+    });
   });
 });

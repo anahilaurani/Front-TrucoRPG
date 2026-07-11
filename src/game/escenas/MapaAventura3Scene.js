@@ -4,6 +4,7 @@ import JugadorPrincipal from '../personajes/JugadorPrincipal.js';
 import Portal from '../objetos/Portal.js';
 import Oponente from '../personajes/Oponente.js';
 import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
+import { environment } from '../../environments/environment';
 
 const RIVAL_MANDINGA_NIVEL = 5;
 

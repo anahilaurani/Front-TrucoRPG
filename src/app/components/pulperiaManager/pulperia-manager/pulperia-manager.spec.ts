@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { PulperiaManager } from './pulperia-manager';
 
 describe('PulperiaManager', () => {
@@ -8,7 +9,8 @@ describe('PulperiaManager', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PulperiaManager]
+      imports: [PulperiaManager],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     })
     .compileComponents();
 

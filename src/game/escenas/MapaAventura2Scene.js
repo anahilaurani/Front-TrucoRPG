@@ -5,6 +5,7 @@ import Oponente from '../personajes/Oponente.js';
 import Portal from '../objetos/Portal.js';
 import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
 import BarreraPinches from '../objetos/BarreraPinches.js';
+import { environment } from '../../environments/environment';
 
 const RIVAL_LOBIZON_NIVEL = 3;
 const RIVAL_LUZMALA_NIVEL = 4;

@@ -5,6 +5,7 @@ import Portal from '../objetos/Portal.js';
 import Oponente from '../personajes/Oponente.js';
 import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
 import NpcDialogo from '../personajes/NpcDialogo.js';
+import { environment } from '../../environments/environment';
 import BarreraJefe from '../objetos/BarreraJefe.js';
 
 const RIVAL_NAHUELITO_NIVEL = 1;
