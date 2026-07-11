@@ -30,6 +30,13 @@ export class CasaManager implements OnInit {
     });
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.vistaActiva !== null) {
+      this.cerrar();
+    }
+  }
+
   @HostListener('window:game-interact', ['$event'])
   onGameInteract(event: Event) {
     const customEvent = event as CustomEvent;

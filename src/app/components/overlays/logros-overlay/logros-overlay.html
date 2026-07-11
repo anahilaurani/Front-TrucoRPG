@@ -1,1 +1,23 @@
-<h1>LOGROS</h1>
+<div class="contenedor-logros">
+  <div class="titulo-logros">LOGROS</div>
+
+  @if (tieneLogros) {
+    <div class="cuadricula-logros">
+      @for (logro of logros; track logro.nombre) {
+        <div class="slot-logro" [class.bloqueado]="!logro.desbloqueado">
+          @if (logro.img) {
+            <img [src]="logro.img" [alt]="logro.nombre" class="logro-icono" />
+          }
+          <span class="logro-nombre">{{ logro.nombre }}</span>
+          @if (logro.descripcion) {
+            <span class="logro-descripcion">{{ logro.descripcion }}</span>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="cartel-sin-logros">
+      <p class="texto-sin-logros">SIN LOGROS</p>
+    </div>
+  }
+</div>

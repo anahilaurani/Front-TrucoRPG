@@ -170,3 +170,35 @@ input::placeholder {
   .btn-submit { padding: 11px; font-size: 1.05rem; }
   .registro-link { margin-top: 14px; }
 }
+
+/* Celular apaisado: poco alto y mucho ancho → campos a dos columnas
+   para que el formulario entre completo sin scroll. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .titulo { font-size: 1.2rem; margin-bottom: 2px; letter-spacing: 2px; }
+  .sep { display: none; }
+  label { font-size: 0.85rem; margin-bottom: 4px; }
+
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 14px;
+    align-items: flex-start;
+  }
+
+  .campo {
+    flex: 1 1 220px;
+    min-width: 0;
+    margin-bottom: 8px;
+  }
+
+  .error-servidor,
+  .btn-submit { flex-basis: 100%; }
+
+  .btn-submit { margin-top: 2px; padding: 9px; font-size: 1rem; }
+
+  .registro-link {
+    display: inline-block;
+    margin: 8px 10px 0;
+    font-size: 0.85rem;
+  }
+}

@@ -1,8 +1,11 @@
 import BaseScene from './BaseScene.js';
 import JugadorPrincipal from '../personajes/JugadorPrincipal.js';
 import Portal from '../objetos/Portal.js';
+import Phaser from 'phaser';
 import Npc from '../personajes/Npc.js';
 import Tutorial from '../objetos/Tutorial.js';
+import SalidaMenu from '../objetos/SalidaMenu.js';
+import ZonaInteraccionNpc from '../objetos/ZonaInteraccionNpc.js';
 import { TUTORIALES } from '../data/tutoriales.js';
 
 export default class MapaPrincipalScene extends BaseScene {
@@ -105,8 +108,38 @@ export default class MapaPrincipalScene extends BaseScene {
       y: 552,
     });
 
+    // salida al menú en el camino del borde izquierdo
+    this.salidaMenu = new SalidaMenu(this, 25, 470, 50, 150);
+
     this.npc = new Npc(this, 333, 438, 'Nuri').setDepth(1);
     this.npc.setScale(1.3);
+
+    // interactuar con Nuria repite el tutorial del lobby
+    this.zonaNuria = new ZonaInteraccionNpc(this, 333, 438);
+
+    // pava y mate de Nuria (abajo a la derecha de ella)
+    this.add.image(370, 464, 'Pava').setDepth(0);
+    this.add.image(352, 470, 'Mate').setDepth(0);
+
+    // vapor de la pava
+    if (!this.textures.exists('fx-vapor')) {
+      const g = this.make.graphics({ add: false });
+      g.fillStyle(0xffffff);
+      g.fillRect(0, 0, 3, 3);
+      g.generateTexture('fx-vapor', 3, 3);
+      g.destroy();
+    }
+    this.add
+      .particles(366, 452, 'fx-vapor', {
+        frequency: 420,
+        lifespan: { min: 900, max: 1500 },
+        speedY: { min: -14, max: -8 },
+        speedX: { min: -3, max: 3 },
+        scale: { start: 0.8, end: 1.8 },
+        alpha: { start: 0.35, end: 0 },
+        tint: 0xeeeeee,
+      })
+      .setDepth(2);
 
     const pasosCargados = TUTORIALES.mapaPrincipal.map((paso) => {
       if (paso.enfoque === 'npc') {
@@ -123,6 +156,13 @@ export default class MapaPrincipalScene extends BaseScene {
   update() {
     if (this.tutorial && this.tutorial.activo) {
       this.tutorial.update();
+      return;
+    }
+
+    // con el cartel de salida abierto se frena todo
+    if (this.salidaMenu.abierto || this.salidaMenu.saliendo) {
+      this.JugadorPrincipal.setVelocity(0);
+      this.botonInteractuarPresionado = false;
       return;
     }
 
@@ -144,6 +184,16 @@ export default class MapaPrincipalScene extends BaseScene {
     this.portalACasa.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
     this.portalAPulperia.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
     this.portalAOponentes.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
+    this.salidaMenu.update(this.JugadorPrincipal, this.teclaE, interactuoMobile);
+
+    // Nuria: repetir el tutorial al interactuar
+    const enZonaNuria = this.zonaNuria.update(this.JugadorPrincipal, !this.tutorial.activo);
+    if (
+      enZonaNuria &&
+      (Phaser.Input.Keyboard.JustDown(this.teclaE) || interactuoMobile)
+    ) {
+      this.tutorial.reiniciar();
+    }
 
     if (this.botonInteractuarPresionado) {
       this.botonInteractuarPresionado = false;

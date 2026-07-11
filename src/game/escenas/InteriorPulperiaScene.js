@@ -139,29 +139,47 @@ export default class InteriorPulperiaScene extends BaseScene {
     this.teclaE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
     this.npc = new Npc(this, 536, 272, 'Facu').setDepth(1);
+    this._crearFernetDeFacu();
 
     this.mesa = new GauchosPulperia(this, 960, 180, 'MesaEjemplo');
     this.mesa2 = new GauchosPulperia(this, 205, 495, 'MesaEjemplo2');
 
     this.mesasDecoracion = this.add.group();
 
-    this.mesa3 = new GauchosPulperia(this, 1040, 370, 'MesaEjemplo3');
-    this.mesa4 = new GauchosPulperia(this, 1480, 370, 'MesaEjemplo4');
+    // Mesas decorativas de abajo (las del medio se quitaron para despejar el paso).
     this.mesa5 = new GauchosPulperia(this, 1605, 570, 'MesaEjemplo6');
     this.mesa6 = new GauchosPulperia(this, 1050, 560, 'MesaEjemplo5');
 
-    this.mesa3.posXOriginal = 1040;
-    this.mesa3.posYOriginal = 370;
-    this.mesa4.posXOriginal = 1480;
-    this.mesa4.posYOriginal = 370;
     this.mesa5.posXOriginal = 1605;
     this.mesa5.posYOriginal = 570;
     this.mesa6.posXOriginal = 1050;
     this.mesa6.posYOriginal = 560;
 
-    this.mesasDecoracion.addMultiple([this.mesa3, this.mesa4, this.mesa5, this.mesa6]);
+    this.mesasDecoracion.addMultiple([this.mesa5, this.mesa6]);
 
     this.mesaSolitario = new GauchosPulperia(this, 1590, 180, 'MesaSolitario');
+
+    // Colisión: el jugador no puede pararse encima de las mesas decorativas.
+    // Usamos rectángulos estáticos invisibles en coordenadas del mundo, del tamaño
+    // de la mesa de madera (no del sprite completo, que incluye gauchos y sillas),
+    // para poder seguir caminando entre las mesas.
+    // mesaSolitario queda caminable (su "E" está en el centro de la mesa).
+    // Las de abajo (mesa5/mesa6) sincronizan su colisión con la visibilidad, porque
+    // MesaManager las oculta para reemplazarlas por mesas de sala que hay que pisar.
+    const crearColisionMesa = (mesa) => {
+      // La mesa de madera está ~37px por debajo del centro del sprite (escala 1.1).
+      const rect = this.add.rectangle(mesa.x, mesa.y + 37, 128, 80).setVisible(false);
+      this.physics.add.existing(rect, true); // cuerpo estático
+      rect.mesaAsociada = mesa; // para sincronizar la colisión con la visibilidad
+      return rect;
+    };
+    this.colisionesMesas = [
+      crearColisionMesa(this.mesa),
+      crearColisionMesa(this.mesa2),
+      crearColisionMesa(this.mesa5),
+      crearColisionMesa(this.mesa6),
+    ];
+    this.physics.add.collider(this.JugadorPrincipal, this.colisionesMesas);
 
     const pasosCargados = TUTORIALES.pulperia.map((paso) => {
       if (paso.enfoque === 'npc') {
@@ -247,6 +265,71 @@ export default class InteriorPulperiaScene extends BaseScene {
     window.addEventListener('start-multiplayer-match', this.onStartMatchBound);
   }
 
+  /* ── Fernet de Facu ─────────────────────────────────────────────────────
+     Botella de fernet, botella de coca y un vaso servido por la mitad,
+     sobre la barra a la izquierda de Facu. Pixel-art procedural. */
+  _crearFernetDeFacu() {
+    if (!this.textures.exists('fx-fernet')) {
+      const g = this.make.graphics({ add: false });
+      // botella oscura de fernet
+      g.fillStyle(0x111111);
+      g.fillRect(3, 0, 4, 2); // tapa
+      g.fillStyle(0x0f2416);
+      g.fillRect(3, 2, 4, 5); // cuello
+      g.fillRect(1, 7, 8, 17); // cuerpo
+      g.fillStyle(0x1d3a26);
+      g.fillRect(2, 8, 1, 14); // brillo
+      g.fillStyle(0xe8dcb0);
+      g.fillRect(2, 11, 6, 8); // etiqueta crema
+      g.fillStyle(0x8a2020);
+      g.fillRect(3, 13, 4, 1);
+      g.fillStyle(0x555555);
+      g.fillRect(3, 15, 4, 1);
+      g.generateTexture('fx-fernet', 10, 24);
+      g.destroy();
+    }
+
+    if (!this.textures.exists('fx-coca')) {
+      const g = this.make.graphics({ add: false });
+      g.fillStyle(0xcc1111);
+      g.fillRect(2, 0, 4, 2); // tapa roja
+      g.fillStyle(0x3a1408);
+      g.fillRect(3, 2, 3, 4); // cuello
+      g.fillRect(1, 6, 7, 16); // cuerpo
+      g.fillStyle(0x5c2410);
+      g.fillRect(2, 7, 1, 14); // brillo
+      g.fillStyle(0xd8281e);
+      g.fillRect(1, 12, 7, 4); // banda roja
+      g.fillStyle(0xffffff);
+      g.fillRect(2, 13, 5, 1); // onda blanca
+      g.generateTexture('fx-coca', 9, 22);
+      g.destroy();
+    }
+
+    if (!this.textures.exists('fx-vaso-fernet')) {
+      const g = this.make.graphics({ add: false });
+      // fernet servido hasta la mitad
+      g.fillStyle(0x3a1a0c);
+      g.fillRect(1, 5, 6, 5);
+      // espumita
+      g.fillStyle(0xd8c8a8);
+      g.fillRect(1, 4, 6, 1);
+      // paredes del vaso
+      g.fillStyle(0xdff0f4, 0.55);
+      g.fillRect(0, 0, 1, 10);
+      g.fillRect(7, 0, 1, 10);
+      g.fillRect(1, 9, 6, 1);
+      g.generateTexture('fx-vaso-fernet', 8, 10);
+      g.destroy();
+    }
+
+    // sobre la barra, a la izquierda de Facu (base apoyada en la mesada)
+    const baseY = 312;
+    this.add.image(462, baseY, 'fx-fernet').setOrigin(0.5, 1).setDepth(3);
+    this.add.image(476, baseY, 'fx-coca').setOrigin(0.5, 1).setDepth(3);
+    this.add.image(489, baseY, 'fx-vaso-fernet').setOrigin(0.5, 1).setDepth(3);
+  }
+
   manejarInicioPartida() {
     if (this.timerBuscarSalas) this.timerBuscarSalas.destroy();
     this.cameras.main.fadeOut(500, 0, 0, 0);
@@ -258,6 +341,17 @@ export default class InteriorPulperiaScene extends BaseScene {
   }
 
   update() {
+    // La colisión de las mesas sigue su visibilidad (las de sala se ocultan y hay
+    // que poder pisarlas para unirse).
+    if (this.colisionesMesas) {
+      this.colisionesMesas.forEach((rect) => {
+        const visible = rect.mesaAsociada ? rect.mesaAsociada.visible : true;
+        if (rect.body && rect.body.enable !== visible) {
+          rect.body.enable = visible;
+        }
+      });
+    }
+
     if (this.tutorial && this.tutorial.activo) {
       this.tutorial.update();
     } else {

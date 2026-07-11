@@ -1,3 +1,31 @@
+@if (rivalNivel !== null && !combateListo) {
+<div class="combate-skeleton" aria-busy="true" aria-label="Cargando combate">
+  <aside class="skeleton-panel skeleton-left">
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-btn"></div>
+    <div class="skeleton-block skeleton-rival-info"></div>
+    <div class="skeleton-block skeleton-rival-info short"></div>
+  </aside>
+
+  <main class="skeleton-arena">
+    <div class="skeleton-block skeleton-rival"></div>
+    <div class="skeleton-block skeleton-table"></div>
+    <div class="skeleton-block skeleton-hand"></div>
+  </main>
+
+  <aside class="skeleton-panel skeleton-right">
+    <div class="skeleton-block skeleton-title"></div>
+    <div class="skeleton-block skeleton-score"></div>
+    <div class="skeleton-block skeleton-score"></div>
+    <div class="skeleton-block skeleton-tally"></div>
+    <div class="skeleton-block skeleton-stat"></div>
+    <div class="skeleton-block skeleton-stat"></div>
+  </aside>
+</div>
+} @else {
 <div class="root" [ngStyle]="fondoStyle">
 
   <!-- ── PANEL IZQUIERDO: botones de acción ──────────────────────────────── -->
@@ -18,7 +46,7 @@
     <div class="rival-panel-left">
       <div class="rival-nombre-panel">{{ rivalIconoPanel }} {{ rival.nombre }}</div>
       <div class="heroe-desc">{{ rival.descripcionHabilidad }}</div>
-      @if (vistaRival?.ultimoMensajeHabilidad) {
+      @if (vistaRival?.ultimoMensajeHabilidad && !mensajeEsTrampaDelMonte(vistaRival?.ultimoMensajeHabilidad) && !mensajeEsTrampaDelMonte(mano?.ultimoMensajeHabilidadRival)) {
       <div class="heroe-desc rival-log-msg">{{ mensajeHabilidadLimpio(vistaRival?.ultimoMensajeHabilidad) }}</div>
       }
       @if (esMandinga) {
@@ -35,12 +63,6 @@
 
     @if (esMandinga && mandingaMaldicionActiva) {
     <div class="mandinga-maldicion-activa">Maldición Activa</div>
-    }
-
-    @if (mostrarBotonGanar10Puntos) {
-    <button class="debug-win-btn" (click)="ganar10PuntosDebug()">
-      Ganar 10puntos
-    </button>
     }
   </aside>
 
@@ -63,7 +85,7 @@
     <div class="table-wrap">
       <div class="table-surface">
 
-        <div class="rival-hand">
+        <div class="rival-hand" [class.oculto-envido-reveal]="envidoRevealActivo">
           @for (c of opCards; track $index) {
           @if (c.revelada && c.carta) {
           <div class="rival-card-face-wrap" [class.hidden]="!c.visible">
@@ -75,6 +97,20 @@
           }
           }
         </div>
+
+        @if (envidoRevealActivo) {
+        <div class="envido-reveal-mesa">
+          <p class="envido-reveal-titulo">Cartas de envido del rival</p>
+          <div class="envido-reveal-fila">
+            @for (c of envidoRevealCartas; track c.numero + '-' + c.palo) {
+            <div class="baza-slot far-slot envido-reveal-slot">
+              <img class="baza-card-img far-card-img envido-reveal-carta" [src]="cardImg(c)"
+                [alt]="c.numero + ' de ' + c.palo" />
+            </div>
+            }
+          </div>
+        </div>
+        }
 
         <div class="bazas">
           @for (s of slots; track $index) {
@@ -96,15 +132,21 @@
             }
             <div class="baza-slot near-slot">
               @if (s.jugador) {
-              <img class="baza-card-img near-card-img" [src]="cardImg(s.jugador)"
-                [alt]="s.jugador.numero + ' ' + s.jugador.palo" />
+              <div class="remolino-card-wrap"
+                [class.remolino-animando]="remolinoAnimando && remolinoSlotIdx === $index">
+                <img class="baza-card-img near-card-img" [src]="cardImg(s.jugador)"
+                  [alt]="s.jugador.numero + ' ' + s.jugador.palo" />
+                @if (remolinoAnimando && remolinoSlotIdx === $index) {
+                <div class="remolino-vortex" aria-hidden="true"></div>
+                }
+              </div>
               }
             </div>
           </div>
           }
         </div>
 
-        @if (turnoBadge) {
+        @if (turnoBadge && !envidoRevealActivo) {
         <div class="turno-badge">{{ turnoBadge }}</div>
         }
 
@@ -124,13 +166,21 @@
       @for (c of misCarts; track $index) {
       <div class="fan-card" [class.hidden]="!c.visible" [class.played-out]="!c.carta"
         [class.carta-seleccionada]="c.seleccionada" [class.brilla]="cartasBrillan[$index]"
-        [class.carta-oculta]="c.oculta" [style.--angle]="fanAngles[$index] + 'deg'"
+        [class.carta-oculta]="c.oculta"
+        [class.rasguno-animando]="rasgunoAnimando && rasgunoSlotIdx === $index"
+        [class.rasguno-debilitada]="rasgunoMostrarDebilitada && rasgunoSlotIdx === $index && rasgunoAnimEnCurso"
+        [style.--angle]="fanAngles[$index] + 'deg'"
         [style.--xoff]="fanXOff[$index] + 'px'" (click)="jugarCarta($index)">
         @if (c.carta) {
         @if (c.oculta) {
         <img class="fan-card-img fan-card-back" src="assets/cards/back.PNG" alt="carta oculta" />
         } @else {
-        <img class="fan-card-img" [src]="cardImg(c.carta)" [alt]="c.carta.numero + ' ' + c.carta.palo" />
+        <div class="fan-card-img-wrap">
+          <img class="fan-card-img" [src]="cardImg(c.carta)" [alt]="c.carta.numero + ' ' + c.carta.palo" />
+          @if (rasgunoAnimando && rasgunoSlotIdx === $index) {
+          <div class="rasguno-garras" aria-hidden="true"></div>
+          }
+        </div>
         }
         }
       </div>
@@ -213,6 +263,8 @@
         ← Tocá la carta a cambiar
         } @else if (habilidadDisponible) {
         ⚡ Usar habilidad
+        } @else if (habilidadSoloAlInicio) {
+        Solo al inicio de la mano
         } @else {
         Habilidad no disponible
         }
@@ -267,7 +319,7 @@
   }
 
 
-  @if (countdown !== null) {
+  @if (countdown !== null && !envidoRevealActivo && !trampaDelMonteActivo) {
   <div class="nueva-mano-countdown">Nueva mano en {{ countdown }}</div>
   }
 
@@ -285,6 +337,15 @@
   }
 
 </div>
+}
+
+@if (trampaDelMonteActivo) {
+<div class="trampa-overlay">
+  <div class="trampa-box">
+    <div class="trampa-texto">{{ trampaDelMonteTexto }}</div>
+  </div>
+</div>
+}
 
 @if (salpicaduraRevelando) {
 <div class="salpicadura-overlay">

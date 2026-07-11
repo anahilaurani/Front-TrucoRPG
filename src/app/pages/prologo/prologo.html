@@ -13,9 +13,9 @@
     </div>
 
     <div class="acciones-confirmar">
+        <button class="btn-saltar" (click)="saltar()">SALTAR</button>
         <button class="boton-siguiente" (click)="siguiente()">
             {{ !typewriterDone ? 'CONTINUAR ▶' : esUltimaSlide ? 'COMENZAR AVENTURA' : 'SIGUIENTE ▶' }}
         </button>
-        <button class="btn-saltar" (click)="saltar()">SALTAR</button>
     </div>
 </main>

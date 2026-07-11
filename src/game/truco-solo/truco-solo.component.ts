@@ -75,8 +75,8 @@ export interface VistaHabilidadesRival {
 
 export interface ManoState {
   id: string;
-  humano: { mano: Carta[] };
-  maquina: { mano: Carta[] };
+  humano: { mano: Carta[]; jugadas?: Carta[] };
+  maquina: { mano: Carta[]; jugadas?: Carta[] };
   bazas: Baza[];
   turnoActual: 'Humano' | 'Maquina';
   puntosHumano: number;
@@ -128,6 +128,7 @@ export interface ManoState {
   mandingaEnganoManoOculta?: boolean;
   mandingaMaldicionBloqueando?: boolean;
   mandingaMaldicionActivaEnMano?: boolean;
+  ultimoMensajeHabilidadRival?: string;
 }
 
 export interface Btn {
@@ -189,6 +190,8 @@ const FAN_X = [-84, 0, 84];
 const SALPICADURA_REVEAL_SEG = 5;
 const TRAVESURA_REVEAL_SEG = 5;
 const RASGUNO_REVEAL_SEG = 3;
+const RASGUNO_ANIM_MS = 850;
+const RASGUNO_POST_ANIM_MS = 450;
 const AULLIDO_REVEAL_SEG = 3;
 const DESTELLO_REVEAL_SEG = 3;
 const ESPEJISMO_REVEAL_SEG = 3;
@@ -196,9 +199,23 @@ const ESPEJISMO_PARPADEO_MS = 2000;
 const MANDINGA_ESPEJO_SEG = 3;
 const MANDINGA_ENGANO_SEG = 5;
 const MANDINGA_MALDICION_SEG = 3;
+const ENVIDO_REVEAL_SEG = 3;
+const REMOLINO_HOLD_MS = 2000;
+const REMOLINO_ANIM_MS = 900;
+const TRAMPA_MONTE_MS = 3000;
+const TRAMPA_MONTE_TEXTO = 'Trampa: Pomberito obtiene +1 punto.';
+const CLASE_RIVAL_POMBERITO = 2;
 
 const RIVAL_BATALLA_ARCHIVO: Record<string, string> = {
   mandinga: 'Mandinga_batalla.png',
+};
+
+const RIVAL_NIVEL_SLUG: Record<number, string> = {
+  1: 'nahuelito',
+  2: 'pomberito',
+  3: 'lobizon',
+  4: 'luzmala',
+  5: 'mandinga',
 };
 
 // ── Componente ───────────────────────────────────────────────────────────────
@@ -227,6 +244,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   rival: Rival | null = null;
 
+  /** Pantalla de combate contra jefe: oculta el layout hasta cargar assets + mano inicial. */
+  combateListo = false;
+  rivalNivel: number | null = null;
+
   // Índice de la carta seleccionada para el Manipulador (claseHeroe === 0)
   habilidadCartaIdx: number | null = null;
 
@@ -249,17 +270,26 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.esPartidaHistoria(this.mano) && !this.gameOver && !!this.mano;
   }
 
-  get mostrarBotonGanar10Puntos(): boolean {
+  /** SOLO PRUEBAS — Atajo oculto (tecla O) para sumar 10 puntos contra Mandinga. */
+  get puedeUsarGanar10PuntosDebug(): boolean {
     return this.puedeUsarGanarAutomaticoDebug && this.esMandinga;
   }
 
   @HostListener('document:keydown', ['$event'])
-  onGanarAutomaticoDebugKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'p' && event.key !== 'P') return;
+  onDebugKeydown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
     if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return;
-    if (!this.puedeUsarGanarAutomaticoDebug) return;
-    this.ganarAutomaticoDebug();
+
+    if (event.key === 'p' || event.key === 'P') {
+      if (!this.puedeUsarGanarAutomaticoDebug) return;
+      this.ganarAutomaticoDebug();
+      return;
+    }
+
+    if (event.key === 'o' || event.key === 'O') {
+      if (!this.puedeUsarGanar10PuntosDebug) return;
+      this.ganar10PuntosDebug();
+    }
   }
 
   get accionesBloqueadasPorHabilidadRival(): boolean {
@@ -267,7 +297,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.salpicaduraRevelando
       || this.travesuraRevelando
       || this.rasgunoRevelando
+      || this.rasgunoAnimEnCurso
       || this.rasgunoConfirmando
+      || this.remolinoEnCurso
+      || this.trampaDelMonteActivo
       || this.destelloRevelando
       || this.espejismoRevelando
       || this.mandingaEspejoRevelando
@@ -305,6 +338,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   travesuraSegundos = 0;
   rasgunoRevelando = false;
   rasgunoSegundos = 0;
+  rasgunoAnimEnCurso = false;
+  rasgunoAnimando = false;
+  rasgunoMostrarDebilitada = false;
+  rasgunoSlotIdx: number | null = null;
+  private rasgunoManoPendiente: ManoState | null = null;
+  private debilitarCartaMotivo: 'rasguno' | 'lunaLlena' | null = null;
   aullidoRevelando = false;
   aullidoSegundos = 0;
   destelloRevelando = false;
@@ -322,17 +361,65 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private salpicaduraCartasOriginales: Carta[] = [];
   private rasgunoCartasOriginales: Carta[] = [];
 
-  // Habilidad disponible = el backend dice que está lista y no fue usada esta mano
+  // Inicio de la mano = sin bazas jugadas, sin ganador de mano y partida en curso
+  // (misma regla que ReglasHabilidadActiva.EsInicioDeMano en el backend).
+  get esInicioDeMano(): boolean {
+    const m = this.mano;
+    if (!m) return false;
+    return (m.bazas?.length ?? 0) === 0 && !m.ganadorMano && !m.partidaTerminada;
+  }
+
+  /**
+   * Manipulador (0), Timbero (1) y Mentiroso (3) solo pueden activar al inicio de
+   * la mano. Fanfarrón (2) no (su activa aplica al próximo envido/truco).
+   */
+  private get activaRequiereInicioDeMano(): boolean {
+    const clase = this.heroe?.id;
+    return clase === 0 || clase === 1 || clase === 3;
+  }
+
+  // Habilidad disponible = el backend dice que está lista, no fue usada esta mano
+  // y, si la activa lo exige, estamos al inicio de la mano (así el botón no queda
+  // habilitado para una acción que el backend va a rechazar con 400).
   get habilidadDisponible(): boolean {
     const v = this.vista;
     if (!this.heroe || !v?.habilidadesActivasEnPartida) return false;
-    return !!v.activaDisponible && !v.activaUsadaEnEstaMano;
+    if (!v.activaDisponible || v.activaUsadaEnEstaMano) return false;
+    if (this.activaRequiereInicioDeMano && !this.esInicioDeMano) return false;
+    return true;
+  }
+
+  /** La activa está lista pero deshabilitada solo por no ser el inicio de la mano. */
+  get habilidadSoloAlInicio(): boolean {
+    const v = this.vista;
+    return !!v?.activaDisponible && !v?.activaUsadaEnEstaMano
+      && this.activaRequiereInicioDeMano && !this.esInicioDeMano;
   }
 
   // True cuando el jugador tocó el botón y el Manipulador espera que elija carta
   get manipuladorEsperandoCarta(): boolean {
     return !!this.heroe && this.heroe.id === 0 && this.modoSeleccionCarta;
   }
+
+  /** Revelación de cartas de envido del rival al cerrar la mano (modo historia). */
+  envidoRevealActivo = false;
+  envidoRevealCartas: Carta[] = [];
+
+  /** Remolino (Nahuelito): muestra la carta original, anima y recién ahí aplica el cambio de palo. */
+  remolinoEnCurso = false;
+  remolinoAnimando = false;
+  remolinoMostrarNueva = false;
+  remolinoSlotIdx: number | null = null;
+  remolinoCartaOriginal: Carta | null = null;
+  remolinoCartaNueva: Carta | null = null;
+  private ultimaCartaJugadaOptimista: Carta | null = null;
+
+  trampaDelMonteActivo = false;
+  trampaDelMonteSegundos = 0;
+  private trampaDelMonteManoId: string | null = null;
+  private trampaDelMonteTimer: ReturnType<typeof setTimeout> | null = null;
+  private trampaDelMonteInterval: ReturnType<typeof setInterval> | null = null;
+  readonly trampaDelMonteTexto = TRAMPA_MONTE_TEXTO;
 
   // ── Modo práctica ─────────────────────────────────────────────────────────
   escenarioPractica: number | null = null;
@@ -384,7 +471,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private envidoSeqTimers: ReturnType<typeof setTimeout>[] = [];
   private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
-  private rivalNivel: number | null = null;
+  private manoInicialRecibida = false;
+  private assetsCombateListos = false;
   private salpicaduraManoId: string | null = null;
   private salpicaduraTimer: ReturnType<typeof setTimeout> | null = null;
   private salpicaduraInterval: ReturnType<typeof setInterval> | null = null;
@@ -415,6 +503,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private mandingaMaldicionManoId: string | null = null;
   private mandingaMaldicionTimer: ReturnType<typeof setTimeout> | null = null;
   private mandingaMaldicionInterval: ReturnType<typeof setInterval> | null = null;
+  private envidoRevealTimer: ReturnType<typeof setTimeout> | null = null;
+  private envidoRevealManoId: string | null = null;
+  /** Id de la mano actual para mantener cada carta en su slot del abanico. */
+  private misCartsManoId: string | null = null;
   private rasgunoWatchdog: ReturnType<typeof setInterval> | null = null;
   private rasgunoConfirmando = false;
   private nuevaManoEnCurso = false;
@@ -426,14 +518,16 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Slug normalizado del rival (ej. "El Pomberito" -> "pomberito"). Vacío si no hay rival.
   get rivalSlug(): string {
-    if (!this.rival?.nombre) return '';
-    return this.rival.nombre
-      .toLowerCase()
-      .replace(/^(el|la|los|las)\s+/i, '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '')
-      .trim();
+    if (this.rival?.nombre) {
+      return this.rival.nombre
+        .toLowerCase()
+        .replace(/^(el|la|los|las)\s+/i, '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '')
+        .trim();
+    }
+    return this.obtenerSlugRivalDesdeNivel(this.rivalNivel);
   }
 
   get rivalSlugFondo(): string {
@@ -564,7 +658,11 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     const rivalNivelStr = localStorage.getItem('rivalNivel');
     if (rivalNivelStr !== null) {
       this.rivalNivel = parseInt(rivalNivelStr, 10);
+      this.hidratarRivalLocal(this.rivalNivel);
       this.cargarRival(this.rivalNivel);
+      this.iniciarPrecargaCombate();
+    } else {
+      this.assetsCombateListos = true;
     }
 
     const escStr = localStorage.getItem('practicaEscenario');
@@ -582,7 +680,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarMandingaTimers();
     this.rasgunoManoId = null;
 
-    this.call('nueva-partida', this.construirBodyPartida());
+    this.call('nuevaPartida', this.construirBodyPartida());
   }
 
   private cargarRival(nivel: number): void {
@@ -595,9 +693,81 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: () => {
+        if (!this.rival) {
+          this.hidratarRivalLocal(nivel);
+        }
         this.showToast('No se pudo cargar los datos del rival.');
       },
     });
+  }
+
+  private obtenerSlugRivalDesdeNivel(nivel: number | null): string {
+    if (nivel === null) return '';
+    return RIVAL_NIVEL_SLUG[nivel] ?? '';
+  }
+
+  private hidratarRivalLocal(nivel: number): void {
+    const oponente = OPONENTES[nivel - 1];
+    if (!oponente) return;
+
+    const habilidades = oponente.habilidades ?? [];
+    const descripcionHabilidad = habilidades.length > 0
+      ? habilidades.map(h => `${h.nombre}: ${h.texto}`).join(' ')
+      : (oponente.fases?.map(f => `${f.titulo}: ${f.texto}`).join(' ') ?? oponente.intro);
+
+    this.rival = {
+      id: oponente.id,
+      nivel,
+      nombre: oponente.nombre,
+      descripcion: oponente.intro,
+      nombreHabilidad: habilidades[0]?.nombre ?? oponente.fases?.[0]?.titulo ?? '',
+      descripcionHabilidad: this.formatearDescripcionRival(descripcionHabilidad),
+      tipoRival: 0,
+      tipoHabilidad: 0,
+    };
+  }
+
+  private iniciarPrecargaCombate(): void {
+    const slug = this.obtenerSlugRivalDesdeNivel(this.rivalNivel);
+    if (!slug) {
+      this.assetsCombateListos = true;
+      this.evaluarCombateListo();
+      return;
+    }
+
+    const fondoSlug = slug === 'luzmala' ? 'lobizon' : slug;
+    const fondoUrl = `assets/fondos1v1/${fondoSlug}_fondo.png`;
+    const batallaArchivo = RIVAL_BATALLA_ARCHIVO[slug] ?? `${slug}_batalla.png`;
+    const rivalUrl = `assets/oponentes1v1/${batallaArchivo}`;
+
+    Promise.all([
+      this.preloadImagen(fondoUrl),
+      this.preloadImagen(rivalUrl),
+    ]).finally(() => {
+      this.assetsCombateListos = true;
+      this.evaluarCombateListo();
+    });
+  }
+
+  private preloadImagen(src: string): Promise<void> {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = src;
+    });
+  }
+
+  private evaluarCombateListo(): void {
+    if (this.combateListo) return;
+    if (this.rivalNivel === null) {
+      this.combateListo = this.manoInicialRecibida;
+    } else {
+      this.combateListo = this.manoInicialRecibida && this.assetsCombateListos;
+    }
+    if (this.combateListo) {
+      this.cdr.markForCheck();
+    }
   }
 
   private construirBodyPartida(): Record<string, unknown> {
@@ -623,6 +793,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarDestelloTimer();
     this.cancelarEspejismoTimers();
     this.cancelarMandingaTimers();
+    this.cancelarEnvidoRevealTimer();
+    this.cancelarRemolino();
+    this.cancelarTrampaDelMonte();
     if (this.rasgunoWatchdog) {
       clearInterval(this.rasgunoWatchdog);
       this.rasgunoWatchdog = null;
@@ -644,6 +817,30 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   mensajeHabilidadLimpio(msg?: string | null): string {
     if (!msg) return '';
     return msg.replace(/\s*\(Truco\s+\d+\)/gi, '').trim();
+  }
+
+  mensajeEsTrampaDelMonte(msg?: string | null): boolean {
+    return !!msg && msg.includes('Trampa del monte');
+  }
+
+  private mensajeEsLunaLlena(msg?: string | null): boolean {
+    return !!msg && msg.includes('Luna llena');
+  }
+
+  private mensajeRivalActual(m: ManoState): string {
+    return m.vistaHabilidadesRival?.ultimoMensajeHabilidad
+      ?? m.ultimoMensajeHabilidadRival
+      ?? '';
+  }
+
+  private esRivalPomberito(m: ManoState): boolean {
+    return m.configuracion?.rivalDeLaMaquina === CLASE_RIVAL_POMBERITO
+      || this.rivalNivel === CLASE_RIVAL_POMBERITO
+      || this.rival?.id === 'pomberito';
+  }
+
+  private esManoSilenciosa(m: ManoState): boolean {
+    return !m.envidoCantado && !m.trucoCantado;
   }
 
   private formatearDescripcionRival(desc: string): string {
@@ -689,8 +886,8 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Acciones tras las cuales la máquina juega/responde → conviene simular que "piensa". */
   private readonly ENDPOINTS_PENSAR = new Set([
-    'jugar-carta', 'cantar-envido', 'cantar-envido-tipo', 'responder-envido',
-    'son-buenas', 'cantar-truco', 'responder-truco', 'escalar-truco',
+    'jugarCarta', 'cantarEnvido', 'cantarEnvidoTipo', 'responderEnvido',
+    'sonBuenas', 'cantarTruco', 'responderTruco', 'escalarTruco',
   ]);
 
   private esPartidaHistoria(m?: ManoState | null): boolean {
@@ -729,7 +926,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       let sinProgreso = 0;
       while (this.mano) {
         const m = this.mano;
-        if (m.ganadorPartida || m.ganadorMano) break;
+        if (m.ganadorPartida || m.ganadorMano || m.partidaTerminada) break;
         if (this.accionesBloqueadasPorHabilidadRival) {
           if (this.mano?.id === m.id && this.rasgunoBloqueandoEn(m) && this.rasgunoManoId !== m.id) {
             this.manejarRasguno(m);
@@ -750,7 +947,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         try {
           const res = await firstValueFrom(
             this.http.post<{ mano: ManoState; evento?: { tipo: string; texto: string } }>(
-              `${API}/avanzar-maquina`,
+              `${API}/avanzarMaquina`,
               { manoId: m.id },
             ),
           );
@@ -780,37 +977,65 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async call(endpoint: string, body: object): Promise<void> {
     if (this.loading || this.maquinaCorriendo) return;
-    if (endpoint !== 'confirmar-salpicadura'
-      && endpoint !== 'confirmar-travesura'
-      && endpoint !== 'confirmar-rasguno'
-      && endpoint !== 'confirmar-aullido'
-      && endpoint !== 'confirmar-destello'
-      && endpoint !== 'confirmar-espejismo'
-      && endpoint !== 'confirmar-mandinga-espejo'
-      && endpoint !== 'confirmar-mandinga-engano'
-      && endpoint !== 'confirmar-mandinga-maldicion'
-      && endpoint !== 'ganar-automatico-debug'
-      && endpoint !== 'sumar-puntos-humano-debug'
+    if (endpoint !== 'confirmarSalpicadura'
+      && endpoint !== 'confirmarTravesura'
+      && endpoint !== 'confirmarRasguno'
+      && endpoint !== 'confirmarAullido'
+      && endpoint !== 'confirmarDestello'
+      && endpoint !== 'confirmarEspejismo'
+      && endpoint !== 'confirmarMandingaEspejo'
+      && endpoint !== 'confirmarMandingaEngano'
+      && endpoint !== 'confirmarMandingaMaldicion'
+      && endpoint !== 'ganarAutomaticoDebug'
+      && endpoint !== 'sumarPuntosHumanoDebug'
       && this.accionesBloqueadasPorHabilidadRival) return;
     this.loading = true;
 
     const pensar = this.ENDPOINTS_PENSAR.has(endpoint);
     // Tu carta aparece al instante en la mesa; la máquina "piensa" antes de mostrar su jugada.
-    if (endpoint === 'jugar-carta') this.colocarCartaHumanoOptimista(body);
+    if (endpoint === 'jugarCarta') this.colocarCartaHumanoOptimista(body);
     // Tu canto aparece al instante en tu burbuja (la respuesta/tantos los muestra la secuencia).
     this.feedbackCantoHumano(endpoint, body);
+
+    let cartasAntesLunaLlena: Carta[] | null = null;
+    const bodyRecord = body as { aceptar?: boolean; escalarA?: string };
+    if (endpoint === 'responderTruco'
+      && bodyRecord.aceptar === true
+      && !bodyRecord.escalarA
+      && this.mano?.cantorTruco === 'Maquina') {
+      cartasAntesLunaLlena = this.cartasHumano(this.mano).map(c => ({ ...c }));
+    }
 
     try {
       const data = await firstValueFrom(
         this.http.post<ManoState>(`${API}/${endpoint}`, body)
       );
-      // Pausa que simula a la máquina pensando antes de revelar su jugada/respuesta.
-      if (pensar) await this.delay(this.delayMaquinaMs);
-      this.recibirMano(data);
-      await this.correrMaquinas();
+      const remolinoPendiente = endpoint === 'jugarCarta' && this.debeAnimarRemolino(data);
+      const lunaLlenaPendiente = cartasAntesLunaLlena
+        && this.debeAnimarLunaLlena(data, cartasAntesLunaLlena);
+
+      if (remolinoPendiente) {
+        this.recibirMano(data);
+        await this.ejecutarSecuenciaRemolino(data);
+        await this.delay(this.delayMaquinaMs);
+        await this.correrMaquinas();
+      } else if (lunaLlenaPendiente) {
+        if (pensar) await this.delay(this.delayMaquinaMs);
+        await this.ejecutarSecuenciaLunaLlena(cartasAntesLunaLlena!, data);
+        await this.correrMaquinas();
+      } else {
+        if (pensar) await this.delay(this.delayMaquinaMs);
+        this.recibirMano(data);
+        await this.correrMaquinas();
+      }
     } catch (err: unknown) {
       const msg = this.extraerErrorApi(err);
       this.showToast(`Error en ${endpoint}: ${msg}`);
+      if (endpoint === 'nuevaPartida') {
+        this.manoInicialRecibida = true;
+        this.assetsCombateListos = true;
+        this.combateListo = true;
+      }
       if (this.mano) this.updateUI(this.mano);
     } finally {
       this.loading = false;
@@ -832,8 +1057,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     if (idxHand < 0) return;
     const carta = this.misCarts[idxHand].carta;
+    this.ultimaCartaJugadaOptimista = carta ? { ...carta } : null;
 
-    this.misCarts = this.misCarts.map((mc, i) => i === idxHand ? { ...mc, visible: false } : mc);
+    this.misCarts = this.misCarts.map((mc, i) =>
+      i === idxHand ? { ...mc, carta: null, visible: false, seleccionada: false } : mc);
 
     const slotIdx = m.bazas?.length ?? 0;
     if (carta && slotIdx >= 0 && slotIdx < this.slots.length) {
@@ -881,7 +1108,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         paloCarta: c.palo,
       };
       this.misCarts = this.misCarts.map(mc => ({ ...mc, seleccionada: false }));
-      this.call('activar-habilidad', body);
+      this.call('activarHabilidad', body);
       return;
     }
 
@@ -899,7 +1126,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Flujo normal: jugar la carta
     new Audio('/assets/musica/card.mp3').play().catch(() => { });
-    this.call('jugar-carta', { manoId: this.mano.id, numero: c.numero, palo: c.palo });
+    this.call('jugarCarta', { manoId: this.mano.id, numero: c.numero, palo: c.palo });
   }
 
   // ── Usar habilidad ────────────────────────────────────────────────────────
@@ -916,7 +1143,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Resto de héroes: llamar al backend directamente sin elegir carta
-    this.call('activar-habilidad', { manoId: this.mano.id });
+    this.call('activarHabilidad', { manoId: this.mano.id });
   }
 
   private iniciarCountdown(onComplete: () => void): void {
@@ -954,12 +1181,18 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.prevMensajeRival = null;
     this.salpicaduraCartasOriginales = [];
     this.rasgunoCartasOriginales = [];
+    this.envidoRevealManoId = null;
+    this.trampaDelMonteManoId = null;
+    this.misCartsManoId = null;
+    this.cancelarEnvidoRevealTimer();
+    this.cancelarRemolino();
+    this.cancelarTrampaDelMonte();
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
     this.cancelarDestelloTimer();
     this.cancelarEspejismoTimers();
-    this.call('nueva-partida', this.construirBodyPartida());
+    this.call('nuevaPartida', this.construirBodyPartida());
   }
 
   mostrarConfirmSalir = false;
@@ -1025,12 +1258,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cancelarSalpicaduraTimer();
     this.cancelarTravesuraTimer();
     this.cancelarRasgunoTimer();
-    this.call('ganar-automatico-debug', { manoId: this.mano.id });
+    this.call('ganarAutomaticoDebug', { manoId: this.mano.id });
   }
 
   ganar10PuntosDebug(): void {
     if (!this.mano || !this.esMandinga) return;
-    this.call('sumar-puntos-humano-debug', { manoId: this.mano.id });
+    this.call('sumarPuntosHumanoDebug', { manoId: this.mano.id });
   }
 
   private registrarVictoriaHistoria(m: ManoState): void {
@@ -1038,7 +1271,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.victoriaHistoriaRegistrada = true;
 
     const diferencia = Math.max(0, m.puntosHumano - m.puntosMaquina);
-    this.http.post(`${API_HISTORIA}/registrar-victoria`, {
+    this.http.post(`${API_HISTORIA}/registrarVictoria`, {
       rivalNivel: this.rivalNivel,
       diferenciaPuntos: diferencia,
     }).subscribe({
@@ -1064,29 +1297,17 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
         this.turnoBadge = '';
         this.reproducirSecuenciaEnvido(m);
         this.prevEnvidoResuelto = true;
-        if (this.gameOverTimer) clearTimeout(this.gameOverTimer);
-        this.gameOverTimer = setTimeout(() => {
-          this.gameOver = true;
-          this.gameOverWon = m.ganadorPartida === 'Humano';
-          // La partida también puede definirse por el envido: hay que registrar la
-          // victoria de historia acá igual que en el cierre normal, si no el progreso
-          // (rival derrotado) no se guarda y el siguiente rival queda bloqueado.
-          if (this.gameOverWon && this.rivalNivel !== null) {
-            this.registrarVictoriaHistoria(m);
-          }
-          if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
-          this.cdr.markForCheck();
-        }, this.duracionSecuenciaEnvido(m) + 800);
+        this.programarCierrePartidaPorEnvido(m);
         this.cdr.markForCheck();
         return;
       }
-      this.gameOver = true;
-      this.gameOverWon = m.ganadorPartida === 'Humano';
-      if (this.gameOverWon && this.rivalNivel !== null) {
-        this.registrarVictoriaHistoria(m);
+      if (m.ganadorMano && this.debeMostrarTrampaDelMonte(m)) {
+        this.rivalLabel = m.ganadorMano === 'Humano' ? '¡Perdí la mano!' : '¡Gané la mano!';
+        this.iniciarAvisoTrampaDelMonte(m);
+        this.cdr.markForCheck();
+        return;
       }
-      if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
-      this.cdr.markForCheck();
+      this.finalizarGameOverPorMano(m);
       return;
     }
     this.gameOver = false;
@@ -1095,8 +1316,14 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rivalLabel = m.ganadorMano === 'Humano' ? '¡Perdí la mano!' : '¡Gané la mano!';
       this.habilidadCartaIdx = null;
       this.modoSeleccionCarta = false;
-      if (!m.partidaTerminada && m.ganadorMano !== this.prevGanadorMano) {
-        this.iniciarCountdown(() => this.solicitarNuevaMano());
+      if (this.debeMostrarTrampaDelMonte(m)) {
+        this.iniciarAvisoTrampaDelMonte(m);
+      } else if (!m.partidaTerminada && m.ganadorMano !== this.prevGanadorMano) {
+        if (this.debeRevelarCartasEnvidoFinMano(m)) {
+          this.iniciarRevelacionEnvidoFinMano(m);
+        } else if (!this.envidoRevealActivo) {
+          this.iniciarCountdown(() => this.solicitarNuevaMano());
+        }
       }
     } else {
       this.rivalLabel = m.turnoActual === 'Maquina' ? 'Pensando...' : '...';
@@ -1111,6 +1338,22 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.rasgunoRevelando) {
       this.turnoBadge = 'Rasguño: el Lobizón va a debilitar una carta...';
+    } else if (this.rasgunoAnimEnCurso) {
+      if (this.debilitarCartaMotivo === 'lunaLlena') {
+        this.turnoBadge = this.rasgunoAnimando
+          ? 'Luna llena: el Lobizón ara tu carta...'
+          : 'Luna llena: tu carta pierde valor...';
+      } else {
+        this.turnoBadge = this.rasgunoAnimando
+          ? 'Rasguño: el Lobizón ara tu carta...'
+          : 'Rasguño: la carta pierde valor...';
+      }
+    } else if (this.remolinoEnCurso) {
+      this.turnoBadge = this.remolinoAnimando
+        ? '¡Remolino! La carta gira en remolino...'
+        : '¡Remolino! Nahuelito agita las aguas...';
+    } else if (this.envidoRevealActivo) {
+      this.turnoBadge = '';
     } else if (this.aullidoRevelando) {
       this.turnoBadge = 'Aullido: el Lobizón te asusta...';
     } else if (this.travesuraRevelando) {
@@ -1141,7 +1384,9 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.prevEnvidoResuelto = !!m.envidoResuelto;
 
     const cantOp = m.maquina?.mano?.length ?? 0;
-    this.actualizarCartasRival(m, cantOp);
+    if (!this.envidoRevealActivo) {
+      this.actualizarCartasRival(m, cantOp);
+    }
 
     this.manejarSalpicadura(m);
     this.manejarRasguno(m);
@@ -1160,8 +1405,14 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       const pendingHum = !b && i === idxActual && !!m.cartaHumanoEnMesa && !m.cartaMaquinaEnMesa;
       const espejismoOculto = pendingMaq && this.espejismoOcultandoMesa(m);
       const espejismoParpadeoActivo = pendingMaq && this.espejismoAlternandoEnMesa(m);
+      let jugador = b?.cartaJugador ?? (pendingHum ? m.cartaHumanoEnMesa : undefined);
+      if (this.remolinoEnCurso && i === this.remolinoSlotIdx) {
+        jugador = this.remolinoMostrarNueva
+          ? (this.remolinoCartaNueva ?? jugador)
+          : (this.remolinoCartaOriginal ?? jugador);
+      }
       return {
-        jugador: b?.cartaJugador ?? (pendingHum ? m.cartaHumanoEnMesa : undefined),
+        jugador,
         maquina: espejismoOculto
           ? undefined
           : (b?.cartaMaquina ?? (pendingMaq ? this.cartaMaquinaVisual(m) : undefined)),
@@ -1173,6 +1424,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.actualizarCartasMano(m);
+
+    if (this.envidoRevealActivo) {
+      this.btns = [];
+      this.cdr.markForCheck();
+      return;
+    }
 
     this.buildBtns(m, esMiTurno, pendEnv, pendTru);
 
@@ -1230,7 +1487,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.salpicaduraSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-salpicadura', m.id);
+        this.confirmarHabilidadRival('confirmarSalpicadura', m.id);
       }
     }, SALPICADURA_REVEAL_SEG * 1000);
 
@@ -1298,7 +1555,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.travesuraSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-travesura', m.id);
+        this.confirmarHabilidadRival('confirmarTravesura', m.id);
       }
     }, TRAVESURA_REVEAL_SEG * 1000);
 
@@ -1318,6 +1575,16 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.rasgunoSegundos = 0;
     this.rasgunoCartasOriginales = [];
     this.rasgunoManoId = null;
+    this.cancelarRasgunoAnimacion();
+  }
+
+  private cancelarRasgunoAnimacion(): void {
+    this.rasgunoAnimEnCurso = false;
+    this.rasgunoAnimando = false;
+    this.rasgunoMostrarDebilitada = false;
+    this.rasgunoSlotIdx = null;
+    this.rasgunoManoPendiente = null;
+    this.debilitarCartaMotivo = null;
   }
 
   private rasgunoBloqueandoEn(m: ManoState): boolean {
@@ -1360,14 +1627,126 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rasgunoInterval = null;
       this.rasgunoRevelando = false;
       this.rasgunoSegundos = 0;
-      this.rasgunoCartasOriginales = [];
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-rasguno', m.id);
+        void this.ejecutarSecuenciaRasguno(m);
       }
     }, RASGUNO_REVEAL_SEG * 1000);
 
     this.cdr.detectChanges();
+  }
+
+  private indiceCartaDebilitada(originales: Carta[], nuevas: Carta[]): number {
+    for (let i = 0; i < Math.min(originales.length, nuevas.length); i++) {
+      const o = originales[i];
+      const n = nuevas[i];
+      if (o.numero !== n.numero || o.palo !== n.palo || o.valorTruco !== n.valorTruco) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private debeAnimarLunaLlena(data: ManoState, originales: Carta[]): boolean {
+    if (!this.mensajeEsLunaLlena(this.mensajeRivalActual(data))) return false;
+    const antes = originales.map(c => this.normalizarCarta(c));
+    const despues = this.cartasHumano(data);
+    return this.indiceCartaDebilitada(antes, despues) >= 0;
+  }
+
+  private async ejecutarAnimacionDebilitarCarta(manoUi: ManoState, data: ManoState, slotIdx: number): Promise<void> {
+    this.rasgunoManoPendiente = data;
+    this.rasgunoAnimEnCurso = true;
+    this.rasgunoSlotIdx = slotIdx;
+    this.rasgunoMostrarDebilitada = false;
+    this.rasgunoAnimando = false;
+    this.btns = [];
+    this.actualizarCartasMano(manoUi);
+    this.updateUI(manoUi);
+    this.cdr.markForCheck();
+
+    await this.delay(180);
+    this.rasgunoAnimando = true;
+    this.updateUI(manoUi);
+    this.cdr.markForCheck();
+    await this.delay(RASGUNO_ANIM_MS);
+
+    this.rasgunoAnimando = false;
+    this.rasgunoMostrarDebilitada = true;
+    this.actualizarCartasMano(manoUi);
+    this.updateUI(manoUi);
+    await this.delay(RASGUNO_POST_ANIM_MS);
+  }
+
+  private async ejecutarSecuenciaLunaLlena(originales: Carta[], data: ManoState): Promise<void> {
+    this.rasgunoCartasOriginales = originales.map(c => this.normalizarCarta(c));
+    const nuevas = this.cartasHumano(data);
+    const slotIdx = this.indiceCartaDebilitada(this.rasgunoCartasOriginales, nuevas);
+
+    if (slotIdx < 0) {
+      this.rasgunoCartasOriginales = [];
+      this.recibirMano(data);
+      return;
+    }
+
+    this.debilitarCartaMotivo = 'lunaLlena';
+    const msg = this.mensajeHabilidadLimpio(this.mensajeRivalActual(data));
+    if (msg) this.showBubble(msg);
+
+    try {
+      await this.ejecutarAnimacionDebilitarCarta(this.mano ?? data, data, slotIdx);
+      this.rasgunoCartasOriginales = [];
+      this.cancelarRasgunoAnimacion();
+      this.recibirMano(data);
+    } catch {
+      this.rasgunoCartasOriginales = [];
+      this.cancelarRasgunoAnimacion();
+      this.recibirMano(data);
+    }
+  }
+
+  private async ejecutarSecuenciaRasguno(m: ManoState): Promise<void> {
+    const originales = this.rasgunoCartasOriginales.map(c => this.normalizarCarta(c));
+    if (originales.length === 0) {
+      this.confirmarHabilidadRival('confirmarRasguno', m.id);
+      return;
+    }
+
+    this.rasgunoConfirmando = true;
+    try {
+      const data = await firstValueFrom(
+        this.http.post<ManoState>(`${API}/confirmarRasguno`, { manoId: m.id }),
+      );
+      const nuevas = this.cartasHumano(data);
+      const slotIdx = this.indiceCartaDebilitada(originales, nuevas);
+
+      if (slotIdx < 0) {
+        this.rasgunoCartasOriginales = [];
+        this.finalizarRasguno(data);
+        return;
+      }
+
+      this.debilitarCartaMotivo = 'rasguno';
+      await this.ejecutarAnimacionDebilitarCarta(m, data, slotIdx);
+
+      this.rasgunoCartasOriginales = [];
+      this.finalizarRasguno(data);
+    } catch (err) {
+      this.rasgunoManoId = null;
+      this.rasgunoConfirmando = false;
+      this.rasgunoCartasOriginales = [];
+      this.cancelarRasgunoAnimacion();
+      this.showToast(`Error en confirmarRasguno: ${this.extraerErrorApi(err)}`);
+      this.cdr.markForCheck();
+    }
+  }
+
+  private finalizarRasguno(data: ManoState): void {
+    this.cancelarRasgunoAnimacion();
+    this.rasgunoManoId = null;
+    this.rasgunoConfirmando = false;
+    this.recibirMano(data);
+    void this.correrMaquinas();
   }
 
   private aullidoBloqueandoEn(m: ManoState): boolean {
@@ -1424,7 +1803,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.aullidoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-aullido', m.id);
+        this.confirmarHabilidadRival('confirmarAullido', m.id);
       }
     }, AULLIDO_REVEAL_SEG * 1000);
 
@@ -1489,7 +1868,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.destelloSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-destello', m.id);
+        this.confirmarHabilidadRival('confirmarDestello', m.id);
       }
     }, DESTELLO_REVEAL_SEG * 1000);
 
@@ -1645,7 +2024,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.espejismoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-espejismo', m.id);
+        this.confirmarHabilidadRival('confirmarEspejismo', m.id);
       }
     }, ESPEJISMO_REVEAL_SEG * 1000);
 
@@ -1728,7 +2107,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaEspejoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-mandinga-espejo', m.id);
+        this.confirmarHabilidadRival('confirmarMandingaEspejo', m.id);
       }
     }, MANDINGA_ESPEJO_SEG * 1000);
 
@@ -1767,7 +2146,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaEnganoSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-mandinga-engano', m.id);
+        this.confirmarHabilidadRival('confirmarMandingaEngano', m.id);
       }
     }, MANDINGA_ENGANO_SEG * 1000);
 
@@ -1806,7 +2185,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaMaldicionSegundos = 0;
       this.cdr.markForCheck();
       if (this.mano?.id === m.id) {
-        this.confirmarHabilidadRival('confirmar-mandinga-maldicion', m.id);
+        this.confirmarHabilidadRival('confirmarMandingaMaldicion', m.id);
       }
     }, MANDINGA_MALDICION_SEG * 1000);
 
@@ -1814,10 +2193,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private confirmarHabilidadRival(
-    endpoint: 'confirmar-salpicadura' | 'confirmar-travesura' | 'confirmar-rasguno' | 'confirmar-aullido' | 'confirmar-destello' | 'confirmar-espejismo' | 'confirmar-mandinga-espejo' | 'confirmar-mandinga-engano' | 'confirmar-mandinga-maldicion',
+    endpoint: 'confirmarSalpicadura' | 'confirmarTravesura' | 'confirmarRasguno' | 'confirmarAullido' | 'confirmarDestello' | 'confirmarEspejismo' | 'confirmarMandingaEspejo' | 'confirmarMandingaEngano' | 'confirmarMandingaMaldicion',
     manoId: string,
   ): void {
-    if (endpoint === 'confirmar-rasguno') this.rasgunoConfirmando = true;
+    if (endpoint === 'confirmarRasguno') this.rasgunoConfirmando = true;
     firstValueFrom(
       this.http.post<ManoState>(`${API}/${endpoint}`, { manoId }),
     ).then(data => {
@@ -1831,7 +2210,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       this.mandingaEnganoManoId = null;
       this.mandingaMaldicionManoId = null;
       this.recibirMano(data);
-      if (endpoint === 'confirmar-espejismo' && this.mano) {
+      if (endpoint === 'confirmarEspejismo' && this.mano) {
         this.iniciarEspejismoParpadeo(this.mano);
         this.actualizarCartaEspejismoEnMesa(this.mano);
       }
@@ -1866,6 +2245,13 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     this.mano = data;
+    if (!this.manoInicialRecibida) {
+      this.manoInicialRecibida = true;
+      this.evaluarCombateListo();
+    }
+    if (this.envidoRevealManoId && data.id !== this.envidoRevealManoId) {
+      this.envidoRevealManoId = null;
+    }
     this.updateEventosHabilidad(data);
     this.updateUI(data);
     if (this.rasgunoBloqueandoEn(data) && this.rasgunoManoId !== data.id) {
@@ -1892,17 +2278,58 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private actualizarCartasMano(m: ManoState): void {
-    const manoVisible = this.cartasParaAbanico(m);
-    this.misCarts = [0, 1, 2].map(i => {
-      const carta = manoVisible[i] ?? null;
-      return {
-        carta,
-        visible: !!carta,
-        seleccionada: this.habilidadCartaIdx === i,
-        oculta: !!carta && this.cartaEsOculta(carta, m),
-      };
+    const manoVisible = this.cartasParaAbanico(m).map(c => this.normalizarCarta(c));
+    const prev = this.misCarts;
+    const esNuevaMano = this.misCartsManoId !== m.id;
+
+    if (this.rasgunoAnimEnCurso) {
+      this.misCarts = [0, 1, 2].map(i => this.crearMisCartSlot(manoVisible[i] ?? null, i, m));
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (esNuevaMano) {
+      this.misCartsManoId = m.id;
+      this.misCarts = [0, 1, 2].map(i => this.crearMisCartSlot(manoVisible[i] ?? null, i, m));
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const usadas = new Set<number>();
+    const slots = [0, 1, 2].map(slotIdx => {
+      const prevCarta = prev[slotIdx]?.carta;
+      if (!prevCarta) {
+        return this.crearMisCartSlot(null, slotIdx, m);
+      }
+      const idxEnMano = manoVisible.findIndex(
+        (c, i) => !usadas.has(i) && this.cartaCoincide(c, prevCarta),
+      );
+      if (idxEnMano >= 0) {
+        usadas.add(idxEnMano);
+        return this.crearMisCartSlot(manoVisible[idxEnMano], slotIdx, m);
+      }
+      return this.crearMisCartSlot(null, slotIdx, m);
     });
+
+    for (let i = 0; i < manoVisible.length; i++) {
+      if (usadas.has(i)) continue;
+      const slotLibre = slots.findIndex(s => !s.carta);
+      if (slotLibre < 0) break;
+      usadas.add(i);
+      slots[slotLibre] = this.crearMisCartSlot(manoVisible[i], slotLibre, m);
+    }
+
+    this.misCarts = slots;
     this.cdr.markForCheck();
+  }
+
+  private crearMisCartSlot(carta: Carta | null, slotIdx: number, m: ManoState) {
+    return {
+      carta,
+      visible: !!carta,
+      seleccionada: this.habilidadCartaIdx === slotIdx,
+      oculta: !!carta && this.cartaEsOculta(carta, m),
+    };
   }
 
   private actualizarCartasRival(m: ManoState, cantOp: number): void {
@@ -1928,6 +2355,14 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   private cartasParaAbanico(m: ManoState): Carta[] {
     if (this.salpicaduraRevelando && this.salpicaduraCartasOriginales.length > 0) {
       return this.salpicaduraCartasOriginales;
+    }
+    if (this.rasgunoAnimEnCurso) {
+      if (this.rasgunoMostrarDebilitada && this.rasgunoManoPendiente) {
+        return this.cartasHumano(this.rasgunoManoPendiente);
+      }
+      if (this.rasgunoCartasOriginales.length > 0) {
+        return this.rasgunoCartasOriginales;
+      }
     }
     if (this.rasgunoRevelando && this.rasgunoCartasOriginales.length > 0) {
       return this.rasgunoCartasOriginales;
@@ -1960,7 +2395,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     this.nuevaManoEnCurso = true;
     const manoAnteriorId = this.mano.id;
     firstValueFrom(
-      this.http.post<ManoState>(`${API}/nueva-mano`, { manoAnteriorId }),
+      this.http.post<ManoState>(`${API}/nuevaMano`, { manoAnteriorId }),
     ).then(data => {
       this.recibirMano(data);
       return this.correrMaquinas();
@@ -1991,9 +2426,7 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const cartas = m.humano?.mano ?? [];
     const manoTerminada = !!m.ganadorMano;
-    const envidoPosible = !m.envidoCantado && !m.trucoResuelto
-      && (m.bazas?.length ?? 0) === 0 && !manoTerminada
-      && !m.envidoPendienteRespuestaHumano && !m.trucoPendienteRespuestaHumano;
+    const envidoPosible = this.envidoPosibleEnMano(m, manoTerminada);
 
     // 1. Siempre: marcar la carta más fuerte
     if (cartas.length > 0 && !manoTerminada) {
@@ -2036,6 +2469,12 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
     return numero <= 7 ? numero : 0;
   }
 
+  private envidoPosibleEnMano(m: ManoState, manoEnd: boolean): boolean {
+    return !m.envidoCantado && !m.envidoResuelto
+      && (m.bazas?.length ?? 0) === 0 && !manoEnd
+      && (!m.trucoCantado || !!m.trucoPendienteRespuestaHumano);
+  }
+
   private calcularPuntosEnvido(cartas: Carta[]): number {
     const grupos: Record<string, number[]> = {};
     for (const c of cartas) {
@@ -2049,6 +2488,273 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
       if (pts > max) max = pts;
     }
     return max;
+  }
+
+  private esModoHistoria(): boolean {
+    return this.rivalNivel !== null
+      || this.heroe !== null
+      || (this.mano?.configuracion?.modo === 1);
+  }
+
+  private cartasMaquinaOriginales(m: ManoState): Carta[] {
+    const mano = (m.maquina?.mano ?? []).map(c => this.normalizarCarta(c));
+    const raw = m.maquina as unknown as Record<string, unknown> | undefined;
+    const jugadasRaw = (raw?.['jugadas'] ?? raw?.['Jugadas'] ?? m.maquina?.jugadas ?? []) as
+      (Carta | Record<string, unknown>)[];
+    const jugadas = jugadasRaw.map(c => this.normalizarCarta(c));
+    return [...mano, ...jugadas];
+  }
+
+  private cartasMaquinaEnBazas(m: ManoState): Carta[] {
+    return (m.bazas ?? [])
+      .map(b => b.cartaMaquina)
+      .filter((c): c is Carta => !!c)
+      .map(c => this.normalizarCarta(c));
+  }
+
+  /** Cartas del rival ya jugadas o visibles en la mesa (bazas + carta pendiente). */
+  private cartasMaquinaVisiblesEnMesa(m: ManoState): Carta[] {
+    const visibles = this.cartasMaquinaEnBazas(m);
+    if (m.cartaMaquinaEnMesa) {
+      visibles.push(this.normalizarCarta(m.cartaMaquinaEnMesa));
+    }
+    return visibles;
+  }
+
+  private cartasEnvidoNoEstanEnMesa(cartasEnvido: Carta[], m: ManoState): boolean {
+    const visibles = this.cartasMaquinaVisiblesEnMesa(m);
+    return cartasEnvido.some(c =>
+      !visibles.some(v => this.cartaCoincide(c, v)),
+    );
+  }
+
+  /** Cartas con las que la máquina formó su mejor envido (mano + jugadas). */
+  private seleccionarCartasEnvido(cartas: Carta[]): Carta[] {
+    if (cartas.length === 0) return [];
+
+    const grupos: Record<string, Carta[]> = {};
+    for (const c of cartas) {
+      if (!grupos[c.palo]) grupos[c.palo] = [];
+      grupos[c.palo].push(c);
+    }
+
+    let mejorCartas: Carta[] = [];
+    let mejorPts = 0;
+
+    for (const delPalo of Object.values(grupos)) {
+      if (delPalo.length < 2) continue;
+      const sorted = [...delPalo].sort(
+        (a, b) => this.envidoValorCarta(b.numero) - this.envidoValorCarta(a.numero),
+      );
+      const pts = this.envidoValorCarta(sorted[0].numero)
+        + this.envidoValorCarta(sorted[1].numero) + 20;
+      if (pts > mejorPts) {
+        mejorPts = pts;
+        mejorCartas = [sorted[0], sorted[1]];
+      }
+    }
+
+    if (mejorPts > 0) return mejorCartas;
+
+    return [cartas.reduce((best, c) =>
+      this.envidoValorCarta(c.numero) > this.envidoValorCarta(best.numero) ? c : best,
+    )];
+  }
+
+  private obtenerCartasEnvidoMaquina(m: ManoState): Carta[] {
+    return this.seleccionarCartasEnvido(this.cartasMaquinaOriginales(m));
+  }
+
+  /** Envido aceptado (quiero): se compararon tantos. No aplica a no quiero ni son buenas. */
+  private envidoFueQuerido(m: ManoState): boolean {
+    const estado = (m.estadoEnvido ?? '').toLowerCase();
+    if (estado.includes('no quis') || estado.includes('no quier')) return false;
+    if (m.sonBuenasDeclarado) return false;
+    return m.tantoHumano != null && m.tantoCantadoMaquina != null;
+  }
+
+  private debeRevelarCartasEnvidoFinMano(m: ManoState): boolean {
+    if (!this.esModoHistoria()) return false;
+    if (m.ganadorEnvido !== 'Maquina' || !m.envidoResuelto) return false;
+    if (!this.envidoFueQuerido(m)) return false;
+    if (this.envidoRevealManoId === m.id) return false;
+
+    const cartasEnvido = this.obtenerCartasEnvidoMaquina(m);
+    if (cartasEnvido.length === 0) return false;
+
+    return this.cartasEnvidoNoEstanEnMesa(cartasEnvido, m);
+  }
+
+  private iniciarRevelacionEnvidoFinMano(m: ManoState): void {
+    this.iniciarRevelacionEnvido(m, () => this.solicitarNuevaMano());
+  }
+
+  /** Tras resolver un envido que cierra la partida: secuencia de cantos → cartas (si aplica) → cartel. */
+  private programarCierrePartidaPorEnvido(m: ManoState): void {
+    const duracionSecuencia = this.duracionSecuenciaEnvido(m) + 800;
+    const mostrarCartel = () => this.mostrarGameOverPorEnvido(m);
+
+    if (this.gameOverTimer) clearTimeout(this.gameOverTimer);
+
+    const trasSecuencia = () => {
+      if (m.ganadorPartida === 'Maquina' && this.debeRevelarCartasEnvidoFinMano(m)) {
+        this.iniciarRevelacionEnvido(m, mostrarCartel);
+        return;
+      }
+      mostrarCartel();
+    };
+
+    this.gameOverTimer = setTimeout(trasSecuencia, duracionSecuencia);
+  }
+
+  private mostrarGameOverPorEnvido(m: ManoState): void {
+    this.gameOver = true;
+    this.gameOverWon = m.ganadorPartida === 'Humano';
+    if (this.gameOverWon && this.rivalNivel !== null) {
+      this.registrarVictoriaHistoria(m);
+    }
+    if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
+    this.cdr.markForCheck();
+  }
+
+  private iniciarRevelacionEnvido(m: ManoState, alTerminar: () => void): void {
+    this.cancelarCountdown();
+    this.cancelarEnvidoRevealTimer();
+
+    this.envidoRevealManoId = m.id;
+    this.envidoRevealCartas = this.obtenerCartasEnvidoMaquina(m);
+    this.envidoRevealActivo = true;
+    this.btns = [];
+    this.turnoBadge = '';
+
+    this.envidoRevealTimer = setTimeout(() => {
+      this.cancelarEnvidoRevealTimer();
+      alTerminar();
+    }, ENVIDO_REVEAL_SEG * 1000);
+
+    this.cdr.markForCheck();
+  }
+
+  private cancelarEnvidoRevealTimer(): void {
+    if (this.envidoRevealTimer) {
+      clearTimeout(this.envidoRevealTimer);
+      this.envidoRevealTimer = null;
+    }
+    this.envidoRevealActivo = false;
+    this.envidoRevealCartas = [];
+  }
+
+  private debeAnimarRemolino(m: ManoState): boolean {
+    if (!this.esModoHistoria() || !m.cartaHumanoEnMesa || !this.ultimaCartaJugadaOptimista) return false;
+    if ((m.bazas?.length ?? 0) !== 0) return false;
+
+    const msg = m.vistaHabilidadesRival?.ultimoMensajeHabilidad ?? '';
+    if (!msg.includes('Remolino')) return false;
+
+    const nueva = this.normalizarCarta(m.cartaHumanoEnMesa);
+    const original = this.ultimaCartaJugadaOptimista;
+    return nueva.numero === original.numero && nueva.palo !== original.palo;
+  }
+
+  private async ejecutarSecuenciaRemolino(m: ManoState): Promise<void> {
+    const original = { ...this.ultimaCartaJugadaOptimista! };
+    const nueva = this.normalizarCarta(m.cartaHumanoEnMesa!);
+
+    this.remolinoEnCurso = true;
+    this.remolinoAnimando = false;
+    this.remolinoMostrarNueva = false;
+    this.remolinoSlotIdx = m.bazas?.length ?? 0;
+    this.remolinoCartaOriginal = original;
+    this.remolinoCartaNueva = nueva;
+    this.rivalLabel = '¡Remolino!';
+    this.showBubble('¡Remolino! Nahuelito agita las aguas...');
+    this.updateUI(m);
+    this.cdr.markForCheck();
+
+    await this.delay(REMOLINO_HOLD_MS);
+
+    this.remolinoAnimando = true;
+    this.cdr.markForCheck();
+    await this.delay(REMOLINO_ANIM_MS);
+
+    this.remolinoMostrarNueva = true;
+    this.remolinoAnimando = false;
+    this.remolinoEnCurso = false;
+    this.ultimaCartaJugadaOptimista = null;
+    this.rivalLabel = 'Pensando...';
+    this.updateUI(m);
+    this.cdr.markForCheck();
+  }
+
+  private cancelarRemolino(): void {
+    this.remolinoEnCurso = false;
+    this.remolinoAnimando = false;
+    this.remolinoMostrarNueva = false;
+    this.remolinoSlotIdx = null;
+    this.remolinoCartaOriginal = null;
+    this.remolinoCartaNueva = null;
+    this.ultimaCartaJugadaOptimista = null;
+  }
+
+  private debeMostrarTrampaDelMonte(m: ManoState): boolean {
+    if (this.trampaDelMonteManoId === m.id) return false;
+    if (!m.ganadorMano) return false;
+    if (this.mensajeEsTrampaDelMonte(this.mensajeRivalActual(m))) return true;
+    return this.esRivalPomberito(m) && this.esManoSilenciosa(m);
+  }
+
+  private finalizarGameOverPorMano(m: ManoState): void {
+    this.gameOver = true;
+    this.gameOverWon = m.ganadorPartida === 'Humano';
+    if (this.gameOverWon && this.rivalNivel !== null) {
+      this.registrarVictoriaHistoria(m);
+    }
+    if (this.esVictoriaFinalHistoria) this.iniciarDerrotaFinal();
+    this.cdr.markForCheck();
+  }
+
+  private alTerminarAvisoTrampaDelMonte(m: ManoState): void {
+    if (m.ganadorPartida || m.partidaTerminada) {
+      this.finalizarGameOverPorMano(m);
+      return;
+    }
+    this.solicitarNuevaMano();
+  }
+
+  private iniciarAvisoTrampaDelMonte(m: ManoState): void {
+    this.cancelarCountdown();
+    this.cancelarTrampaDelMonte();
+
+    this.trampaDelMonteManoId = m.id;
+    this.trampaDelMonteActivo = true;
+    this.trampaDelMonteSegundos = TRAMPA_MONTE_MS / 1000;
+    this.btns = [];
+    this.turnoBadge = '';
+    this.cdr.markForCheck();
+
+    this.trampaDelMonteInterval = setInterval(() => {
+      this.trampaDelMonteSegundos = Math.max(0, this.trampaDelMonteSegundos - 1);
+      this.cdr.markForCheck();
+    }, 1000);
+
+    this.trampaDelMonteTimer = setTimeout(() => {
+      this.cancelarTrampaDelMonte();
+      this.alTerminarAvisoTrampaDelMonte(m);
+      this.cdr.markForCheck();
+    }, TRAMPA_MONTE_MS);
+  }
+
+  private cancelarTrampaDelMonte(): void {
+    if (this.trampaDelMonteTimer) {
+      clearTimeout(this.trampaDelMonteTimer);
+      this.trampaDelMonteTimer = null;
+    }
+    if (this.trampaDelMonteInterval) {
+      clearInterval(this.trampaDelMonteInterval);
+      this.trampaDelMonteInterval = null;
+    }
+    this.trampaDelMonteActivo = false;
+    this.trampaDelMonteSegundos = 0;
   }
 
   // ── Burbuja ───────────────────────────────────────────────────────────────
@@ -2163,10 +2869,10 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Muestra el canto del humano en su burbuja apenas lo hace (envido/truco). */
   private feedbackCantoHumano(endpoint: string, body: any): void {
     let txt = '';
-    if (endpoint === 'cantar-envido' || endpoint === 'cantar-envido-tipo')
+    if (endpoint === 'cantarEnvido' || endpoint === 'cantarEnvidoTipo')
       txt = '¡' + (body?.tipo ?? 'Envido') + '!';
-    else if (endpoint === 'cantar-truco') txt = '¡Truco!';
-    else if (endpoint === 'escalar-truco') txt = '¡Quiero más!';
+    else if (endpoint === 'cantarTruco') txt = '¡Truco!';
+    else if (endpoint === 'escalarTruco') txt = '¡Quiero más!';
     if (txt) this.showTempBubbleHumano(txt, 1800);
   }
 
@@ -2246,59 +2952,58 @@ export class TrucoSoloComponent implements OnInit, AfterViewInit, OnDestroy {
 
     } else if (pendEnv) {
       raw.push(['QUIERO', '#44ff44',
-        () => this.call('responder-envido', { manoId: m.id, aceptar: true })]);
+        () => this.call('responderEnvido', { manoId: m.id, aceptar: true })]);
       const tipoEnv = m.tipoEnvidoCantado;
       if (tipoEnv === 'Envido')
         raw.push(['ENVIDO', '#ffdd00',
-          () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Envido Envido' })]);
+          () => this.call('responderEnvido', { manoId: m.id, aceptar: true, escalarA: 'Envido Envido' })]);
       if (tipoEnv === 'Envido' || tipoEnv === 'EnvidoEnvido')
         raw.push(['REAL ENVIDO', '#ffaa00',
-          () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Real Envido' })]);
+          () => this.call('responderEnvido', { manoId: m.id, aceptar: true, escalarA: 'Real Envido' })]);
       // El backend normaliza el tipo como 'FaltaEnvido' (sin espacio): comparar contra
       // ambos, si no el botón aparecía aunque la máquina ya hubiera cantado la falta.
       if (tipoEnv !== 'FaltaEnvido' && tipoEnv !== 'Falta Envido')
         raw.push(['FALTA ENVIDO', '#ff8800',
-          () => this.call('responder-envido', { manoId: m.id, aceptar: true, escalarA: 'Falta Envido' })]);
+          () => this.call('responderEnvido', { manoId: m.id, aceptar: true, escalarA: 'Falta Envido' })]);
       raw.push(['NO QUIERO', '#ff4444',
-        () => this.call('responder-envido', { manoId: m.id, aceptar: false })]);
+        () => this.call('responderEnvido', { manoId: m.id, aceptar: false })]);
 
     } else if (pendTru) {
       raw.push(['QUIERO', '#44ff44',
-        () => this.call('responder-truco', { manoId: m.id, aceptar: true })]);
+        () => this.call('responderTruco', { manoId: m.id, aceptar: true })]);
       if ((m.nivelTruco ?? 0) < 3) {
         const lbl = m.nivelTruco === 1 ? 'RETRUCO' : 'VALE 4';
         const esc = m.nivelTruco === 1 ? 'retruco' : 'valecuatro';
         raw.push([lbl, '#ffaa00',
-          () => this.call('responder-truco', { manoId: m.id, aceptar: true, escalarA: esc })]);
+          () => this.call('responderTruco', { manoId: m.id, aceptar: true, escalarA: esc })]);
       }
       raw.push(['NO QUIERO', '#ff4444',
-        () => this.call('responder-truco', { manoId: m.id, aceptar: false })]);
+        () => this.call('responderTruco', { manoId: m.id, aceptar: false })]);
       if (!m.envidoCantado && (m.bazas?.length ?? 0) === 0) {
-        raw.push(['Envido', '#4488ff', () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Envido' })]);
-        raw.push(['Real Envido', '#4488ff', () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Real Envido' })]);
-        raw.push(['Falta Envido', '#4488ff', () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Falta Envido' })]);
+        raw.push(['Envido', '#4488ff', () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Envido' })]);
+        raw.push(['Real Envido', '#4488ff', () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Real Envido' })]);
+        raw.push(['Falta Envido', '#4488ff', () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Falta Envido' })]);
       }
 
     } else {
-      const envidoPosible = !m.envidoCantado && !m.trucoResuelto
-        && (m.bazas?.length ?? 0) === 0 && !manoEnd;
+      const envidoPosible = this.envidoPosibleEnMano(m, manoEnd);
       if (envidoPosible) {
-        raw.push(['Envido', '#4488ff', esMiTurno ? () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Envido' }) : null]);
-        raw.push(['Real Envido', '#4488ff', esMiTurno ? () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Real Envido' }) : null]);
-        raw.push(['Falta Envido', '#4488ff', esMiTurno ? () => this.call('cantar-envido-tipo', { manoId: m.id, tipo: 'Falta Envido' }) : null]);
+        raw.push(['Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Envido' }) : null]);
+        raw.push(['Real Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Real Envido' }) : null]);
+        raw.push(['Falta Envido', '#4488ff', esMiTurno ? () => this.call('cantarEnvidoTipo', { manoId: m.id, tipo: 'Falta Envido' }) : null]);
       }
 
       if (!trucoCantado) {
         raw.push(['Truco', '#cc4444',
-          esMiTurno && !manoEnd ? () => this.call('cantar-truco', { manoId: m.id }) : null]);
+          esMiTurno && !manoEnd ? () => this.call('cantarTruco', { manoId: m.id }) : null]);
       } else if (trucoCantado && !trucoResuelto && (m.nivelTruco ?? 0) < 3 && m.cantorTruco !== 'Humano') {
         const lbl = m.nivelTruco === 1 ? 'Retruco' : 'Vale Cuatro';
         raw.push([lbl, '#cc4444',
-          esMiTurno && !manoEnd ? () => this.call('escalar-truco', { manoId: m.id }) : null]);
+          esMiTurno && !manoEnd ? () => this.call('escalarTruco', { manoId: m.id }) : null]);
       }
 
       if (esMiTurno && !manoEnd)
-        raw.push(['Ir al mazo', '#556677', () => this.call('irse-al-mazo', { manoId: m.id })]);
+        raw.push(['Ir al mazo', '#556677', () => this.call('irseAlMazo', { manoId: m.id })]);
     }
 
     const bloqueado = this.accionesBloqueadasPorHabilidadRival;

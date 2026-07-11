@@ -41,6 +41,12 @@ export default class NpcDialogo {
       return;
     }
 
+    // En móvil, el mismo toque que cierra el diálogo (botón "Interactuar") deja
+    // interactuoMobile en true durante este frame; sin esta guarda, el diálogo se
+    // reabriría al instante y quedaría congelado. Ignoramos la reapertura un
+    // momento después de cerrar.
+    if (this.escena.time.now - (this._tiempoCierre || 0) < 400) return;
+
     const enZona = this.zona.update(jugador);
 
     if (enZona && (Phaser.Input.Keyboard.JustDown(teclaE) || interactuoMobile)) {
@@ -58,6 +64,12 @@ export default class NpcDialogo {
   }
 
   _avanzar() {
+    // Un mismo toque en móvil puede disparar dos veces (listener 'pointerdown' +
+    // botón "Interactuar"). Debounce para avanzar un solo mensaje por toque.
+    const ahora = this.escena.time.now;
+    if (ahora - (this._ultimoAvance || 0) < 200) return;
+    this._ultimoAvance = ahora;
+
     this.indice++;
     if (this.indice < this.mensajes.length) {
       this.textoGlobo.setText(this.mensajes[this.indice]);
@@ -69,6 +81,7 @@ export default class NpcDialogo {
   _cerrar() {
     this.dialogoAbierto = false;
     this.indice = 0;
+    this._tiempoCierre = this.escena.time.now;
     this.escena.input.off('pointerdown', this._onClick);
 
     if (this.globo) {

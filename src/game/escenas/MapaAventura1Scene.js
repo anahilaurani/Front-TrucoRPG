@@ -157,6 +157,8 @@ export default class MapaAventura1Scene extends BaseScene {
       'Mi sueño es\ndibujar como Molina Campos\nsoy su gran fan!.',
     ]);
 
+    this._crearAsado(map);
+
     this.puedePelearPomberito = false;
     this.puedeEntrarCueva = false;
     this.cargarPuedePelearPomberito(false);
@@ -177,6 +179,168 @@ export default class MapaAventura1Scene extends BaseScene {
   shutdown() {
     window.removeEventListener('historia:progreso-actualizado', this._onProgresoActualizado);
     window.removeEventListener('truco-solo:end', this._onTrucoEnd);
+  }
+
+  /* ── Asado de Ale ───────────────────────────────────────────────────────
+     Sobre la fogata de piedras: fuego, parrilla pixel-art con carne y
+     chorizos, humo subiendo y resplandor titilante. Todo procedural. */
+  _crearAsado(map) {
+    this._crearTexturasFx();
+    this._crearTexturaParrilla();
+
+    // se saca la fogata de piedras del tilemap (celdas 5-6, 9-10):
+    // el fogón ahora es el del asado, con sus propias piedras
+    [[5, 9], [6, 9], [5, 10], [6, 10]].forEach(([tx, ty]) =>
+      map.removeTileAt(tx, ty, false, false, 'Objetos'),
+    );
+
+    // Cerca de Ale pero sin pisar el camino al puente ni su zona de diálogo.
+    const X = 238;
+    const Y = 282;
+
+    // piedras del fogón
+    this.add.image(X, Y + 12, 'fx-piedras-asado').setDepth(0);
+
+    // colisión: que nadie se pare arriba del asado
+    const bloqueo = this.add.zone(X, Y + 2, 46, 32);
+    this.physics.add.existing(bloqueo, true);
+    this.physics.add.collider(this.JugadorPrincipal, bloqueo);
+
+    // resplandor titilante del fuego
+    const brillo = this.add
+      .image(X, Y, 'fx-glow')
+      .setDepth(0)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setTint(0xff6622)
+      .setAlpha(0.5)
+      .setScale(2.1);
+    this.tweens.add({
+      targets: brillo,
+      alpha: 0.25,
+      scale: 1.7,
+      duration: 380,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // llamas entre las piedras (debajo de la parrilla)
+    this.add
+      .particles(X, Y + 4, 'fx-brasa', {
+        frequency: 55,
+        quantity: 2,
+        lifespan: { min: 280, max: 620 },
+        speedY: { min: -38, max: -18 },
+        speedX: { min: -8, max: 8 },
+        emitZone: { type: 'random', source: new Phaser.Geom.Rectangle(-14, -4, 28, 8) },
+        scale: { start: 1.5, end: 0 },
+        tint: [0xffee66, 0xffaa22, 0xff5511, 0xcc2200],
+        blendMode: 'ADD',
+      })
+      .setDepth(2);
+
+    // parrilla con la carne
+    this.add.image(X, Y - 6, 'fx-parrilla').setDepth(2);
+
+    // humo del asado
+    this.add
+      .particles(X, Y - 16, 'fx-brasa', {
+        frequency: 120,
+        lifespan: { min: 1300, max: 2400 },
+        speedY: { min: -26, max: -14 },
+        speedX: { min: -5, max: 11 },
+        scale: { start: 1.4, end: 3.2 },
+        alpha: { start: 0.4, end: 0 },
+        tint: [0x777777, 0x999999, 0x555555],
+      })
+      .setDepth(3);
+  }
+
+  _crearTexturasFx() {
+    if (!this.textures.exists('fx-brasa')) {
+      const g = this.make.graphics({ add: false });
+      g.fillStyle(0xffffff);
+      g.fillRect(0, 0, 4, 4);
+      g.generateTexture('fx-brasa', 4, 4);
+      g.destroy();
+    }
+    if (!this.textures.exists('fx-glow')) {
+      const g = this.make.graphics({ add: false });
+      for (let r = 16; r > 0; r--) {
+        g.fillStyle(0xffffff, 0.07);
+        g.fillCircle(16, 16, r);
+      }
+      g.generateTexture('fx-glow', 32, 32);
+      g.destroy();
+    }
+  }
+
+  _crearTexturaParrilla() {
+    if (!this.textures.exists('fx-piedras-asado')) {
+      const g = this.make.graphics({ add: false });
+      // ronda de piedras grises con sombra
+      const piedras = [
+        [6, 8, 7], [18, 12, 6], [30, 13, 7], [42, 11, 6], [52, 7, 6],
+        [12, 4, 5], [26, 3, 6], [40, 3, 5], [48, 4, 4],
+      ];
+      piedras.forEach(([x, y, r]) => {
+        g.fillStyle(0x2e2e2e);
+        g.fillCircle(x + 1, y + 2, r);
+        g.fillStyle(0x5c5c5c);
+        g.fillCircle(x, y, r);
+        g.fillStyle(0x7a7a7a);
+        g.fillCircle(x - 1, y - 2, r * 0.5);
+      });
+      g.generateTexture('fx-piedras-asado', 60, 22);
+      g.destroy();
+    }
+
+    if (this.textures.exists('fx-parrilla')) return;
+    const g = this.make.graphics({ add: false });
+
+    // patas de hierro
+    g.fillStyle(0x1a1a1a);
+    g.fillRect(4, 16, 3, 12);
+    g.fillRect(41, 16, 3, 12);
+
+    // marco
+    g.fillStyle(0x232323);
+    g.fillRect(0, 6, 48, 14);
+
+    // barras de la parrilla
+    g.fillStyle(0x5a5a5a);
+    for (let y = 8; y <= 18; y += 3) {
+      g.fillRect(2, y, 44, 1);
+    }
+
+    // bife 1
+    g.fillStyle(0x5e2018);
+    g.fillRect(6, 8, 13, 9);
+    g.fillStyle(0x9c4030);
+    g.fillRect(7, 9, 11, 7);
+    g.fillStyle(0xb85b40);
+    g.fillRect(9, 10, 6, 3);
+
+    // bife 2
+    g.fillStyle(0x5e2018);
+    g.fillRect(31, 10, 12, 8);
+    g.fillStyle(0x8f3a28);
+    g.fillRect(32, 11, 10, 6);
+    g.fillStyle(0xad5238);
+    g.fillRect(34, 12, 5, 3);
+
+    // chorizos
+    g.fillStyle(0x4e1c12);
+    g.fillRect(21, 8, 4, 10);
+    g.fillStyle(0x7a2f22);
+    g.fillRect(22, 9, 2, 8);
+    g.fillStyle(0x4e1c12);
+    g.fillRect(26, 9, 4, 9);
+    g.fillStyle(0x74301f);
+    g.fillRect(27, 10, 2, 7);
+
+    g.generateTexture('fx-parrilla', 48, 30);
+    g.destroy();
   }
 
   _crearJefeNahuelito() {
@@ -202,7 +366,7 @@ export default class MapaAventura1Scene extends BaseScene {
   async cargarPuedePelearPomberito(animarBarrera = false) {
     try {
       const res = await fetch(
-        `${environment.apiUrl}/api/historia/rivales/${RIVAL_POMBERITO_NIVEL}/puede-pelear`,
+        `/api/historia/rivales/${RIVAL_POMBERITO_NIVEL}/puedePelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;
@@ -254,7 +418,7 @@ export default class MapaAventura1Scene extends BaseScene {
   async cargarPuedeEntrarCueva(animar = false) {
     try {
       const res = await fetch(
-        `${environment.apiUrl}/api/Historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puede-pelear`,
+        `/api/historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puedePelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;

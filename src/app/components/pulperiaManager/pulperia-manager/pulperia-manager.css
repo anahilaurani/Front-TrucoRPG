@@ -10,6 +10,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh; /* en mobile, vh incluye la barra del navegador; dvh no */
     z-index: 99999 !important;
     display: flex;
     justify-content: center;
@@ -27,6 +28,7 @@
     max-width: 940px;
     height: auto;
     max-height: 95vh;
+    max-height: 95dvh;
     text-align: center;
     font-family: 'Jersey 20', sans-serif;
     display: flex;
@@ -68,6 +70,7 @@
         padding: 45px 12px 20px 12px;
         width: 100%;
         max-height: 95vh;
+        max-height: 95dvh;
     }
 }
 

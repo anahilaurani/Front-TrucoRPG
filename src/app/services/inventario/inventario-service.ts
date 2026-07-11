@@ -13,6 +13,6 @@ export class InventarioService {
   constructor(private http: HttpClient) {}
 
   obtenerInventario(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/mi-inventario`);
+    return this.http.get<any>(`${this.apiUrl}/miInventario`);
   }
 }

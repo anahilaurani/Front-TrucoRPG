@@ -56,31 +56,47 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
+  /** Está autenticado solo si hay token y NO está vencido. */
   estaAutenticado(): boolean {
-    return !!this.obtenerToken();
+    return !!this.obtenerToken() && !this.tokenVencido();
+  }
+
+  /** true si el token existe y su claim `exp` ya pasó (o es ilegible). */
+  tokenVencido(): boolean {
+    const payload = this.obtenerPayload();
+    if (!payload) return false; // sin token legible: no lo tratamos como vencido acá
+    if (!payload.exp) return false; // sin exp: no podemos afirmar que venció
+    // `exp` viene en segundos (epoch). Margen de 5s para expirar un toque antes.
+    const margenMs = 5000;
+    return payload.exp * 1000 <= Date.now() + margenMs;
   }
 
   obtenerUsuario(): UsuarioInfo | null {
     return this.usuario();
   }
 
-  private leerUsuarioDesdeToken(): UsuarioInfo | null {
+  private obtenerPayload(): any | null {
     const token = this.obtenerToken();
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return {
-        nombre: payload['name']
-          ?? payload['unique_name']
-          ?? payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
-          ?? '',
-        email: payload['email']
-          ?? payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-          ?? '',
-      };
+      return JSON.parse(atob(token.split('.')[1]));
     } catch {
       return null;
     }
+  }
+
+  private leerUsuarioDesdeToken(): UsuarioInfo | null {
+    const payload = this.obtenerPayload();
+    if (!payload) return null;
+    return {
+      nombre: payload['name']
+        ?? payload['unique_name']
+        ?? payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
+        ?? '',
+      email: payload['email']
+        ?? payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+        ?? '',
+    };
   }
 
   /** Datos de partida/historia del usuario anterior; no deben mezclarse entre cuentas. */
@@ -105,18 +121,18 @@ export class AuthService {
   }
 
   cambiarPassword(passwordActual: string, passwordNueva: string): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${this.apiUrl}/change-password`, {
+    return this.http.put<{ message: string }>(`${this.apiUrl}/changePassword`, {
       passwordActual,
       passwordNueva,
     });
   }
 
   solicitarResetPassword(email: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgotPassword`, { email });
   }
 
   resetPassword(email: string, token: string, nuevaPassword: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/resetPassword`, {
       email,
       token,
       nuevaPassword,

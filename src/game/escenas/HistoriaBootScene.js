@@ -21,6 +21,10 @@ export default class HistoriaBootScene extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64,
     });
+    this.load.spritesheet('personaje4', './assets/sprites/personaje4.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
     this.load.spritesheet('personaje1rosa', './assets/sprites/personaje1rosa.png', {
       frameWidth: 64,
       frameHeight: 64,

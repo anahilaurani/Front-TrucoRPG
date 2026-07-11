@@ -38,7 +38,15 @@
         </div>
       } @else {
         <div class="empty-state">
-          <p>No tenés ropa ni tintes comprados.<br />¡Visitá la tienda!</p>
+          <p class="empty-title">No tenés ropa ni tintes comprados.</p>
+          <div class="tienda-hint">
+            <span class="hint-label">¿Dónde compro?</span>
+            <p>
+              La tienda está dentro de la <strong>Pulpería</strong> del pueblo.
+              Entrá a la Pulpería, acercate al mostrador y apretá <kbd>E</kbd>
+              (o tocá el botón de interactuar) para comprar ropa y tintes.
+            </p>
+          </div>
         </div>
       }
     </div>
@@ -49,6 +57,7 @@
         <div class="avatar-display">
           <img
             [src]="obtenerRutaPreviewGrande()"
+            (error)="onPreviewError()"
             alt="Previa del Personaje"
             class="avatar-grande"
           />

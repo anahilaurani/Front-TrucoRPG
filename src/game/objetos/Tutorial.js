@@ -16,6 +16,13 @@ export default class Tutorial {
     this.yaVisto = localStorage.getItem(this.idTutorial) === 'true';
   }
 
+  /** Vuelve a mostrar el tutorial desde el principio (aunque ya se haya visto). */
+  reiniciar() {
+    if (this.activo) return false;
+    this.yaVisto = false;
+    return this.iniciar();
+  }
+
   iniciar() {
     if (this.yaVisto) return false;
 
@@ -166,11 +173,15 @@ export default class Tutorial {
     this.escena.input.off('pointerdown');
 
     if (this.globoContenedor) {
+      const globo = this.globoContenedor;
+      // se limpian las referencias para que el tutorial pueda volver a mostrarse
+      this.globoContenedor = null;
+      this.textoGlobo = null;
       this.escena.tweens.add({
-        targets: this.globoContenedor,
+        targets: globo,
         alpha: 0,
         duration: 300,
-        onComplete: () => this.globoContenedor.destroy(),
+        onComplete: () => globo.destroy(),
       });
     }
   }
