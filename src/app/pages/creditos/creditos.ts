@@ -24,6 +24,10 @@ export class Creditos implements OnInit, OnDestroy {
   staff = CREDITOS_STAFF;
   mostrandoStaff = false;
 
+  // ── Transición de salida estilo RPG ───────────────────────────────────────
+  saliendo = false;
+  private timeoutSalida: any;
+
   ngOnInit() {
     this.iniciarTypewriter();
   }
@@ -46,7 +50,7 @@ export class Creditos implements OnInit, OnDestroy {
 
   siguiente() {
     if (this.mostrandoStaff) {
-      this.creditosTerminado.emit();
+      this.salirConEfecto();
       return;
     }
 
@@ -74,14 +78,23 @@ export class Creditos implements OnInit, OnDestroy {
   saltar() {
     clearInterval(this.intervalo);
     if (this.mostrandoStaff) {
-      this.creditosTerminado.emit();
+      this.salirConEfecto();
     } else {
       this.mostrandoStaff = true;
     }
     this.cdr.markForCheck();
   }
 
+  // Flash blanco + fundido a negro antes de volver al menú.
+  private salirConEfecto() {
+    if (this.saliendo) return;
+    this.saliendo = true;
+    this.cdr.markForCheck();
+    this.timeoutSalida = setTimeout(() => this.creditosTerminado.emit(), 1400);
+  }
+
   ngOnDestroy() {
     clearInterval(this.intervalo);
+    clearTimeout(this.timeoutSalida);
   }
 }
