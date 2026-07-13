@@ -366,7 +366,7 @@ export default class MapaAventura1Scene extends BaseScene {
   async cargarPuedePelearPomberito(animarBarrera = false) {
     try {
       const res = await fetch(
-        `/api/historia/rivales/${RIVAL_POMBERITO_NIVEL}/puedePelear`,
+        `${environment.apiUrl}/api/historia/rivales/${RIVAL_POMBERITO_NIVEL}/puedePelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;
@@ -418,7 +418,7 @@ export default class MapaAventura1Scene extends BaseScene {
   async cargarPuedeEntrarCueva(animar = false) {
     try {
       const res = await fetch(
-        `/api/historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puedePelear`,
+        `${environment.apiUrl}/api/historia/rivales/${RIVAL_SIGUIENTE_A_POMBERITO_NIVEL}/puedePelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;

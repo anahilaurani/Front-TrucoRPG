@@ -318,7 +318,7 @@ export default class MapaAventura3Scene extends BaseScene {
   async cargarPuedePelearMandinga() {
     try {
       const res = await fetch(
-        `/api/historia/rivales/${RIVAL_MANDINGA_NIVEL}/puedePelear`,
+        `${environment.apiUrl}/api/historia/rivales/${RIVAL_MANDINGA_NIVEL}/puedePelear`,
         { headers: authHeaders() },
       );
       if (!res.ok) return;
