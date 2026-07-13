@@ -27,6 +27,7 @@ export class Creditos implements OnInit, OnDestroy {
   // ── Transición de salida estilo RPG ───────────────────────────────────────
   saliendo = false;
   private timeoutSalida: any;
+  private timeoutRollFin: any;
 
   ngOnInit() {
     this.iniciarTypewriter();
@@ -85,6 +86,13 @@ export class Creditos implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // Cuando el roll termina de subir (ya pasó el logo), sale solo al menú.
+  rollTerminado(evento: AnimationEvent) {
+    // el nombre puede venir con prefijo de encapsulación de Angular
+    if (!String(evento.animationName).endsWith('subir-creditos')) return;
+    this.timeoutRollFin = setTimeout(() => this.salirConEfecto(), 800);
+  }
+
   // Flash blanco + fundido a negro antes de volver al menú.
   private salirConEfecto() {
     if (this.saliendo) return;
@@ -96,5 +104,6 @@ export class Creditos implements OnInit, OnDestroy {
   ngOnDestroy() {
     clearInterval(this.intervalo);
     clearTimeout(this.timeoutSalida);
+    clearTimeout(this.timeoutRollFin);
   }
 }

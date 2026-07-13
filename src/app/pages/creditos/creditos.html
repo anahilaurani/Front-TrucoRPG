@@ -22,7 +22,7 @@
     } @else {
     <div class="carta-wrapper">
         <div class="carta carta-staff">
-            <div class="staff-roll">
+            <div class="staff-roll" (animationend)="rollTerminado($event)">
                 @for (linea of staff; track $index) {
                 <p class="staff-linea" [class.staff-vacia]="!linea">{{ linea }}</p>
                 }
