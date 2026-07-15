@@ -101,7 +101,7 @@ export class AuthService {
 
   /** Datos de partida/historia del usuario anterior; no deben mezclarse entre cuentas. */
   private limpiarDatosDeSesionAnterior(): void {
-    localStorage.removeItem('avatarUrl');
+    //localStorage.removeItem('avatarUrl');
     this.avatarUrl.set(null);
 
     const clavesSesion = [

@@ -12,7 +12,7 @@ export class TutorialService {
 
   private http = inject(HttpClient);
 
-  private apiUrl = '/api/Tutorial';
+  private apiUrl = `${environment.apiUrl}/api/Tutorial`;
 
   obtenerReglas(): Observable<Reglas[]> {
     return this.http.get<Reglas[]>(`${this.apiUrl}/generales`);
